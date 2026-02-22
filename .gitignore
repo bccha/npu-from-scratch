@@ -1,0 +1,69 @@
+# ============================================================
+# Quartus Prime
+# ============================================================
+db/
+incremental_db/
+output_files/
+*.rpt
+*.smsg
+*.summary
+*.jdi
+*.pin
+*.pof
+*.sof
+*.jam
+*.jbc
+*.ekp
+*.qws
+greybox_tmp/
+
+# ============================================================
+# Qsys / Platform Designer (생성 파일)
+# ============================================================
+soc_system/synthesis/
+soc_system/*.html
+soc_system/*.xml
+soc_system/*.bsf
+soc_system/*.cmp
+soc_system/soc_system_bb.v
+soc_system/soc_system_inst.v
+soc_system/soc_system_inst.vhd
+soc_system.sopcinfo
+.qsys_edit/
+
+# ============================================================
+# Nios II BSP (generate로 재생성 가능)
+# ============================================================
+nios_software/nios_ddr3_test_bsp/HAL/
+nios_software/nios_ddr3_test_bsp/drivers/
+nios_software/nios_ddr3_test_bsp/obj/
+nios_software/nios_ddr3_test_bsp/*.h
+nios_software/nios_ddr3_test_bsp/*.x
+nios_software/nios_ddr3_test_bsp/*.mk
+nios_software/nios_ddr3_test_bsp/Makefile
+nios_software/nios_ddr3_test_bsp/summary.html
+nios_software/nios_ddr3_test_bsp/alt_sys_init.c
+
+# Nios II App (빌드 산출물)
+nios_software/nios_ddr3_test/obj/
+nios_software/nios_ddr3_test/*.elf
+nios_software/nios_ddr3_test/*.map
+
+# Eclipse 메타데이터
+nios_software/.metadata/
+nios_software/RemoteSystemsTempFiles/
+
+# ============================================================
+# HPS 생성 파일 (재생성 가능)
+# ============================================================
+hps_isw_handoff/
+hps_sdram_p0_summary.csv
+
+# ============================================================
+# 기타 생성/임시 파일
+# ============================================================
+*.bak
+*.orig
+*.log
+*.tmp
+*.temp
