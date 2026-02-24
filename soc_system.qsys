@@ -456,7 +456,7 @@
    enabled="1">
   <parameter name="ADDRESS_UNITS" value="SYMBOLS" />
   <parameter name="ADDRESS_WIDTH" value="28" />
-  <parameter name="DATA_WIDTH" value="32" />
+  <parameter name="DATA_WIDTH" value="64" />
   <parameter name="LINEWRAPBURSTS" value="0" />
   <parameter name="MAX_BURST_SIZE" value="512" />
   <parameter name="MAX_PENDING_RESPONSES" value="4" />
@@ -474,7 +474,7 @@
    enabled="1">
   <parameter name="ADDRESS_UNITS" value="SYMBOLS" />
   <parameter name="ADDRESS_WIDTH" value="10" />
-  <parameter name="DATA_WIDTH" value="32" />
+  <parameter name="DATA_WIDTH" value="64" />
   <parameter name="LINEWRAPBURSTS" value="0" />
   <parameter name="MAX_BURST_SIZE" value="512" />
   <parameter name="MAX_PENDING_RESPONSES" value="4" />

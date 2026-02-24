@@ -14,8 +14,7 @@ async def test_systolic_core_stress(dut):
     """Stress Test: Load Weight Once, Stream 100 Matrices (400 Rows)"""
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
     await reset_dut(dut)
-
-    N = 4
+    N = 8
     NUM_MATRICES = 100
     TOTAL_ROWS = NUM_MATRICES * N
     

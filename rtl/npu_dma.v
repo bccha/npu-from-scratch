@@ -1,6 +1,8 @@
 `timescale 1ns / 1ps
 
-module npu_dma (
+module npu_dma #(
+    parameter AXI_WIDTH = 64
+)(
     input  wire        clk,
     input  wire        rst_n,
 
@@ -20,7 +22,7 @@ module npu_dma (
 
     // Avalon-MM Read Master Interface
     input  wire        rd_m_waitrequest,
-    input  wire [31:0] rd_m_readdata,
+    input  wire [AXI_WIDTH-1:0] rd_m_readdata,
     input  wire        rd_m_readdatavalid,
     output reg  [9:0]  rd_m_burstcount,
     output reg  [31:0] rd_m_address,
@@ -31,13 +33,13 @@ module npu_dma (
     output reg  [9:0]  wr_m_burstcount,
     output reg  [31:0] wr_m_address,
     output reg         wr_m_write,
-    output wire [31:0] wr_m_writedata,
+    output wire [AXI_WIDTH-1:0] wr_m_writedata,
 
 // Internal Streaming Interface
-    output wire [31:0] data_to_npu,
+    output wire [AXI_WIDTH-1:0] data_to_npu,
     output wire        data_to_npu_valid,
     input  wire        data_to_npu_ready, // 👈 ADDED
-    input  wire [31:0] data_from_npu,
+    input  wire [AXI_WIDTH-1:0] data_from_npu,
     input  wire        data_from_npu_valid,
     output wire        data_from_npu_ready
 );
@@ -47,7 +49,7 @@ module npu_dma (
     // ----------------------------------------------------
     localparam FIFO_DEPTH = 512;
     localparam ADDR_WIDTH = 9;
-    reg [31:0] in_fifo [0:FIFO_DEPTH-1];
+    reg [AXI_WIDTH-1:0] in_fifo [0:FIFO_DEPTH-1];
     reg [ADDR_WIDTH-1:0] in_fifo_wr_ptr;
     reg [ADDR_WIDTH-1:0] in_fifo_rd_ptr;
     reg [ADDR_WIDTH:0]   in_fifo_count;
@@ -58,7 +60,7 @@ module npu_dma (
     // ----------------------------------------------------
     // Write FIFO (NPU -> out_fifo -> Memory)
     // ----------------------------------------------------
-    reg [31:0] out_fifo [0:FIFO_DEPTH-1];
+    reg [AXI_WIDTH-1:0] out_fifo [0:FIFO_DEPTH-1];
     reg [ADDR_WIDTH-1:0] out_fifo_wr_ptr;
     reg [ADDR_WIDTH-1:0] out_fifo_rd_ptr;
     reg [ADDR_WIDTH:0]   out_fifo_count;
@@ -123,8 +125,8 @@ module npu_dma (
                 RD_WAIT: begin
                     if (rd_m_waitrequest == 1'b0) begin
                         rd_m_read       <= 1'b0;
-                        rd_rem_len      <= rd_rem_len - {22'd0, rd_m_burstcount};
-                        rd_m_address    <= rd_m_address + ({22'd0, rd_m_burstcount} << 2);
+                        rd_rem_len      <= rd_rem_len - {22'd0, rd_m_burstcount}; // Note: rd_rem_len is now in 64-bit words logic if user provides length in 64-bit unit, or addr calculation needs *8
+                        rd_m_address    <= rd_m_address + ({22'd0, rd_m_burstcount} * (AXI_WIDTH/8)); // AXI_WIDTH/8 bytes per burst word
                         rd_state        <= RD_BURST;
                     end
                 end
@@ -254,7 +256,7 @@ module npu_dma (
                         if (wr_burst_rem == 1) begin
                             wr_m_write   <= 1'b0;
                             wr_rem_len    <= wr_rem_len - {22'd0, wr_m_burstcount};
-                            wr_m_address  <= wr_m_address + ({22'd0, wr_m_burstcount} << 2);
+                            wr_m_address  <= wr_m_address + ({22'd0, wr_m_burstcount} * (AXI_WIDTH/8)); // AXI_WIDTH/8 bytes
                             wr_state      <= WR_BURST;
                         end else begin
                             wr_burst_rem <= wr_burst_rem - 1'b1;

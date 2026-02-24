@@ -1,6 +1,8 @@
 `timescale 1ns / 1ps
 
-module npu_unit (
+module npu_unit #(
+    parameter AXI_WIDTH = 64
+)(
     input  wire        clk,
     input  wire        rst_n,
 
@@ -14,7 +16,7 @@ module npu_unit (
 
     // Avalon-MM Read Master Interface (DMA)
     input  wire        dma_rd_m_waitrequest,
-    input  wire [31:0] dma_rd_m_readdata,
+    input  wire [AXI_WIDTH-1:0] dma_rd_m_readdata,
     input  wire        dma_rd_m_readdatavalid,
     output wire [9:0]  dma_rd_m_burstcount,
     output wire [31:0] dma_rd_m_address,
@@ -25,7 +27,7 @@ module npu_unit (
     output wire [9:0]  dma_wr_m_burstcount,
     output wire [31:0] dma_wr_m_address,
     output wire        dma_wr_m_write,
-    output wire [31:0] dma_wr_m_writedata
+    output wire [AXI_WIDTH-1:0] dma_wr_m_writedata
 );
 
     // Pipeline avs_readdata due to NPU CTRL having 1 cycle latency
@@ -105,12 +107,12 @@ module npu_unit (
     // ------------------------------------------------------------------
     // 2. Data Move Engine (DMA)
     // ------------------------------------------------------------------
-    wire [31:0] dma_data_to_npu;
+    wire [AXI_WIDTH-1:0] dma_data_to_npu;
     wire        dma_data_to_npu_valid;
-    wire [31:0] dma_data_from_npu;
+    wire [AXI_WIDTH-1:0] dma_data_from_npu;
     wire        dma_data_from_npu_valid;
 
-    npu_dma u_npu_dma (
+    npu_dma #(.AXI_WIDTH(AXI_WIDTH)) u_npu_dma (
         .clk                  (clk),
         .rst_n                (rst_n),
         
@@ -153,15 +155,16 @@ module npu_unit (
     // 3. NPU Sequencer
     // ------------------------------------------------------------------
     wire        core_load_weight;
-    wire [3:0]  core_valid_in;
-    wire [31:0] core_x_in;
-    wire [127:0]core_y_in;
-    wire [127:0]core_y_out;
-    wire [3:0]  core_valid_out;
+    wire [7:0]  core_valid_in;
+    wire [63:0] core_x_in;
+    wire [255:0]core_y_in;
+    wire [255:0]core_y_out;
+    wire [7:0]  core_valid_out;
 
     npu_sequencer #(
-        .N(4),
-        .DATA_WIDTH(8)
+        .N(8),
+        .DATA_WIDTH(8),
+        .AXI_WIDTH(AXI_WIDTH)
     ) u_npu_sequencer (
         .clk                  (clk),
         .rst_n                (rst_n),
@@ -190,10 +193,10 @@ module npu_unit (
     );
 
     // ------------------------------------------------------------------
-    // 4. Systolic Array 4x4 Core
+    // --- 4. Systolic Array 8x8 Core ---
     // ------------------------------------------------------------------
     systolic_core #(
-        .N(4),
+        .N(8),
         .DATA_WIDTH(8),
         .ACC_WIDTH(32)
     ) u_systolic_core (
@@ -202,7 +205,7 @@ module npu_unit (
         .load_weight  (core_load_weight),
         .valid_in     (core_valid_in),
         .x_in         (core_x_in),
-        .y_in         ({4*32{1'b0}}),
+        .y_in         ({8*32{1'b0}}),
         .y_out        (core_y_out),
         .valid_out    (core_valid_out)
     );
