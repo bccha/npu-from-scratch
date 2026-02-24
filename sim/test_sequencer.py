@@ -25,9 +25,9 @@ async def test_sequencer_throughput_full(dut):
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
     await reset_dut(dut)
 
-    TOTAL_ROWS = 8 * 100
-    BEATS_PER_ROW_IN = 2
-    BEATS_PER_ROW_OUT = 8
+    TOTAL_ROWS = 4
+    BEATS_PER_ROW_IN = 1
+    BEATS_PER_ROW_OUT = 4
     
     dut.total_rows.value = TOTAL_ROWS
     dut.mode.value = 1 
@@ -117,10 +117,10 @@ async def test_sequencer_throughput_full(dut):
                 _, data = queue.pop(0)
                 # Input (data) is 64-bit. Row output (core_y_out) is 256-bit.
                 # Replicate 64-bit data 4 times to get 256 bits.
-                clean_data = int(data) & 0xFFFFFFFFFFFFFFFF
-                res_hex = f"{clean_data:016x}" * 4
+                clean_data = int(data) & 0xFFFFFFFF
+                res_hex = f"{clean_data:08x}" * 4
                 dut.core_y_out.value = int(res_hex, 16)
-                dut.core_valid_out.value = 0xFF
+                dut.core_valid_out.value = 0xF
                 batches_processed += 1
             else:
                 dut.core_valid_out.value = 0

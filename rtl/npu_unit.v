@@ -153,14 +153,16 @@ module npu_unit (
     // 3. NPU Sequencer
     // ------------------------------------------------------------------
     wire        core_load_weight;
-    wire [7:0]  core_valid_in;
-    wire [63:0] core_x_in;
-    wire [255:0]core_y_in;
-    wire [255:0]core_y_out;
-    wire [7:0]  core_valid_out;
+    wire [3:0]  core_valid_in;
+    wire [31:0] core_x_in;
+    wire [127:0]core_y_in;
+    wire [127:0]core_y_out;
+    wire [3:0]  core_valid_out;
 
-
-    npu_sequencer u_npu_sequencer (
+    npu_sequencer #(
+        .N(4),
+        .DATA_WIDTH(8)
+    ) u_npu_sequencer (
         .clk                  (clk),
         .rst_n                (rst_n),
         .start                (seq_start),
@@ -188,15 +190,19 @@ module npu_unit (
     );
 
     // ------------------------------------------------------------------
-    // 4. Systolic Array 8x8 Core
+    // 4. Systolic Array 4x4 Core
     // ------------------------------------------------------------------
-    systolic_core u_systolic_core (
+    systolic_core #(
+        .N(4),
+        .DATA_WIDTH(8),
+        .ACC_WIDTH(32)
+    ) u_systolic_core (
         .clk          (clk),
         .rst_n        (rst_n),
         .load_weight  (core_load_weight),
         .valid_in     (core_valid_in),
         .x_in         (core_x_in),
-        .y_in         (core_y_in),
+        .y_in         ({4*32{1'b0}}),
         .y_out        (core_y_out),
         .valid_out    (core_valid_out)
     );

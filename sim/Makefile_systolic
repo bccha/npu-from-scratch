@@ -3,7 +3,7 @@ SIM ?= icarus
 TOPLEVEL_LANG ?= verilog
 
 VERILOG_SOURCES += $(PWD)/../rtl/mac_pe.v
-VERILOG_SOURCES += $(PWD)/../rtl/systolic_array_8x8.v
+VERILOG_SOURCES += $(PWD)/../rtl/systolic_array.v
 VERILOG_SOURCES += $(PWD)/../rtl/systolic_core.v
 
 TOPLEVEL = systolic_core

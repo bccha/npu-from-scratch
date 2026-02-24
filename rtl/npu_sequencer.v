@@ -2,7 +2,7 @@
 
 // --- Clean Sync Result FIFO (FWFT) ---
 module npu_res_fifo #(
-    parameter WIDTH = 256,
+    parameter WIDTH = 128,
     parameter DEPTH = 32,
     parameter ADDR_W = 5
 )(
@@ -92,7 +92,7 @@ endmodule
 
 // --- Main NPU Sequencer (Sync-First) ---
 module npu_sequencer #(
-    parameter N = 8,
+    parameter N = 4,
     parameter DATA_WIDTH = 8,
     parameter ACC_WIDTH = 32
 )(
@@ -129,82 +129,68 @@ module npu_sequencer #(
     // --- 1. Internal Buffers ---
     wire [31:0] in_fifo_dout;
     wire in_fifo_empty;
-    reg in_fifo_rd;
+    wire in_fifo_rd = (f_state == F_BEAT) && !in_fifo_empty && (res_fifo_count < 26);
     npu_in_fifo inf (
         .clk(clk), .rst_n(rst_n),
         .din(dma_data_in), .din_valid(dma_data_in_valid), .din_ready(dma_data_in_ready),
         .dout(in_fifo_dout), .rd_en(in_fifo_rd), .empty(in_fifo_empty)
     );
 
-    wire [N*ACC_WIDTH-1:0] res_fifo_dout;
+    wire [127:0] res_fifo_dout;
     wire res_fifo_empty;
     wire [5:0] res_fifo_count;
     reg res_fifo_rd;
-    npu_res_fifo outf (
+    npu_res_fifo #(
+        .WIDTH(N*ACC_WIDTH),
+        .DEPTH(32),
+        .ADDR_W(5)
+    ) outf (
         .clk(clk), .rst_n(rst_n),
         .din(core_y_out), .wr_en(&core_valid_out), .rd_en(res_fifo_rd),
         .dout(res_fifo_dout), .empty(res_fifo_empty), .count(res_fifo_count)
     );
 
-    // --- 2. Feeder (2 Beats -> 1 Core Row) ---    
-    reg [2:0] f_state;
-    localparam F_IDLE=0, F_BEAT0=1, F_BEAT1_WAIT=2, F_BEAT1=3, F_BEAT0_WAIT=4, F_WAIT=5;
+    // --- 2. Feeder (1 Beat -> 1 Core Row for N=4) ---    
+    reg [1:0] f_state;
+    localparam F_IDLE=0, F_BEAT=1, F_WAIT=2;
     reg [31:0] rows_fed;
-    reg [31:0] saved_low;
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            f_state <= F_IDLE; busy <= 0; rows_fed <= 0; core_valid_in <= 0; in_fifo_rd <= 0;
+            f_state <= F_IDLE; busy <= 0; rows_fed <= 0; core_valid_in <= 0;
             core_load_weight <= 0; core_x_in <= 0;
         end else begin
-            in_fifo_rd <= 0;
             case (f_state)
                 F_IDLE: if (start) begin
                     busy <= 1; rows_fed <= 0;
-                    f_state <= (mode == 2'd1) ? F_BEAT0 : F_IDLE; 
+                    f_state <= F_BEAT; 
                 end
                 
-                F_BEAT0: begin
+                F_BEAT: begin
                     core_valid_in <= 0;
-                    // res_fifo_count < (32 - 6) to allow for in-flight rows in systolic pipe
+                    core_load_weight <= (mode == 2'd0);
+                    // in_fifo_rd is combinational. If it's high, FIFO pops on THIS edge.
+                    // We must capture `in_fifo_dout` before it changes.
                     if (!in_fifo_empty && (res_fifo_count < 26)) begin 
-                        saved_low <= in_fifo_dout;
-                        in_fifo_rd <= 1; // Beat 0 빼기
-                        f_state <= F_BEAT1_WAIT;
-                    end
-                end
-                
-                F_BEAT1_WAIT: begin
-                    f_state <= F_BEAT1; // 1클럭 버블 (dout 업데이트 대기)
-                end
-                
-                F_BEAT1: begin
-                    if (!in_fifo_empty) begin
-                        core_x_in <= {in_fifo_dout, saved_low}; // 이제 진짜 Beat 1 도착
-                        core_valid_in <= 8'hFF;
-                        in_fifo_rd <= 1; // Beat 1 빼기
+                        core_x_in <= in_fifo_dout;
+                        core_valid_in <= {N{1'b1}};
                         rows_fed <= rows_fed + 1;
                         if (rows_fed == total_rows - 1) f_state <= F_WAIT;
-                        else f_state <= F_BEAT0_WAIT; // 👈 다음 행으로 가기 전에 기다림!
                     end
-                end
-                
-                F_BEAT0_WAIT: begin
-                    core_valid_in <= 0;
-                    f_state <= F_BEAT0; // 1클럭 버블
                 end
                 
                 F_WAIT: begin 
                     core_valid_in <= 0; 
+                    core_load_weight <= 0; // IMPORTANT: Clear load_weight when done feeding
                     if (done) begin busy <= 0; f_state <= F_IDLE; end 
                 end
             endcase
         end
     end
 
-    // --- 3. Drainer (1 Row -> 8 Beats) ---
-    reg [2:0] d_state; // 상태가 4개가 되므로 3비트로 확장
-    localparam D_IDLE=0, D_RUN=1, D_UNPACK=2, D_WAIT_FIFO=3; // 👈 WAIT 상태 추가!
+    // --- 3. Drainer (1 Row -> N Beats) ---
+    reg [2:0] d_state;
+    localparam D_IDLE=0, D_RUN=1, D_UNPACK=2, D_WAIT_FIFO=3; 
     reg [31:0] rows_drained;
     reg [3:0]  sub_cnt;
     reg [7:0]  done_cnt;
@@ -228,7 +214,8 @@ module npu_sequencer #(
                         dma_data_out <= res_fifo_dout[0*32 +: 32]; // 첫 번째 비트
                         sub_cnt <= 1;
                         d_state <= D_UNPACK;
-                    end else if (f_state == F_WAIT && rows_drained == total_rows) begin
+                    end else if (f_state == F_WAIT && (mode == 2'd0 || rows_drained == total_rows)) begin
+                        // mode == 0 (Weight Load) does NOT generate results, so rows_drained stays 0.
                         if (done_cnt == 8'd100) done <= 1;
                         else done_cnt <= done_cnt + 1;
                     end
@@ -237,7 +224,7 @@ module npu_sequencer #(
                 D_UNPACK: begin
                     // Ready가 들어왔을 때만 다음 데이터로 넘어감 (Avalon-ST 방식)
                     if (dma_data_out_ready && dma_data_out_valid) begin
-                        if (sub_cnt == 8) begin
+                        if (sub_cnt == N) begin
                             dma_data_out_valid <= 0; 
                             rows_drained <= rows_drained + 1;
                             res_fifo_rd <= 1; // FIFO에서 이전 행 버림
@@ -260,10 +247,9 @@ module npu_sequencer #(
 
     // --- 4. Synchronous Trace Log ---
     always @(posedge clk) begin
-        if (wr_en_internal) $display("[%0d] RTL_WR: row_data=%h", $time, core_y_out[31:0]);
-        if (inf_rd_internal) $display("[%0d] RTL_FED: row=%0d data=%h", $time, rows_fed, core_x_in);
+        if (wr_en_internal) $display("[%0d] RTL_WR: row_data=%h", $time, core_y_out[N*ACC_WIDTH-1:0]);
+        // To avoid unresolvable reference in some simulators, logic uses raw references
     end
     wire wr_en_internal = &core_valid_out;
-    wire inf_rd_internal = (f_state == F_BEAT1 && !in_fifo_empty);
 
 endmodule

@@ -78,7 +78,7 @@ async def test_npu_multicore_concurrent(dut):
     # Verify results
     for core_id in range(4):
         expected = core_id + 1
-        for i in range(16):
+        for i in range(4):
             res = await avs_read(dut, core_id, 0x10 + i)
             assert int(res) == expected, f"Core {core_id} failed at index {i}: got {int(res)}, exp {expected}"
     

@@ -11,11 +11,11 @@ async def reset_dut(dut):
 
 @cocotb.test()
 async def test_systolic_core_stress(dut):
-    """Stress Test: Load Weight Once, Stream 100 Matrices (800 Rows)"""
+    """Stress Test: Load Weight Once, Stream 100 Matrices (400 Rows)"""
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
     await reset_dut(dut)
 
-    N = 8
+    N = 4
     NUM_MATRICES = 100
     TOTAL_ROWS = NUM_MATRICES * N
     
@@ -26,17 +26,17 @@ async def test_systolic_core_stress(dut):
     # Expected Result: (TOTAL_ROWS, N)
     expected_batch_y = np.matmul(batch_inputs.astype(np.int32), weights.astype(np.int32))
 
-    # 2. Phase 1: Load Weights (15 cycles)
-    dut._log.info("Starting Weight Loading (15 cycles)...")
+    # 2. Phase 1: Load Weights (8 cycles)
+    # HW shifts left-to-right, so we feed Col 7 first, then Col 6... Col 0 last.
+    # systolic_core handles the diagonal skew internally.
+    dut._log.info("Starting Weight Loading (8 cycles)...")
     dut.load_weight.value = 1
-    T_stop = N + N - 1 # 15 cycles
-    for t in range(T_stop):
+    for t in range(N):
+        c = (N - 1) - t # Col 7, 6, ..., 0
         cycle_val = 0
         for r in range(N):
-            c = (T_stop - 1) - r - t
-            if 0 <= c < N:
-                w_val = int(weights[r, c]) & 0xFF
-                cycle_val |= (w_val << (r * 8))
+            w_val = int(weights[r, c]) & 0xFF
+            cycle_val |= (w_val << (r * 8))
         dut.x_in.value = cycle_val
         await RisingEdge(dut.clk)
     
@@ -59,7 +59,7 @@ async def test_systolic_core_stress(dut):
                 x_val = int(batch_inputs[t, r]) & 0xFF
                 val |= (x_val << (r * 8))
             
-            dut.valid_in.value = 0xFF 
+            dut.valid_in.value = 0xF 
             dut.x_in.value = val
             await RisingEdge(dut.clk)
         dut.valid_in.value = 0
@@ -75,7 +75,7 @@ async def test_systolic_core_stress(dut):
             await RisingEdge(dut.clk)
             val_out = dut.valid_out.value
             
-            if val_out.is_resolvable and (int(val_out) == 0xFF):
+            if val_out.is_resolvable and (int(val_out) == 0xF):
                 if first_valid_cycle == -1:
                     first_valid_cycle = cycle
                     dut._log.info(f"First valid result captured at cycle {cycle}")
@@ -113,16 +113,16 @@ async def test_systolic_core_stress(dut):
     dut._log.info(f"Stream Complete. Rows Captured: {len(results)}, Pipeline Errors: {pipeline_errors}")
     
     # 6. Detailed Visibility for USER
-    dut._log.info("--- Detailed Matrix Comparison (First 8x8 Matrix: A_0) ---")
+    dut._log.info("--- Detailed Matrix Comparison (First 4x4 Matrix: A_0) ---")
     dut._log.info(f"Weight Matrix (B):\n{weights}")
-    dut._log.info(f"First Input Matrix (A_0):\n{batch_inputs[0:8]}")
-    dut._log.info(f"Expected Result (A_0 * B):\n{expected_batch_y[0:8]}")
-    dut._log.info(f"Actual Result Captured:\n{got[0:8]}")
+    dut._log.info(f"First Input Matrix (A_0):\n{batch_inputs[0:4]}")
+    dut._log.info(f"Expected Result (A_0 * B):\n{expected_batch_y[0:4]}")
+    dut._log.info(f"Actual Result Captured:\n{got[0:4]}")
     
-    dut._log.info("--- Detailed Matrix Comparison (Last 8x8 Matrix: A_99) ---")
-    dut._log.info(f"Last Input Matrix (A_99):\n{batch_inputs[-8:]}")
-    dut._log.info(f"Expected Result (A_99 * B):\n{expected_batch_y[-8:]}")
-    dut._log.info(f"Actual Result Captured:\n{got[-8:]}")
+    dut._log.info("--- Detailed Matrix Comparison (Last 4x4 Matrix: A_99) ---")
+    dut._log.info(f"Last Input Matrix (A_99):\n{batch_inputs[-4:]}")
+    dut._log.info(f"Expected Result (A_99 * B):\n{expected_batch_y[-4:]}")
+    dut._log.info(f"Actual Result Captured:\n{got[-4:]}")
     
     if len(results) < TOTAL_ROWS:
         assert False, f"Verification Failed: Captured only {len(results)}/{TOTAL_ROWS} rows."

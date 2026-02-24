@@ -1,11 +1,11 @@
-module systolic_array_8x8 #(
-    parameter N = 8,
+module systolic_array #(
+    parameter N = 4,
     parameter DATA_WIDTH = 8,
     parameter ACC_WIDTH = 32
 )(
     input  wire clk,
     input  wire rst_n,
-    input  wire load_weight,
+    input  wire [N-1:0] load_weight,
     input  wire [N-1:0] valid_in,               // 각 행(Row)별 유효 신호
     input  wire [N*DATA_WIDTH-1:0] x_in,        // 왼쪽에서 들어오는 8개의 INT8 입력
     input  wire [N*ACC_WIDTH-1:0]  y_in,        // 위에서 내려오는 8개의 32-bit 초기 부분합
@@ -40,7 +40,7 @@ module systolic_array_8x8 #(
                 ) u_pe (
                     .clk(clk),
                     .rst_n(rst_n),
-                    .load_weight(load_weight),
+                    .load_weight(load_weight[i]),
                     .valid_in(v_wire[i][j]),
                     .x_in(x_wire[i][j]),
                     .y_in(y_wire[i][j]),

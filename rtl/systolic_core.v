@@ -1,5 +1,5 @@
 module systolic_core #(
-    parameter N = 8,
+    parameter N = 4,
     parameter DATA_WIDTH = 8,
     parameter ACC_WIDTH = 32
 )(
@@ -13,9 +13,9 @@ module systolic_core #(
     output wire [N-1:0] valid_out          // 정렬된 출력 유효 신호
 );
 
-    // Skewed 신호들을 위한 와이어
     wire [N*DATA_WIDTH-1:0] x_skewed;
     wire [N-1:0]            v_skewed;
+    wire [N-1:0]            lw_skewed;
     wire [N*ACC_WIDTH-1:0]  y_notskewed; // 어레이에서 막 나온 삐뚤빼뚤한 결과
     wire [N-1:0]            v_notskewed;
 
@@ -27,40 +27,46 @@ module systolic_core #(
             if (i == 0) begin
                 assign x_skewed[i*DATA_WIDTH +: DATA_WIDTH] = x_in[i*DATA_WIDTH +: DATA_WIDTH];
                 assign v_skewed[i] = valid_in[i];
+                assign lw_skewed[i] = load_weight; 
             end else begin
                 reg [DATA_WIDTH-1:0] x_delay [0:i-1];
-                reg [i-1:0] v_delay;
+                reg [i-1:0]          v_delay;
+                reg [i-1:0]          lw_delay;
                 integer k;
                 always @(posedge clk or negedge rst_n) begin
                     if (!rst_n) begin
                         v_delay <= 0;
+                        lw_delay <= 0;
                         for (k = 0; k < i; k = k + 1) begin
                             x_delay[k] <= {DATA_WIDTH{1'b0}};
                         end
                     end else begin
                         x_delay[0] <= x_in[i*DATA_WIDTH +: DATA_WIDTH];
                         v_delay[0] <= valid_in[i];
+                        lw_delay[0] <= load_weight;
                         for (k = 1; k < i; k = k + 1) begin
                             x_delay[k] <= x_delay[k-1];
                             v_delay[k] <= v_delay[k-1];
+                            lw_delay[k] <= lw_delay[k-1];
                         end
                     end
                 end
                 assign x_skewed[i*DATA_WIDTH +: DATA_WIDTH] = x_delay[i-1];
                 assign v_skewed[i] = v_delay[i-1];
+                assign lw_skewed[i] = lw_delay[i-1];
             end
         end
     endgenerate
 
-    // 2. 8x8 Systolic Array Instance
-    systolic_array_8x8 #(
+    // 2. 4x4 Systolic Array Instance
+    systolic_array #(
         .N(N),
         .DATA_WIDTH(DATA_WIDTH),
         .ACC_WIDTH(ACC_WIDTH)
     ) u_array (
         .clk(clk),
         .rst_n(rst_n),
-        .load_weight(load_weight),
+        .load_weight(lw_skewed),
         .valid_in(v_skewed),
         .x_in(x_skewed),
         .y_in(y_in),

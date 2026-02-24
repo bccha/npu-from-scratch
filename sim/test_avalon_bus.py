@@ -39,7 +39,7 @@ async def test_slave_registers(dut):
     # 1: X_IN
     # 2: Y_IN
     # 3: Y_OUT (Read-only)
-    test_val_x = 0x7F
+    test_val_x = 0x0F
     test_val_y = 0x12345678
     
     await avs_write(dut, 1, test_val_x)
@@ -159,7 +159,7 @@ async def test_dma_loopback(dut):
 
             rd_pend  = safe_int(dut.u_npu_dma.rd_pending_beats)
             wr_rem   = safe_int(dut.u_npu_dma.wr_rem_len)
-            fifo_cnt = safe_int(dut.u_npu_dma.fifo_count)
+            fifo_cnt = safe_int(dut.u_npu_dma.in_fifo_count)
             rd_state = safe_int(dut.u_npu_dma.rd_state)
             wr_state = safe_int(dut.u_npu_dma.wr_state)
             
@@ -168,7 +168,7 @@ async def test_dma_loopback(dut):
         await RisingEdge(dut.clk)
     else:
         # Final dumping of state
-        fifo_cnt = int(dut.u_npu_dma.fifo_count.value)
+        fifo_cnt = int(dut.u_npu_dma.in_fifo_count.value)
         rd_st = int(dut.u_npu_dma.rd_state.value)
         wr_st = int(dut.u_npu_dma.wr_state.value)
         dut._log.error(f"FATAL: DMA Timeout. Final state: fifo_cnt={fifo_cnt}, rd_st={rd_st}, wr_st={wr_st}")

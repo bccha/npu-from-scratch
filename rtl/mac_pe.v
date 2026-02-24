@@ -42,8 +42,9 @@ module mac_pe #(
         end else begin
             if (load_weight) begin
                 // [가중치 로드 모드] 
+                // Weight Stationary 구조에서 각 행의 PE들은 시프트 레지스터처럼 동작하며 가중치를 채움
                 weight_reg <= x_in;
-                x_out      <= x_in; 
+                x_out      <= x_in; // 1클럭만에 바로 오른쪽으로 넘김 (정상 시프트)
                 valid_out  <= 1'b0;
             end else begin
                 // [연산 모드]
