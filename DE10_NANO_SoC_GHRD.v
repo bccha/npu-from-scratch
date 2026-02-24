@@ -118,13 +118,13 @@ module DE10_NANO_SoC_GHRD(
   wire        npu_dma_rd_waitrequest;
   wire [63:0] npu_dma_rd_readdata;
   wire        npu_dma_rd_readdatavalid;
-  wire [9:0]  npu_dma_rd_burstcount;
+  wire [4:0]  npu_dma_rd_burstcount;
   wire [31:0] npu_dma_rd_address;
   wire        npu_dma_rd_read;
 
 // npu_unit DMA Write Master wires
   wire        npu_dma_wr_waitrequest;
-  wire [9:0]  npu_dma_wr_burstcount;
+  wire [4:0]  npu_dma_wr_burstcount;
   wire [31:0] npu_dma_wr_address;
   wire        npu_dma_wr_write;
   wire [63:0] npu_dma_wr_writedata;
@@ -243,7 +243,7 @@ soc_system u0 (
 	  .dma_read_m_address       (npu_dma_rd_address),
 	  .dma_read_m_write         (1'b0),
 	  .dma_read_m_read          (npu_dma_rd_read),
-	  .dma_read_m_byteenable    (4'hF),
+	  .dma_read_m_byteenable    (8'hFF),
 	  .dma_read_m_debugaccess   (1'b0),
 
 	  .dma_write_m_waitrequest  (npu_dma_wr_waitrequest),
@@ -254,7 +254,7 @@ soc_system u0 (
 	  .dma_write_m_address      (npu_dma_wr_address),
 	  .dma_write_m_write        (npu_dma_wr_write),
 	  .dma_write_m_read         (1'b0),
-	  .dma_write_m_byteenable   (4'hF),
+	  .dma_write_m_byteenable   (8'hFF),
 	  .dma_write_m_debugaccess  (1'b0)
  );
 

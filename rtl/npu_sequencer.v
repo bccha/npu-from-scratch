@@ -203,6 +203,10 @@ module npu_sequencer #(
     // If N=8, ACC=32, total bits=256 bits. 256/64 = 4 words
     localparam OUT_BEATS_PER_ROW = (N*ACC_WIDTH) / AXI_WIDTH; 
 
+    // Padding to avoid Synthesizer index out of bounds error for N=8, AXI=64
+    // where sub_cnt runs up to 3 but the case statement covers up to 7
+    wire [1023:0] res_fifo_dout_padded = { {(1024 - N*ACC_WIDTH){1'b0}}, res_fifo_dout };
+
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             d_state <= D_IDLE; done <= 0; rows_drained <= 0; 
@@ -219,7 +223,7 @@ module npu_sequencer #(
                 D_RUN: begin
                     if (!res_fifo_empty) begin
                         dma_data_out_valid <= 1;
-                        dma_data_out <= res_fifo_dout[0*AXI_WIDTH +: AXI_WIDTH]; // First word
+                        dma_data_out <= res_fifo_dout_padded[0*AXI_WIDTH +: AXI_WIDTH]; // First word
                         sub_cnt <= 1;
                         d_state <= D_UNPACK;
                     end else if (f_state == F_WAIT && (mode == 2'd0 || rows_drained == total_rows)) begin
@@ -230,6 +234,7 @@ module npu_sequencer #(
                 end
                 
                 D_UNPACK: begin
+                    // padding to avoid synthesis index errors on 256-bit res_fifo_dout
                     // Ready가 들어왔을 때만 다음 데이터로 넘어감 (Avalon-ST 방식)
                     if (dma_data_out_ready && dma_data_out_valid) begin
                         if (sub_cnt == OUT_BEATS_PER_ROW) begin
@@ -240,15 +245,16 @@ module npu_sequencer #(
                         end else begin
                             dma_data_out_valid <= 1; 
                             // multiplexer over parameter sub_cnt
+                            // Synthesis expects all indices to be valid, so we explicitly guard the indices
                             case (sub_cnt)
-                                3'd0: dma_data_out <= res_fifo_dout[0*AXI_WIDTH +: AXI_WIDTH];
-                                3'd1: dma_data_out <= res_fifo_dout[1*AXI_WIDTH +: AXI_WIDTH];
-                                3'd2: dma_data_out <= res_fifo_dout[2*AXI_WIDTH +: AXI_WIDTH];
-                                3'd3: dma_data_out <= res_fifo_dout[3*AXI_WIDTH +: AXI_WIDTH];
-                                3'd4: dma_data_out <= res_fifo_dout[4*AXI_WIDTH +: AXI_WIDTH];
-                                3'd5: dma_data_out <= res_fifo_dout[5*AXI_WIDTH +: AXI_WIDTH];
-                                3'd6: dma_data_out <= res_fifo_dout[6*AXI_WIDTH +: AXI_WIDTH];
-                                3'd7: dma_data_out <= res_fifo_dout[7*AXI_WIDTH +: AXI_WIDTH];
+                                4'd0: dma_data_out <= res_fifo_dout_padded[0*AXI_WIDTH +: AXI_WIDTH];
+                                4'd1: dma_data_out <= res_fifo_dout_padded[1*AXI_WIDTH +: AXI_WIDTH];
+                                4'd2: dma_data_out <= res_fifo_dout_padded[2*AXI_WIDTH +: AXI_WIDTH];
+                                4'd3: dma_data_out <= res_fifo_dout_padded[3*AXI_WIDTH +: AXI_WIDTH];
+                                4'd4: dma_data_out <= res_fifo_dout_padded[4*AXI_WIDTH +: AXI_WIDTH];
+                                4'd5: dma_data_out <= res_fifo_dout_padded[5*AXI_WIDTH +: AXI_WIDTH];
+                                4'd6: dma_data_out <= res_fifo_dout_padded[6*AXI_WIDTH +: AXI_WIDTH];
+                                4'd7: dma_data_out <= res_fifo_dout_padded[7*AXI_WIDTH +: AXI_WIDTH];
                                 default: dma_data_out <= 0;
                             endcase
                             sub_cnt <= sub_cnt + 1;

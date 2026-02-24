@@ -24,13 +24,13 @@ module npu_dma #(
     input  wire        rd_m_waitrequest,
     input  wire [AXI_WIDTH-1:0] rd_m_readdata,
     input  wire        rd_m_readdatavalid,
-    output reg  [9:0]  rd_m_burstcount,
+    output reg  [4:0]  rd_m_burstcount,
     output reg  [31:0] rd_m_address,
     output reg         rd_m_read,
 
     // Avalon-MM Write Master Interface
     input  wire        wr_m_waitrequest,
-    output reg  [9:0]  wr_m_burstcount,
+    output reg  [4:0]  wr_m_burstcount,
     output reg  [31:0] wr_m_address,
     output reg         wr_m_write,
     output wire [AXI_WIDTH-1:0] wr_m_writedata,
@@ -47,8 +47,8 @@ module npu_dma #(
     // ----------------------------------------------------
     // Read FIFO (Memory -> in_fifo -> NPU)
     // ----------------------------------------------------
-    localparam FIFO_DEPTH = 512;
-    localparam ADDR_WIDTH = 9;
+    localparam FIFO_DEPTH = 32;
+    localparam ADDR_WIDTH = 5;
     reg [AXI_WIDTH-1:0] in_fifo [0:FIFO_DEPTH-1];
     reg [ADDR_WIDTH-1:0] in_fifo_wr_ptr;
     reg [ADDR_WIDTH-1:0] in_fifo_rd_ptr;
@@ -78,19 +78,19 @@ module npu_dma #(
     localparam RD_WAIT   = 2'd2;
     reg [1:0] rd_state;
     reg [31:0] rd_rem_len;
-    reg [9:0]  current_rd_burst;
+    reg [4:0]  current_rd_burst;
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             rd_state        <= RD_IDLE;
             rd_m_read       <= 1'b0;
             rd_m_address    <= 32'd0;
-            rd_m_burstcount <= 10'd0;
+            rd_m_burstcount <= 5'd0;
             rd_busy         <= 1'b0;
             rd_done         <= 1'b0;
             rd_rem_len      <= 32'd0;
             rd_pending_beats <= 32'd0;
-            current_rd_burst <= 10'd0;
+            current_rd_burst <= 5'd0;
         end else begin
             case (rd_state)
                 RD_IDLE: begin
@@ -114,9 +114,9 @@ module npu_dma #(
                     end else if (rd_rem_len > 0) begin
                         // Decide burst size (max 16)
                         if (in_fifo_free_space >= 16 || (rd_rem_len < 16 && in_fifo_free_space >= rd_rem_len[ADDR_WIDTH:0])) begin
-                            current_rd_burst <= (rd_rem_len >= 16) ? 10'd16 : rd_rem_len[9:0];
+                            current_rd_burst <= (rd_rem_len >= 16) ? 5'd16 : rd_rem_len[4:0];
                             rd_m_read        <= 1'b1;
-                            rd_m_burstcount  <= (rd_rem_len >= 16) ? 10'd16 : rd_rem_len[9:0];
+                            rd_m_burstcount  <= (rd_rem_len >= 16) ? 5'd16 : rd_rem_len[4:0];
                             rd_state         <= RD_WAIT;
                         end
                     end
@@ -208,20 +208,20 @@ module npu_dma #(
     localparam WR_DATA   = 2'd2;
     reg [1:0] wr_state;
     reg [31:0] wr_rem_len;
-    reg [9:0]  wr_burst_rem;
-    reg [9:0]  wr_current_burst;
+    reg [4:0]  wr_burst_rem;
+    reg [4:0]  wr_current_burst;
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             wr_state        <= WR_IDLE;
             wr_m_write      <= 1'b0;
             wr_m_address    <= 32'd0;
-            wr_m_burstcount <= 10'd0;
+            wr_m_burstcount <= 5'd0;
             wr_busy         <= 1'b0;
             wr_done         <= 1'b1; // Default to idle-done
             wr_rem_len      <= 32'd0;
-            wr_burst_rem    <= 10'd0;
-            wr_current_burst <= 10'd0;
+            wr_burst_rem    <= 5'd0;
+            wr_current_burst <= 5'd0;
         end else begin
             case (wr_state)
                 WR_IDLE: begin
@@ -242,7 +242,7 @@ module npu_dma #(
                     end else begin
                         // Decide burst size (max 16)
                         if (out_fifo_count > 0 && (out_fifo_count >= 16 || (wr_rem_len < 16 && out_fifo_count >= wr_rem_len[ADDR_WIDTH:0]))) begin
-                            wr_current_burst = (wr_rem_len >= 16 && out_fifo_count >= 16) ? 10'd16 : wr_rem_len[9:0];
+                            wr_current_burst = (wr_rem_len >= 16 && out_fifo_count >= 16) ? 5'd16 : wr_rem_len[4:0];
                             wr_m_write      <= 1'b1;
                             wr_m_burstcount <= wr_current_burst;
                             wr_burst_rem    <= wr_current_burst;

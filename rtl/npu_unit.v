@@ -18,13 +18,13 @@ module npu_unit #(
     input  wire        dma_rd_m_waitrequest,
     input  wire [AXI_WIDTH-1:0] dma_rd_m_readdata,
     input  wire        dma_rd_m_readdatavalid,
-    output wire [9:0]  dma_rd_m_burstcount,
+    output wire [4:0]  dma_rd_m_burstcount,
     output wire [31:0] dma_rd_m_address,
     output wire        dma_rd_m_read,
 
     // Avalon-MM Write Master Interface (DMA)
     input  wire        dma_wr_m_waitrequest,
-    output wire [9:0]  dma_wr_m_burstcount,
+    output wire [4:0]  dma_wr_m_burstcount,
     output wire [31:0] dma_wr_m_address,
     output wire        dma_wr_m_write,
     output wire [AXI_WIDTH-1:0] dma_wr_m_writedata
