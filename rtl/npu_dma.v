@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 module npu_dma #(
-    parameter AXI_WIDTH = 64
+    parameter AXI_WIDTH = 32
 )(
     input  wire        clk,
     input  wire        rst_n,

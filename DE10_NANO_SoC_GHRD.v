@@ -116,7 +116,7 @@ module DE10_NANO_SoC_GHRD(
 
 // npu_unit DMA Read Master wires
   wire        npu_dma_rd_waitrequest;
-  wire [63:0] npu_dma_rd_readdata;
+  wire [31:0] npu_dma_rd_readdata;
   wire        npu_dma_rd_readdatavalid;
   wire [4:0]  npu_dma_rd_burstcount;
   wire [31:0] npu_dma_rd_address;
@@ -127,7 +127,7 @@ module DE10_NANO_SoC_GHRD(
   wire [4:0]  npu_dma_wr_burstcount;
   wire [31:0] npu_dma_wr_address;
   wire        npu_dma_wr_write;
-  wire [63:0] npu_dma_wr_writedata;
+  wire [31:0] npu_dma_wr_writedata;
 
 
 

@@ -93,10 +93,10 @@ endmodule
 
 // --- Main NPU Sequencer (Sync-First) ---
 module npu_sequencer #(
-    parameter N = 8,
+    parameter N = 4,
     parameter DATA_WIDTH = 8,
     parameter ACC_WIDTH = 32,
-    parameter AXI_WIDTH = 64
+    parameter AXI_WIDTH = 32
 )(
     input  wire clk,
     input  wire rst_n,
@@ -222,31 +222,29 @@ module npu_sequencer #(
                 
                 D_RUN: begin
                     if (!res_fifo_empty) begin
+                        sub_cnt <= 0;
                         dma_data_out_valid <= 1;
-                        dma_data_out <= res_fifo_dout_padded[0*AXI_WIDTH +: AXI_WIDTH]; // First word
-                        sub_cnt <= 1;
+                        dma_data_out <= res_fifo_dout_padded[0*AXI_WIDTH +: AXI_WIDTH];
                         d_state <= D_UNPACK;
                     end else if (f_state == F_WAIT && (mode == 2'd0 || rows_drained == total_rows)) begin
-                        // mode == 0 (Weight Load) does NOT generate results, so rows_drained stays 0.
                         if (done_cnt == 8'd100) done <= 1;
                         else done_cnt <= done_cnt + 1;
                     end
                 end
                 
                 D_UNPACK: begin
-                    // padding to avoid synthesis index errors on 256-bit res_fifo_dout
-                    // Ready가 들어왔을 때만 다음 데이터로 넘어감 (Avalon-ST 방식)
+                    // Data (dma_data_out) is ALREADY presented for sub_cnt
                     if (dma_data_out_ready && dma_data_out_valid) begin
-                        if (sub_cnt == OUT_BEATS_PER_ROW) begin
-                            dma_data_out_valid <= 0; 
+                        if (sub_cnt == OUT_BEATS_PER_ROW - 1) begin
+                            // Last beat of the row accepted
+                            dma_data_out_valid <= 0;
                             rows_drained <= rows_drained + 1;
-                            res_fifo_rd <= 1; // FIFO에서 이전 행 버림
+                            res_fifo_rd <= 1;
                             d_state <= D_WAIT_FIFO;
                         end else begin
-                            dma_data_out_valid <= 1; 
-                            // multiplexer over parameter sub_cnt
-                            // Synthesis expects all indices to be valid, so we explicitly guard the indices
-                            case (sub_cnt)
+                            // Move to next beat
+                            sub_cnt <= sub_cnt + 1;
+                            case (sub_cnt + 4'd1)
                                 4'd0: dma_data_out <= res_fifo_dout_padded[0*AXI_WIDTH +: AXI_WIDTH];
                                 4'd1: dma_data_out <= res_fifo_dout_padded[1*AXI_WIDTH +: AXI_WIDTH];
                                 4'd2: dma_data_out <= res_fifo_dout_padded[2*AXI_WIDTH +: AXI_WIDTH];
@@ -257,13 +255,14 @@ module npu_sequencer #(
                                 4'd7: dma_data_out <= res_fifo_dout_padded[7*AXI_WIDTH +: AXI_WIDTH];
                                 default: dma_data_out <= 0;
                             endcase
-                            sub_cnt <= sub_cnt + 1;
+                            dma_data_out_valid <= 1;
                         end
                     end
                 end
                 
                 D_WAIT_FIFO: begin
-                    d_state <= D_RUN; // 1클럭 버블 (FIFO dout 갱신 대기)
+                    dma_data_out_valid <= 0;
+                    d_state <= D_RUN; // Bubble for FIFO dout update
                 end
             endcase
             if (done) d_state <= D_IDLE;

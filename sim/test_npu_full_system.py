@@ -85,17 +85,17 @@ async def test_dma_burst_read_write(dut):
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
     await reset_dut(dut)
 
-    TOTAL_ROWS = 8
+    TOTAL_ROWS = 4
     BEATS_IN = 1
     BEATS_OUT = 4
-    RD_LEN = TOTAL_ROWS * BEATS_IN # 8 words (64-bit)
-    WR_LEN = TOTAL_ROWS * BEATS_OUT # 32 words (64-bit)
+    RD_LEN = TOTAL_ROWS * BEATS_IN # 4 words (32-bit)
+    WR_LEN = TOTAL_ROWS * BEATS_OUT # 16 words (32-bit)
 
-    dut._log.info("Generating Random 8x8 Matrices via Numpy...")
+    dut._log.info("Generating Random 4x4 Matrices via Numpy...")
     # Generate random 8-bit signed integers (-128 to 127)
     # Let's define the weights as they physically exist in the MAC array (Row i, Col j)
-    weights = np.random.randint(-128, 127, size=(8, 8), dtype=np.int8)
-    inputs  = np.random.randint(-128, 127, size=(8, 8), dtype=np.int8)
+    weights = np.random.randint(-128, 127, size=(4, 4), dtype=np.int8)
+    inputs  = np.random.randint(-128, 127, size=(4, 4), dtype=np.int8)
     
     # Calculate Ground Truth
     expected_output = np.dot(inputs.astype(np.int32), weights.astype(np.int32))
@@ -104,26 +104,26 @@ async def test_dma_burst_read_write(dut):
     rd_memory = []
     wr_memory = []
 
-    # Pack 8x8 Inputs into DMA 64-bit beats (1 beat per row sequence)
-    # HW expects Column vectors per cycle: core_x_in = [Row7, Row6, ..., Row0]
+    # Pack 4x4 Inputs into DMA 32-bit beats (1 beat per row sequence)
+    # HW expects Column vectors per cycle: core_x_in = [Row3, Row2, Row1, Row0]
     def pack_matrix_cols(mat, reverse=False):
         mem = []
-        cols = range(8)
+        cols = range(4)
         if reverse:
             cols = reversed(cols)
             
         for col in cols:
             beat = 0
-            for i in range(8):
+            for i in range(4):
                 beat |= (int(mat[i, col]) & 0xFF) << (i * 8)
             mem.append(beat)
         return mem
 
     def pack_matrix_rows(mat):
         mem = []
-        for row in range(8):
+        for row in range(4):
             beat = 0
-            for i in range(8):
+            for i in range(4):
                 beat |= (int(mat[row, i]) & 0xFF) << (i * 8)
             mem.append(beat)
         return mem
@@ -152,28 +152,28 @@ async def test_dma_burst_read_write(dut):
                 dut.dma_rd_m_waitrequest.value = 0
                 await RisingEdge(dut.clk)
 
-    # Avalon Write Slave Task
+    # Avalon Write Slave Task with BACKPRESSURE
     async def avalon_wr_slave():
+        import random
         while True:
             await FallingEdge(dut.clk)
+            # Random waitrequest (50% chance)
+            if random.random() < 0.3:
+                dut.dma_wr_m_waitrequest.value = 1
+                await RisingEdge(dut.clk)
+                continue
+            
+            dut.dma_wr_m_waitrequest.value = 0
             if dut.dma_wr_m_write.value == 1:
-                dut.dma_wr_m_waitrequest.value = 0
                 await Timer(1, "ns")
                 val = int(dut.dma_wr_m_writedata.value)
-                # Received a 64-bit value, which comprises 2 32-bit output elements
-                # Let's split it into 2 32-bit elements to keep `wr_memory` elements 32-bits (which match the C code's integer expectation)
-                val0 = val & 0xFFFFFFFF
-                val1 = (val >> 32) & 0xFFFFFFFF
                 
                 # Convert 32-bit unsigned to signed
-                if val0 & 0x80000000:
-                    val0 -= 0x100000000
-                if val1 & 0x80000000:
-                    val1 -= 0x100000000
-                wr_memory.extend([val0, val1])
+                if val & 0x80000000:
+                    val -= 0x100000000
+                wr_memory.append(val)
                 await RisingEdge(dut.clk)
             else:
-                dut.dma_wr_m_waitrequest.value = 0
                 await RisingEdge(dut.clk)
 
     cocotb.start_soon(avalon_rd_slave())
@@ -197,9 +197,9 @@ async def test_dma_burst_read_write(dut):
         await Timer(100, "ns")
 
     dut._log.info("Dumping Hardware MAC PE Weight Registers after Phase 1:")
-    for r in range(8):
+    for r in range(4):
         row_weights = []
-        for c in range(8):
+        for c in range(4):
             # Access the internal weight_reg of each PE
             pe = getattr(dut.u_systolic_core.u_array, f"row[{r}]").col[c].u_pe
             w_val = int(pe.weight_reg.value)
@@ -208,7 +208,7 @@ async def test_dma_burst_read_write(dut):
         dut._log.info(f"HW Row {r} Weights: {row_weights}")
     
     dut._log.info(f"NP Reference Weights (weights matrix):")
-    for r in range(8):
+    for r in range(4):
         dut._log.info(f"NP Row {r} Weights: {weights[r].tolist()}")
 
     # --- PHASE 2: EXECUTION ---
@@ -224,19 +224,19 @@ async def test_dma_burst_read_write(dut):
 
     # Wait for DMA Write to complete
     timeout = 0
-    while len(wr_memory) < 64:
+    while len(wr_memory) < 16:
         await RisingEdge(dut.clk)
         timeout += 1
         if timeout > 200000:
-            assert False, f"Timeout! Captured {len(wr_memory)}/64 outputs. Last timeout was {timeout}"
+            assert False, f"Timeout! Captured {len(wr_memory)}/16 outputs. Last timeout was {timeout}"
 
     dut._log.info(f"Captured {len(wr_memory)} output elements. Verifying with Numpy...")
     
     # Verify outputs
     matched = True
-    for row in range(8):
-        for col in range(8):
-            hw_val = wr_memory[row * 8 + col]
+    for row in range(4):
+        for col in range(4):
+            hw_val = wr_memory[row * 4 + col]
             # The NPU computes straightforward matrix multiplication X * W
             np_val = expected_output[row, col]
             # Actually, let's just log mismatched values to see the pattern

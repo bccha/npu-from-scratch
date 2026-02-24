@@ -115,12 +115,12 @@ async def test_sequencer_throughput_full(dut):
             # Output if ready
             if queue and queue[0][0] == 0:
                 _, data = queue.pop(0)
-                # Input (data) is 64-bit. Row output (core_y_out) is 256-bit.
-                # Replicate 64-bit data 4 times to get 256 bits.
-                clean_data = int(data) & 0xFFFFFFFFFFFFFFFF
-                res_hex = f"{clean_data:016x}" * 4
+                # Input (data) is 32-bit. Row output (core_y_out) is 128-bit.
+                # Replicate 32-bit data 4 times to get 128 bits.
+                clean_data = int(data) & 0xFFFFFFFF
+                res_hex = f"{clean_data:08x}" * 4
                 dut.core_y_out.value = int(res_hex, 16)
-                dut.core_valid_out.value = 0xFF
+                dut.core_valid_out.value = 0xF
                 batches_processed += 1
             else:
                 dut.core_valid_out.value = 0

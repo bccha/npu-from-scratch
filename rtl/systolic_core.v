@@ -1,5 +1,5 @@
 module systolic_core #(
-    parameter N = 8,
+    parameter N = 4,
     parameter DATA_WIDTH = 8,
     parameter ACC_WIDTH = 32
 )(

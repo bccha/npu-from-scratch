@@ -20,7 +20,7 @@
 #define REG_PE_Y_OUT 11
 
 void verify_full_system() {
-  printf("\nStarting Full System Matrix Validation (8x8)...\n");
+  printf("\nStarting Full System Matrix Validation (4x4)...\n");
 
   IOWR_32DIRECT(ADDRESS_SPAN_EXTENDER_0_CNTL_BASE, 0, 0x20000000);
   alt_u32 physical_base = 0x20000000;
@@ -28,70 +28,46 @@ void verify_full_system() {
   alt_u32 inputs_addr = DDR3_WINDOW_BASE + 0x1000;
   alt_u32 dst_addr = DDR3_WINDOW_BASE + 0x2000;
 
-  int total_rows = 8;
-  int rd_len = total_rows * 1; // 8 64-bit beats (1 per row)
-  int wr_len = total_rows * 4; // 32 64-bit beats (4 per row: 8*32 / 64)
+  int total_rows = 4;
+  int rd_len = total_rows * 1; // 4 32-bit beats (1 per row)
+  int wr_len = total_rows * 4; // 16 32-bit beats (4 per row: 4*32 / 32)
 
-  // C Test: Weights Matrix = Identity Matrix (Diagonal 1s)
-  // To get identity matrix out of DMA 64-bit load (which loads 1 column per
-  // beat) Beat 0: Col 7 -> [0,0,0,0,0,0,0,1] Beat 1: Col 6 -> [0,0,0,0,0,0,1,0]
-  // ...
-  // Since 64-bit is little endian, Col 7 beat is: 0x0000000000000001 (element 7
-  // is msb)
-  alt_u32 weights_32[16];
-  for (int i = 0; i < 16; i++)
-    weights_32[i] = 0;
+  // C Test: Weights Matrix = Identity Matrix (Diagonal 1s) for 4x4
+  // 32-bit beat = [Col3, Col2, Col1, Col0] (8-bit each)
+  alt_u32 weights_32[4];
+  weights_32[0] = 0x01000000; // Col 3 (Row 0)
+  weights_32[1] = 0x00010000; // Col 2
+  weights_32[2] = 0x00000100; // Col 1
+  weights_32[3] = 0x00000001; // Col 0
 
-  // Provide Identity Matrix appropriately packed for the specific DMA layout
-  weights_32[0] = 0x00000001; // Col 7 (Lower 32)
-  weights_32[1] = 0x00000000;
-  weights_32[2] = 0x00000100; // Col 6
-  weights_32[3] = 0x00000000;
-  weights_32[4] = 0x00010000; // Col 5
-  weights_32[5] = 0x00000000;
-  weights_32[6] = 0x01000000; // Col 4
-  weights_32[7] = 0x00000000;
-  weights_32[8] = 0x00000000; // Col 3
-  weights_32[9] = 0x00000001;
-  weights_32[10] = 0x00000000; // Col 2
-  weights_32[11] = 0x00000100;
-  weights_32[12] = 0x00000000; // Col 1
-  weights_32[13] = 0x00010000;
-  weights_32[14] = 0x00000000; // Col 0
-  weights_32[15] = 0x01000000;
-
-  // Input Matrix = 1, 2, 3... 64
-  alt_u32 inputs_32[16] = {
-      0x04030201, 0x08070605, // row 0: 1-8
-      0x0C0B0A09, 0x100F0E0D, // row 1: 9-16
-      0x14131211, 0x18171615, // row 2: 17-24
-      0x1C1B1A19, 0x201F1E1D, // row 3: 25-32
-      0x24232221, 0x28272625, // row 4: 33-40
-      0x2C2B2A29, 0x302F2E2D, // row 5: 41-48
-      0x34333231, 0x38373635, // row 6: 49-56
-      0x3C3B3A39, 0x403F3E3D  // row 7: 57-64
+  // Input Matrix = 1, 2, 3... 16
+  alt_u32 inputs_32[4] = {
+      0x04030201, // row 0: 1-4
+      0x08070605, // row 1: 5-8
+      0x0C0B0A09, // row 2: 9-12
+      0x100F0E0D  // row 3: 13-16
   };
 
   printf("Preparing Matrix Row Data into DDR3...\n");
-  for (int i = 0; i < 16; i++) {
+  for (int i = 0; i < 4; i++) {
     IOWR_32DIRECT(weights_addr, i * 4, weights_32[i]);
     IOWR_32DIRECT(inputs_addr, i * 4, inputs_32[i]);
   }
 
   printf("Clearing Destination Area...\n");
-  for (int i = 0; i < 64; i++) {
+  for (int i = 0; i < 16; i++) {
     IOWR_32DIRECT(dst_addr, i * 4, 0);
   }
 
   printf("Phase 1: Loading Weights...\n");
-  IOWR(NPU_CTRL_BASE, REG_SEQ_ROWS, total_rows);
-  IOWR(NPU_CTRL_BASE, REG_DMA_RD_ADDR, physical_base);
-  IOWR(NPU_CTRL_BASE, REG_DMA_RD_LEN, rd_len);
+  IOWR(NPU_CTRL_BASE, REG_SEQ_ROWS, (alt_u32)total_rows);
+  IOWR(NPU_CTRL_BASE, REG_DMA_RD_ADDR, (alt_u32)physical_base);
+  IOWR(NPU_CTRL_BASE, REG_DMA_RD_LEN, (alt_u32)rd_len);
 
   // REG_CTRL: Mode=0 (Load Weight), Start=1 -> 0x1
-  IOWR(NPU_CTRL_BASE, REG_CTRL, 0x1);
+  IOWR(NPU_CTRL_BASE, REG_CTRL, 0x00000001);
   // REG_DMA_WR_CTRL: Start RD=Bit 16
-  IOWR(NPU_CTRL_BASE, REG_DMA_WR_CTRL, (1 << 16));
+  IOWR(NPU_CTRL_BASE, REG_DMA_WR_CTRL, 0x00010000);
 
   int timeout = 0;
   while (1) {
@@ -132,23 +108,23 @@ void verify_full_system() {
 
   int errors = 0;
 
-  printf("Dumping Full 8x8 Output Matrix:\n");
-  for (int r = 0; r < 8; r++) {
+  printf("Dumping Full 4x4 Output Matrix:\n");
+  for (int r = 0; r < 4; r++) {
     printf("Row %d: [", r);
-    for (int c = 0; c < 8; c++) {
-      alt_u32 hw_val = IORD_32DIRECT(dst_addr, (r * 8 + c) * 4);
+    for (int c = 0; c < 4; c++) {
+      alt_u32 hw_val = IORD_32DIRECT(dst_addr, (r * 4 + c) * 4);
       printf("%3d", (int)hw_val);
-      if (c < 7)
+      if (c < 3)
         printf(", ");
     }
     printf("]\n");
   }
 
   printf("\nVerifying Output (Expecting Y=X if Weights=Identity)...\n");
-  for (int r = 0; r < 8; r++) {
-    for (int c = 0; c < 8; c++) {
-      alt_u32 hw_val = IORD_32DIRECT(dst_addr, (r * 8 + c) * 4);
-      alt_u32 np_val = c + 1; // 1 to 8
+  for (int r = 0; r < 4; r++) {
+    for (int c = 0; c < 4; c++) {
+      alt_u32 hw_val = IORD_32DIRECT(dst_addr, (r * 4 + c) * 4);
+      alt_u32 np_val = r * 4 + c + 1; // 1 to 16
       if (hw_val != np_val) {
         printf("Mismatch at [%d, %d]: HW=%d, Expected=%d\n", r, c, (int)hw_val,
                (int)np_val);
@@ -158,7 +134,7 @@ void verify_full_system() {
   }
 
   if (errors == 0) {
-    printf("\nFull System Validation: PASS! All %d elements matched.\n", 64);
+    printf("\nFull System Validation: PASS! All %d elements matched.\n", 16);
   } else {
     printf("\nFull System Validation: FAIL (%d errors)\n", errors);
   }
@@ -190,7 +166,7 @@ int main() {
     printf("\nNPU System Verification (Full Framework)\n");
     printf("----------------------------------------------\n");
     printf("1. Verify MAC PE\n");
-    printf("3. Verify Full System Data path\n");
+    printf("2. Verify Full System Data path\n");
     printf("q. Quit\n");
     printf("Choose: ");
 

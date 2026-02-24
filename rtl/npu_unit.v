@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 module npu_unit #(
-    parameter AXI_WIDTH = 64
+    parameter AXI_WIDTH = 32
 )(
     input  wire        clk,
     input  wire        rst_n,
@@ -162,7 +162,7 @@ module npu_unit #(
     wire [7:0]  core_valid_out;
 
     npu_sequencer #(
-        .N(8),
+        .N(4),
         .DATA_WIDTH(8),
         .AXI_WIDTH(AXI_WIDTH)
     ) u_npu_sequencer (
@@ -196,7 +196,7 @@ module npu_unit #(
     // --- 4. Systolic Array 8x8 Core ---
     // ------------------------------------------------------------------
     systolic_core #(
-        .N(8),
+        .N(4),
         .DATA_WIDTH(8),
         .ACC_WIDTH(32)
     ) u_systolic_core (
