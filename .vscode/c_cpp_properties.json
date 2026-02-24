@@ -1,0 +1,21 @@
+{
+    "configurations": [
+        {
+            "name": "Nios II Workspace",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/software/npu_bsp/HAL/inc",
+                "${workspaceFolder}/software/npu_bsp",
+                "${workspaceFolder}/software/npu_bsp/drivers/inc"
+            ],
+            "defines": [
+                "ALT_ENHANCED_INTERRUPT_API_PRESENT"
+            ],
+            "compilerPath": "nios2-elf-gcc",
+            "cStandard": "gnu17",
+            "cppStandard": "gnu++17",
+            "intelliSenseMode": "gcc-x64"
+        }
+    ],
+    "version": 4
+}

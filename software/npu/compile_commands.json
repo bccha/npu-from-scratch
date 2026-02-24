@@ -1,0 +1,12 @@
+[
+    {
+        "directory": "c:/Workspace/quartus/npu/software/npu",
+        "command": "gcc -I../npu_bsp/HAL/inc -I../npu_bsp -I../npu_bsp/drivers/inc -DALT_ENHANCED_INTERRUPT_API_PRESENT -D__builtin_stwio(a,b)=((*(volatile int*)(a))=(b)) -D__builtin_sthio(a,b)=((*(volatile short*)(a))=(b)) -D__builtin_stbio(a,b)=((*(volatile char*)(a))=(b)) -D__builtin_ldwio(a)=(*(volatile int*)(a)) -D__builtin_ldhuio(a)=(*(volatile unsigned short*)(a)) -D__builtin_ldbuio(a)=(*(volatile unsigned char*)(a)) -x c -std=gnu17 -c main.c",
+        "file": "main.c"
+    },
+    {
+        "directory": "c:/Workspace/quartus/npu/software/npu",
+        "command": "gcc -I../npu_bsp/HAL/inc -I../npu_bsp -I../npu_bsp/drivers/inc -DALT_ENHANCED_INTERRUPT_API_PRESENT -D__builtin_stwio(a,b)=((*(volatile int*)(a))=(b)) -D__builtin_sthio(a,b)=((*(volatile short*)(a))=(b)) -D__builtin_stbio(a,b)=((*(volatile char*)(a))=(b)) -D__builtin_ldwio(a)=(*(volatile int*)(a)) -D__builtin_ldhuio(a)=(*(volatile unsigned short*)(a)) -D__builtin_ldbuio(a)=(*(volatile unsigned char*)(a)) -x c -std=gnu17 -c common.c",
+        "file": "common.c"
+    }
+]

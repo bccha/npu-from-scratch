@@ -101,7 +101,34 @@ module DE10_NANO_SoC_GHRD(
 // connection of internal logics
   assign LED[7:1] = fpga_led_internal;
   assign fpga_clk_50=FPGA_CLK1_50;
-  assign stm_hw_events    = {{15{1'b0}}, SW, fpga_led_internal, fpga_debounced_buttons};
+// npu_unit Avalon-MM wires
+  wire [7:0]  npu_avs_full_address;
+  wire [3:0]  npu_avs_address;
+  assign npu_avs_address = npu_avs_full_address[3:0];
+  wire        npu_avs_write;
+  wire [31:0] npu_avs_writedata;
+  wire        npu_avs_read;
+  wire [31:0] npu_avs_readdata;
+
+// Identifiers/Assignments for Qsys connection
+  wire        npu_unit_waitrequest;
+  wire        npu_unit_readdatavalid;
+
+// npu_unit DMA Read Master wires
+  wire        npu_dma_rd_waitrequest;
+  wire [31:0] npu_dma_rd_readdata;
+  wire        npu_dma_rd_readdatavalid;
+  wire [9:0]  npu_dma_rd_burstcount;
+  wire [31:0] npu_dma_rd_address;
+  wire        npu_dma_rd_read;
+
+// npu_unit DMA Write Master wires
+  wire        npu_dma_wr_waitrequest;
+  wire [9:0]  npu_dma_wr_burstcount;
+  wire [31:0] npu_dma_wr_address;
+  wire        npu_dma_wr_write;
+  wire [31:0] npu_dma_wr_writedata;
+
 
 
 
@@ -190,12 +217,74 @@ soc_system u0 (
 	  .dipsw_pio_external_connection_export  ( SW	),  //  dipsw_pio_external_connection.export
 	  .button_pio_external_connection_export ( fpga_debounced_buttons	), // button_pio_external_connection.export
 	  .hps_0_h2f_reset_reset_n               ( hps_fpga_reset_n ),                //                hps_0_h2f_reset.reset_n
-	  .hps_0_f2h_cold_reset_req_reset_n      (~hps_cold_reset ),      //       hps_0_f2h_cold_reset_req.reset_n
+	     .hps_0_f2h_cold_reset_req_reset_n      (~hps_cold_reset ),      //       hps_0_f2h_cold_reset_req.reset_n
      .hps_0_f2h_debug_reset_req_reset_n     (~hps_debug_reset ),     //      hps_0_f2h_debug_reset_req.reset_n
      .hps_0_f2h_stm_hw_events_stm_hwevents  (stm_hw_events ),  //        hps_0_f2h_stm_hw_events.stm_hwevents
      .hps_0_f2h_warm_reset_req_reset_n      (~hps_warm_reset ),      //       hps_0_f2h_warm_reset_req.reset_n
 
+		  // NPU Ctrl Avalon-MM
+		  .npu_ctrl_waitrequest   (npu_unit_waitrequest),
+		  .npu_ctrl_readdata      (npu_avs_readdata),
+		  .npu_ctrl_readdatavalid (npu_unit_readdatavalid), 
+		  .npu_ctrl_burstcount    (),
+		  .npu_ctrl_writedata     (npu_avs_writedata),
+		  .npu_ctrl_address       (npu_avs_full_address), 
+		  .npu_ctrl_write         (npu_avs_write),
+		  .npu_ctrl_read          (npu_avs_read),
+		  .npu_ctrl_byteenable    (),
+		  .npu_ctrl_debugaccess   (),
+
+	  // NPU DMA Masters -> soc_system Bridge
+	  .dma_read_m_waitrequest   (npu_dma_rd_waitrequest),
+	  .dma_read_m_readdata      (npu_dma_rd_readdata),
+	  .dma_read_m_readdatavalid (npu_dma_rd_readdatavalid),
+	  .dma_read_m_burstcount    (npu_dma_rd_burstcount),
+	  .dma_read_m_writedata     (),
+	  .dma_read_m_address       (npu_dma_rd_address),
+	  .dma_read_m_write         (1'b0),
+	  .dma_read_m_read          (npu_dma_rd_read),
+	  .dma_read_m_byteenable    (4'hF),
+	  .dma_read_m_debugaccess   (1'b0),
+
+	  .dma_write_m_waitrequest  (npu_dma_wr_waitrequest),
+	  .dma_write_m_readdata     (),
+	  .dma_write_m_readdatavalid(),
+	  .dma_write_m_burstcount   (npu_dma_wr_burstcount),
+	  .dma_write_m_writedata    (npu_dma_wr_writedata),
+	  .dma_write_m_address      (npu_dma_wr_address),
+	  .dma_write_m_write        (npu_dma_wr_write),
+	  .dma_write_m_read         (1'b0),
+	  .dma_write_m_byteenable   (4'hF),
+	  .dma_write_m_debugaccess  (1'b0)
  );
+
+// NPU Unit (Encapsulates Controller + PE)
+npu_unit u_npu_unit (
+	.clk          (FPGA_CLK1_50),
+	.rst_n        (hps_fpga_reset_n),
+	// Avalon-MM Slave
+	.avs_address  (npu_avs_address),
+	.avs_write    (npu_avs_write),
+	.avs_writedata(npu_avs_writedata),
+	.avs_read     (npu_avs_read),
+	.avs_readdata (npu_avs_readdata),
+	.avs_readdatavalid (npu_unit_readdatavalid),
+
+	// Avalon-MM Read Master (DMA)
+	.dma_rd_m_waitrequest    (npu_dma_rd_waitrequest),
+	.dma_rd_m_readdata       (npu_dma_rd_readdata),
+	.dma_rd_m_readdatavalid  (npu_dma_rd_readdatavalid),
+	.dma_rd_m_burstcount     (npu_dma_rd_burstcount),
+	.dma_rd_m_address        (npu_dma_rd_address),
+	.dma_rd_m_read           (npu_dma_rd_read),
+
+	// Avalon-MM Write Master (DMA)
+	.dma_wr_m_waitrequest    (npu_dma_wr_waitrequest),
+	.dma_wr_m_burstcount     (npu_dma_wr_burstcount),
+	.dma_wr_m_address        (npu_dma_wr_address),
+	.dma_wr_m_write          (npu_dma_wr_write),
+	.dma_wr_m_writedata      (npu_dma_wr_writedata)
+);
 
 // Debounce logic to clean out glitches within 1ms
 debounce debounce_inst (
