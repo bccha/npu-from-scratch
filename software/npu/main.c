@@ -347,11 +347,19 @@ void verify_mac_pe() {
   printf("\nStarting MAC PE Verification...\n");
 
   IOWR(NPU_CTRL_BASE, REG_PE_X_IN, 7);
-  IOWR(NPU_CTRL_BASE, REG_PE_CTRL, 1);
+  // NEW RTL needs valid_in_x=1 AND weight_shift_in=1 to load weight.
+  // In `mac_pe_ctrl.v`: valid_in=bit1, load_weight=bit0 -> 11(binary) = 3
+  IOWR(NPU_CTRL_BASE, REG_PE_CTRL, 3);
   IOWR(NPU_CTRL_BASE, REG_PE_CTRL, 0);
+
+  // The PE is double-buffered. Trigger `weight_latch_en` (NPU_CTRL offset 7).
+  IOWR(NPU_CTRL_BASE, 7, 1);
+  IOWR(NPU_CTRL_BASE, 7, 0);
 
   IOWR(NPU_CTRL_BASE, REG_PE_X_IN, 3);
   IOWR(NPU_CTRL_BASE, REG_PE_Y_IN, 10);
+  // Execute MAC: valid_in_x=1, valid_in_y=1, weight_shift_in=0
+  // valid_in=bit1, load_weight=bit0 -> 10(binary) = 2
   IOWR(NPU_CTRL_BASE, REG_PE_CTRL, 2);
   IOWR(NPU_CTRL_BASE, REG_PE_CTRL, 0);
 

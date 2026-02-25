@@ -8,3 +8,6 @@
 Since the output duplication issue persists regardless of the NPU scale (8x8 or 4x4) and is isolated to the Avalon-MM bus/DMA handshake during hardware execution, the architecture will be heavily revised. 
 
 Instead of relying on the current Avalon-MM DMA-based design, the architecture will transition to an **Avalon Streaming (Avalon-ST)** interface. This change aims to simplify the data path, providing a more robust and predictable data flow between the NPU and memory, thereby eliminating the handshake/timing mismatches causing data duplication.
+
+## Resolution (Completed)
+The migration to the decoupled Avalon-ST architecture (via `npu_stream_ctrl` and elastic valid/ready pipelining) was a complete success. The data duplication issues completely vanished. Both the 4x4 and the final 8x8 NPU configurations now correctly execute continuous hardware sequences and pass 100% of the Linux C-driver memory validation checks under MSGDMA load without repeating any output elements.
