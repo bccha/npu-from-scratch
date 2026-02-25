@@ -18,7 +18,7 @@ Avalon-ST (Streaming) 인터페이스는 `valid`와 `ready` 신호를 통한 엄
 
 ### 3. MSGDMA (Modular Scatter-Gather DMA) 통합
 
-데이터의 흐름은 Qsys(Platform Designer)에 내장된 MSGDMA 인스턴스를 통해 양손(Read/Write)으로 제어됩니다.
+데이터의 흐름은 Qsys(Platform Designer)에 내장된 MSGDMA 인스턴스를 통해 양손(Read/Write)으로 제어됩니다. (상세 레지스터 및 제어 방법은 [**`REG_MAP.md`**](REG_MAP.md) 참조)
 - **Read MSGDMA (Memory-Mapped to Streaming)**: DDR 메모리에서 데이터(예: 8x8 행렬 64바이트)를 읽어 `npu_stream_ctrl`의 `st_sink` 포트로 쏟아냅니다.
 - **Write MSGDMA (Streaming to Memory-Mapped)**: NPU에서 연산이 끝난 결과를 `st_source` 포트에서 받아 DDR 메모리에 기록합니다.
 - **제어(Control)**: 두 MSGDMA의 `csr` 및 `descriptor_slave` 포트는 Nios II (또는 HPS)의 데이터 마스터에 연결되어 있어, 메인 CPU가 디스크립터를 작성해 넣는 것만으로 대규모 데이터 전송을 지시할 수 있습니다.
@@ -32,7 +32,7 @@ Avalon-ST (Streaming) 인터페이스는 `valid`와 `ready` 신호를 통한 엄
 - `st_source_ready` 신호와 동기화하여 정확히 4클럭 동안 64비트씩 잘라서 전송합니다.
 - 첫 전송 시 `startofpacket`(SOP) 플래그를 발생시킵니다.
 - **연속 트랜잭션 (Batch Streaming) 보장**: MSGDMA가 중간에 조기 종료되는 것을 막기 위해 `npu_ctrl` 레지스터에서 받은 `REG_SEQ_ROWS` 값을 기준으로 전체 배치 크기를 파악하고, 단일 행렬이 아닌 **가장 마지막 배치의 마지막 행 결괏값을 전송할 때만 `endofpacket`(EOP) 플래그를 발생시킵니다**.
-- 이 전송이 이루어지는 4클럭 동안은 시스톨릭 어레이의 내부 레이턴시(Pipelines) 구간이므로 데이터 병목(Stall)이나 데이터 유실, 출력 중복 버그가 하드웨어적으로 원천 차단됩니다.
+- 이 전송이 이루어지는 4클럭 동안은 시스톨릭 어레이의 내부 레이턴시(Pipelines) 구간이므로 데이터 병목(Stall)이나 데이터 유실, 낡은 데이터가 덧씌워지는 중복 버그가 하드웨어적으로 원천 차단됩니다. (해결 과정 상세: [**`ISSUE_4x4_DUPLICATION.md`**](ISSUE_4x4_DUPLICATION.md) 참조)
 
 ### 5. Automated Execution Flow (자동화된 파이프라인 흐름)
 
@@ -49,29 +49,29 @@ Avalon-ST (Streaming) 인터페이스는 `valid`와 `ready` 신호를 통한 엄
 graph TD
     %% Define HPS Subsystem
     subgraph HPS ["ARM HPS / NIOS II"]
-        CPU[메인 프로세서]
-        DDR[(DDR3 메모리)]
+        CPU["메인 프로세서"]
+        DDR[("DDR3 메모리")]
     end
 
     %% Define Qsys (Platform Designer) Bridges
     subgraph Qsys ["Platform Designer Interconnect"]
-        AXI_LW[Avalon-MM Lightweight Bridge]
-        AXI_DAT[Avalon-MM Data Bridge]
+        AXI_LW["Avalon-MM Lightweight Bridge"]
+        AXI_DAT["Avalon-MM Data Bridge"]
         
-        ReadDMA[MSGDMA (Read)]
-        WriteDMA[MSGDMA (Write)]
+        ReadDMA["MSGDMA (Read)"]
+        WriteDMA["MSGDMA (Write)"]
     end
 
     %% Define NPU Subsystem
     subgraph NPU ["npu_unit (FPGA Fabric)"]
-        NPU_CTRL[npu_ctrl <br> CSR Registers]
+        NPU_CTRL["npu_ctrl <br> CSR Registers"]
         
         subgraph STREAM_CTRL ["npu_stream_ctrl"]
-            SINK_FSM[Sink Controller <br> 64-bit I/F]
-            SER_FSM[Serializer FSM <br> 256 to 64-bit]
+            SINK_FSM["Sink Controller <br> 64-bit I/F"]
+            SER_FSM["Serializer FSM <br> 256 to 64-bit"]
         end
         
-        MAC_ARRAY[8x8 Systolic Core <br> 64 MAC PEs]
+        MAC_ARRAY["8x8 Systolic Core <br> 64 MAC PEs"]
     end
 
     %% Control Flow (Memory Mapped)

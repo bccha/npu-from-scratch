@@ -31,8 +31,20 @@ DE10-Nano(Cyclone V SoC) FPGA 위에서 NPU를 밑바닥부터 설계하는 프�
 ├── rtl/                 # NPU 하드웨어 로직 (Verilog)
 ├── sim/                 # Python 베이스 Cocotb 시뮬레이션
 ├── soc_system.qsys      # Qsys 시스템 설계
-└── doc/                 # 문서
+└── doc/                 # 문서 및 설계 자료
 ```
+## 문서 목차 (Documentation Index)
+
+프로젝트와 관련된 상세 기획, 구조, 맵 구조, 트러블슈팅 내역은 아래 문서들을 참고해 주십시오.
+
+*   [**ROADMAP.md**](doc/ROADMAP.md): 프로젝트 전체 로드맵 및 단계별 세부 구현 목표.
+*   [**DESIGN.md**](doc/DESIGN.md): (초기) NPU 아키텍처 및 기본 설계 방향 문서.
+*   [**DESIGN_2ND.md**](doc/DESIGN_2ND.md): (현재) Avalon-ST (Streaming) 기반의 Bufferless NPU 아키텍처 및 MSGDMA 직렬화 파이프라인 최신 설계 사양.
+*   [**REG_MAP.md**](doc/REG_MAP.md): NPU(`npu_ctrl`) 및 DMA(MSGDMA CSR/Descriptor) 관련 Memory-mapped 레지스터 맵 및 C 코드 제어 예제.
+*   [**RESULT.md**](doc/RESULT.md): CPU vs NPU (FPGA) 간의 성능 검증 벤치마크 결과 및 프로파일링 데이터.
+*   [**LESSONS_LEARNED.md**](doc/LESSONS_LEARNED.md): 설계 과정 및 디버깅 중 얻은 기술적 교훈 (Quartus, SoC, MSGDMA 관련).
+*   [**STUDY.md**](doc/STUDY.md): 딥러닝 가속기(Systolic Array 등) 구조 및 관련 개념 학습 정리.
+*   [**ISSUE_4x4_DUPLICATION.md**](doc/ISSUE_4x4_DUPLICATION.md): 초기 NPU 파이프라인에서 발생했던 출력 중복(Duplication) 하드웨어 버그 및 그 해결 과정 상세.
 
 ## 최근 진행 현황 및 핵심 성과
 
