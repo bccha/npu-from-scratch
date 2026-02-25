@@ -20,18 +20,6 @@ module npu_ctrl (
     input  wire        seq_done,
     output reg         weight_latch_en,
 
-    // DMA Control
-    output reg  [31:0] dma_rd_addr,
-    output reg  [31:0] dma_rd_len,
-    output reg         dma_rd_start,
-    output reg  [31:0] dma_wr_addr,
-    output reg  [31:0] dma_wr_len,
-    output reg         dma_wr_start,
-    input  wire        dma_rd_busy,
-    input  wire        dma_rd_done,
-    input  wire        dma_wr_busy,
-    input  wire        dma_wr_done,
-
     // Legacy MAC PE Interface
     output wire         pe_load_weight,
     output wire         pe_valid_in,
@@ -73,16 +61,8 @@ module npu_ctrl (
             seq_mode  <= 2'd0;
             seq_total_rows <= 32'd0;
             weight_latch_en <= 1'b0;
-            dma_rd_addr <= 32'd0;
-            dma_rd_len  <= 32'd0;
-            dma_rd_start <= 1'b0;
-            dma_wr_addr <= 32'd0;
-            dma_wr_len  <= 32'd0;
-            dma_wr_start <= 1'b0;
         end else begin
             seq_start <= 1'b0;
-            dma_rd_start <= 1'b0;
-            dma_wr_start <= 1'b0;
             weight_latch_en <= 1'b0;
 
             if (write && select_sys) begin
@@ -90,14 +70,6 @@ module npu_ctrl (
                     3'd0: begin
                         seq_mode  <= writedata[2:1];
                         seq_start <= writedata[0];
-                    end
-                    3'd2: dma_rd_addr <= writedata;
-                    3'd3: dma_rd_len  <= writedata;
-                    3'd4: dma_wr_addr <= writedata;
-                    3'd5: begin
-                        dma_wr_len   <= {16'd0, writedata[15:0]};
-                        dma_rd_start <= writedata[16];
-                        dma_wr_start <= writedata[17];
                     end
                     3'd6: seq_total_rows <= writedata;
                     3'd7: weight_latch_en <= writedata[0];
@@ -120,12 +92,8 @@ module npu_ctrl (
                 case (address[2:0])
                     3'd0: sys_readdata <= {29'd0, seq_mode, 1'b0};
                     3'd1: sys_readdata <= {30'd0, seq_done, seq_busy};
-                    3'd2: sys_readdata <= dma_rd_addr;
-                    3'd3: sys_readdata <= dma_rd_len;
-                    3'd4: sys_readdata <= dma_wr_addr;
-                    3'd5: sys_readdata <= {14'd0, dma_wr_done, dma_rd_done, 14'd0, dma_wr_busy, dma_rd_busy}; // DMA status mapping matching legacy
                     3'd6: sys_readdata <= seq_total_rows;
-                    3'd7: sys_readdata <= {28'd0, dma_wr_done, dma_rd_done, dma_wr_busy, dma_rd_busy};
+                    3'd7: sys_readdata <= {31'd0, weight_latch_en};
                     default: sys_readdata <= 32'd0;
                 endcase
             end
