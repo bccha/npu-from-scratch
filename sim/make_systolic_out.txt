@@ -1,0 +1,64 @@
+rm -f results.xml
+"make" -f Makefile_systolic results.xml
+make[1]: Entering directory '/mnt/c/Workspace/quartus/npu/sim'
+mkdir -p sim_build
+/usr/bin/iverilog -o sim_build/sim.vvp -s systolic_core -g2012 -f sim_build/cmds.f -s cocotb_iverilog_dump  /mnt/c/Workspace/quartus/npu/sim/../rtl/mac_pe.v /mnt/c/Workspace/quartus/npu/sim/../rtl/systolic_array.v /mnt/c/Workspace/quartus/npu/sim/../rtl/systolic_core.v sim_build/cocotb_iverilog_dump.v
+/mnt/c/Workspace/quartus/npu/sim/../rtl/systolic_core.v:99: warning: Port 9 (valid_out_x) of systolic_array expects 8 bits, got 1.
+/mnt/c/Workspace/quartus/npu/sim/../rtl/systolic_core.v:99:        : Padding 7 high bits of the port.
+/mnt/c/Workspace/quartus/npu/sim/../rtl/systolic_core.v:110: warning: output port ready_in is coerced to inout.
+/home/morer/.local/lib/python3.10/site-packages/cocotb_tools/makefiles/simulators/Makefile.icarus:66: Using MODULE is deprecated, please use COCOTB_TEST_MODULES instead.
+rm -f results.xml
+COCOTB_TEST_MODULES=test_systolic COCOTB_TESTCASE= COCOTB_TEST_FILTER= COCOTB_TOPLEVEL=systolic_core TOPLEVEL_LANG=verilog \
+         /usr/bin/vvp -M /home/morer/.local/lib/python3.10/site-packages/cocotb/libs -m libcocotbvpi_icarus   sim_build/sim.vvp -fst  
+     -.--ns INFO     gpi                                ..mbed/gpi_embed.cpp:93   in _embed_init_python              Using Python 3.10.14 interpreter at /usr/bin/python3
+     -.--ns INFO     gpi                                ../gpi/GpiCommon.cpp:79   in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 11.0 (stable)
+     0.00ns WARNING  gpi                                vpi_iterate returned NULL for type vpiInstance for object NULL
+     0.00ns INFO     cocotb                             Seeding Python random module with 1771978158
+     0.00ns INFO     cocotb                             Initialized cocotb v2.0.1 from /home/morer/.local/lib/python3.10/site-packages/cocotb
+     0.00ns INFO     cocotb                             Running tests
+     0.00ns INFO     cocotb.regression                  running test_systolic.test_systolic_core_flow_control (1/1)
+                                                            Stress Test: Valid/Ready Flow Control with Random Stalls
+    20.00ns INFO     cocotb.systolic_core               Starting Flow Control Test...
+  1910.00ns INFO     cocotb.systolic_core               Flow Control Test Passed! No duplicated or lost data.
+  1910.00ns INFO     cocotb.systolic_core               
+                                                        --- Weights Matrix ---
+                                                        [[ 38 -13  28 -50  42   7  -4 -44]
+                                                         [ 38  57  18  22  10  10  23  52]
+                                                         [ 35  39 -41 -62 -43 -12 -63  23]
+                                                         [ 43 -35 -27 -63  -1  -5 -44 -32]
+                                                         [ 11  -7 -43  60  43  24 -16  26]
+                                                         [ -6  62 -23  27  -5  15 -50  -3]
+                                                         [ -3 -18  -3 -14  43 -10  51  -1]
+                                                         [ 56 -62  36 -14 -58 -44   8 -26]]
+  1910.00ns INFO     cocotb.systolic_core               
+                                                        --- Input Matrix (First 5 Rows) ---
+                                                        [[-47 -61  24  -5 -51  49  57 -56]
+                                                         [ 25 -12 -63  19  27  46  -5   6]
+                                                         [-21  60 -57 -18 -30  13  16 -29]
+                                                         [-15  39 -61 -63  61 -59 -11  41]
+                                                         [-61 -11  28  -2 -47  25 -21 -31]]
+  1910.00ns INFO     cocotb.systolic_core               
+                                                        --- Expected Output (First 5 Rows) ---
+                                                        [[-7641  4086 -4384 -1916  -350   203 -1682  -466]
+                                                         [ -522 -1750   566  4043  3988  1840  -182 -3368]
+                                                         [-3367  4626  3214  5771  3202  1818  6261  3228]
+                                                         [ -578 -4185  4727 11006  2513   217  9313  4009]
+                                                         [-4182  5507 -2607  -219 -5125   -42 -3502  2350]]
+  1910.00ns INFO     cocotb.systolic_core               
+                                                        --- Hardware Output (First 5 Rows) ---
+                                                        [[-7641  4086 -4384 -1916  -350   203 -1682  -466]
+                                                         [ -522 -1750   566  4043  3988  1840  -182 -3368]
+                                                         [-3367  4626  3214  5771  3202  1818  6261  3228]
+                                                         [ -578 -4185  4727 11006  2513   217  9313  4009]
+                                                         [-4182  5507 -2607  -219 -5125   -42 -3502  2350]]
+  1910.00ns INFO     cocotb.regression                  test_systolic.test_systolic_core_flow_control passed
+  1910.00ns INFO     cocotb.regression                  *******************************************************************************************************
+                                                        ** TEST                                           STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        *******************************************************************************************************
+                                                        ** test_systolic.test_systolic_core_flow_control   PASS        1910.00           0.34       5622.36  **
+                                                        *******************************************************************************************************
+                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                                1910.00           0.36       5271.45  **
+                                                        *******************************************************************************************************
+FST info: dumpfile sim_build/systolic_core.fst opened for output.
+make[1]: Leaving directory '/mnt/c/Workspace/quartus/npu/sim'

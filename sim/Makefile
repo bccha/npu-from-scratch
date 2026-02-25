@@ -5,12 +5,12 @@ TOPLEVEL_LANG ?= verilog
 VERILOG_SOURCES += $(PWD)/../rtl/mac_pe.v
 VERILOG_SOURCES += $(PWD)/../rtl/mac_pe_ctrl.v
 VERILOG_SOURCES += $(PWD)/../rtl/npu_ctrl.v
-VERILOG_SOURCES += $(PWD)/../rtl/npu_dma.v
+VERILOG_SOURCES += $(PWD)/../rtl/npu_stream_ctrl.v
 VERILOG_SOURCES += $(PWD)/../rtl/systolic_array.v
 VERILOG_SOURCES += $(PWD)/../rtl/systolic_core.v
 VERILOG_SOURCES += $(PWD)/../rtl/npu_unit.v
 
 TOPLEVEL = npu_unit
-MODULE = test_avalon_bus
+MODULE = test_npu
 
 include $(shell cocotb-config --makefiles)/Makefile.sim

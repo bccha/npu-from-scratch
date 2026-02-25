@@ -1,56 +1,97 @@
 `timescale 1ns / 1ps
 
 module mac_pe #(
-    parameter DATA_WIDTH = 8,  // INT8 입력 (Activation & Weight)
-    parameter ACC_WIDTH  = 32  // 32-bit 누산기 (Overflow 방지)
+    parameter DATA_WIDTH = 8,
+    parameter ACC_WIDTH  = 32
 )(
     input  wire                         clk,
     input  wire                         rst_n,
 
-    // Control Signals
-    input  wire                         load_weight, // 1: 가중치 로드 모드, 0: 연산 모드
-    input  wire                         valid_in,    // 1: 입력 데이터 유효함
+    // --- X-Axis: Activation & Weight Shift (Left to Right) ---
+    input  wire                         valid_in_x,
+    output wire                         ready_out_x, 
+    input  wire                         weight_shift_in,
+    input  wire signed [DATA_WIDTH-1:0] x_in,
 
-    // Data Inputs
-    input  wire signed [DATA_WIDTH-1:0] x_in,        // 왼쪽에서 들어오는 입력 (Activation)
-    input  wire signed [ACC_WIDTH-1:0]  y_in,        // 위에서 내려오는 부분합 (Partial Sum)
+    output reg                          valid_out_x,
+    input  wire                         ready_in_x,
+    output reg                          weight_shift_out,
+    output reg  signed [DATA_WIDTH-1:0] x_out,
 
-    // Data Outputs
-    output reg  signed [DATA_WIDTH-1:0] x_out,       // 오른쪽 다음 PE로 넘겨줄 입력
-    output reg  signed [ACC_WIDTH-1:0]  y_out,       // 아래쪽 다음 PE로 내려줄 부분합
-    output reg                          valid_out    // 출력 데이터 유효함
+    // --- Y-Axis: Partial Sum (Top to Bottom) ---
+    input  wire                         valid_in_y,
+    output wire                         ready_out_y,
+    input  wire signed [ACC_WIDTH-1:0]  y_in,
+
+    output reg                          valid_out_y,
+    input  wire                         ready_in_y,
+    output reg  signed [ACC_WIDTH-1:0]  y_out,
+
+    // --- Global Controls ---
+    input  wire                         weight_latch_en
 );
 
-    // 1. 내부 가중치 레지스터 (Weight Stationary의 핵심)
-    reg signed [DATA_WIDTH-1:0] weight_reg;
+    // 1. 가중치 이중 버퍼링 (Double Buffering)
+    reg signed [DATA_WIDTH-1:0] shadow_weight_reg;
+    reg signed [DATA_WIDTH-1:0] active_weight_reg;
 
-    // 2. 연산용 와이어 선언
-    wire signed [DATA_WIDTH*2-1:0] mult_out; // 8bit x 8bit = 16bit
+    // 2. 명시적 부호 확장 (Explicit Sign-Extension)
+    wire signed [DATA_WIDTH*2-1:0] mult_out;
     wire signed [ACC_WIDTH-1:0]    add_out;
+    wire signed [ACC_WIDTH-1:0]    mult_ext;
 
-    // 3. 조합 논리 (Combinational Logic) - 합성 시 DSP 블록에 자동 매핑됨
-    assign mult_out = x_in * weight_reg;      // 곱셈
-    assign add_out  = y_in + mult_out;        // 누산 (위에서 온 값 + 현재 곱셈 결과)
+    assign mult_out = x_in * active_weight_reg;
+    assign mult_ext = { {(ACC_WIDTH - DATA_WIDTH*2){mult_out[DATA_WIDTH*2-1]}}, mult_out };
+    assign add_out  = y_in + mult_ext;
 
-    // 4. 순차 논리 (Sequential Logic)
+    // --- 3. 2D Elastic Handshake Logic (Fork & Join) ---
+    wire stall_x = valid_out_x && !ready_in_x;
+    wire stall_y = valid_out_y && !ready_in_y;
+
+    wire can_fire_x = !stall_x;
+    wire can_fire_y = !stall_y;
+
+    // Weight Phase: Only X needs to be valid. Y is ignored.
+    wire fire_load = valid_in_x && weight_shift_in && can_fire_x;
+    // MAC Phase: Both X and Y must be valid.
+    wire fire_calc = valid_in_x && valid_in_y && !weight_shift_in && can_fire_x && can_fire_y;
+
+    wire fire = fire_load || fire_calc;
+
+    assign ready_out_x = fire;
+    assign ready_out_y = fire_calc; // Y is consumed ONLY during calculation
+
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            weight_reg <= {DATA_WIDTH{1'b0}};
-            x_out      <= {DATA_WIDTH{1'b0}};
-            y_out      <= {ACC_WIDTH{1'b0}};
-            valid_out  <= 1'b0;
+            shadow_weight_reg <= {DATA_WIDTH{1'b0}};
+            active_weight_reg <= {DATA_WIDTH{1'b0}};
+            x_out            <= {DATA_WIDTH{1'b0}};
+            y_out            <= {ACC_WIDTH{1'b0}};
+            valid_out_x      <= 1'b0;
+            valid_out_y      <= 1'b0;
+            weight_shift_out <= 1'b0;
         end else begin
-            if (load_weight) begin
-                // [가중치 로드 모드] 
-                // Weight Stationary 구조에서 각 행의 PE들은 시프트 레지스터처럼 동작하며 가중치를 채움
-                weight_reg <= x_in;
-                x_out      <= x_in; // 1클럭만에 바로 오른쪽으로 넘김 (정상 시프트)
-                valid_out  <= 1'b0;
+            
+            // Latch 펄스
+            if (weight_latch_en) begin
+                active_weight_reg <= shadow_weight_reg;
+            end
+
+            if (fire_load) begin
+                shadow_weight_reg <= x_in;           
+                x_out             <= shadow_weight_reg; 
+                valid_out_x       <= 1'b1; // MUST propagate valid so downstream knows a token arrived           
+                valid_out_y       <= 1'b0; 
+                weight_shift_out  <= 1'b1; // Pass the shift command downstream          
+            end else if (fire_calc) begin
+                x_out            <= x_in;     
+                y_out            <= add_out;  
+                valid_out_x      <= 1'b1;
+                valid_out_y      <= 1'b1;
+                weight_shift_out <= 1'b0;
             end else begin
-                // [연산 모드]
-                x_out     <= x_in;     
-                y_out     <= add_out;  
-                valid_out <= valid_in;
+                if (valid_out_x && ready_in_x) valid_out_x <= 1'b0;
+                if (valid_out_y && ready_in_y) valid_out_y <= 1'b0;
             end
         end
     end

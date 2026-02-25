@@ -2,8 +2,8 @@
 <sch:Settings xmlns:sch="http://www.altera.com/embeddedsw/bsp/schema">
         <BspType>hal</BspType>
         <BspVersion>default</BspVersion>
-        <BspGeneratedTimeStamp>Feb 24, 2026 5:41:24 AM</BspGeneratedTimeStamp>
-        <BspGeneratedUnixTimeStamp>1771929684971</BspGeneratedUnixTimeStamp>
+        <BspGeneratedTimeStamp>Feb 24, 2026 3:53:09 PM</BspGeneratedTimeStamp>
+        <BspGeneratedUnixTimeStamp>1771966389963</BspGeneratedUnixTimeStamp>
         <BspGeneratedLocation>C:\Workspace\quartus\npu\software\npu_bsp</BspGeneratedLocation>
         <BspSettingsFile>settings.bsp</BspSettingsFile>
         <SopcDesignFile>C:\Workspace\quartus\npu\soc_system.sopcinfo</SopcDesignFile>
@@ -899,34 +899,58 @@
                 <Group xsi:nil="true" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
         </Setting>
         <MemoryMap>
-                <slaveDescriptor>onchip_memory2_0</slaveDescriptor>
-                <addressRange>0x00000000 - 0x0001869F</addressRange>
-                <addressSpan>100000</addressSpan>
-                <attributes>memory</attributes>
-        </MemoryMap>
-        <MemoryMap>
-                <slaveDescriptor>jtag_uart</slaveDescriptor>
-                <addressRange>0x00020000 - 0x00020007</addressRange>
-                <addressSpan>8</addressSpan>
-                <attributes>printable</attributes>
+                <slaveDescriptor>timer_0</slaveDescriptor>
+                <addressRange>0x00000060 - 0x0000007F</addressRange>
+                <addressSpan>32</addressSpan>
+                <attributes>timer</attributes>
         </MemoryMap>
         <MemoryMap>
                 <slaveDescriptor>address_span_extender_0_cntl</slaveDescriptor>
-                <addressRange>0x00020008 - 0x0002000F</addressRange>
+                <addressRange>0x00000080 - 0x00000087</addressRange>
                 <addressSpan>8</addressSpan>
                 <attributes/>
-        </MemoryMap>
-        <MemoryMap>
-                <slaveDescriptor>timer_0</slaveDescriptor>
-                <addressRange>0x00020020 - 0x0002003F</addressRange>
-                <addressSpan>32</addressSpan>
-                <attributes>timer</attributes>
         </MemoryMap>
         <MemoryMap>
                 <slaveDescriptor>npu_ctrl</slaveDescriptor>
                 <addressRange>0x00030000 - 0x000303FF</addressRange>
                 <addressSpan>1024</addressSpan>
                 <attributes/>
+        </MemoryMap>
+        <MemoryMap>
+                <slaveDescriptor>ddr_read_st_csr</slaveDescriptor>
+                <addressRange>0x00031000 - 0x0003101F</addressRange>
+                <addressSpan>32</addressSpan>
+                <attributes/>
+        </MemoryMap>
+        <MemoryMap>
+                <slaveDescriptor>ddr_write_st_csr</slaveDescriptor>
+                <addressRange>0x00031020 - 0x0003103F</addressRange>
+                <addressSpan>32</addressSpan>
+                <attributes/>
+        </MemoryMap>
+        <MemoryMap>
+                <slaveDescriptor>ddr_read_st_descriptor_slave</slaveDescriptor>
+                <addressRange>0x00031040 - 0x0003104F</addressRange>
+                <addressSpan>16</addressSpan>
+                <attributes/>
+        </MemoryMap>
+        <MemoryMap>
+                <slaveDescriptor>ddr_write_st_descriptor_slave</slaveDescriptor>
+                <addressRange>0x00031050 - 0x0003105F</addressRange>
+                <addressSpan>16</addressSpan>
+                <attributes/>
+        </MemoryMap>
+        <MemoryMap>
+                <slaveDescriptor>jtag_uart</slaveDescriptor>
+                <addressRange>0x00070000 - 0x00070007</addressRange>
+                <addressSpan>8</addressSpan>
+                <attributes>printable</attributes>
+        </MemoryMap>
+        <MemoryMap>
+                <slaveDescriptor>onchip_memory2_0</slaveDescriptor>
+                <addressRange>0x00080000 - 0x0009869F</addressRange>
+                <addressSpan>100000</addressSpan>
+                <attributes>memory</attributes>
         </MemoryMap>
         <MemoryMap>
                 <slaveDescriptor>address_span_extender_0_windowed_slave</slaveDescriptor>

@@ -1,0 +1,83 @@
+rm -f results.xml
+"make" -f Makefile results.xml
+make[1]: Entering directory '/mnt/c/Workspace/quartus/npu/sim'
+mkdir -p sim_build
+/usr/bin/iverilog -o sim_build/sim.vvp -s npu_unit -g2012 -f sim_build/cmds.f  /mnt/c/Workspace/quartus/npu/sim/../rtl/mac_pe.v /mnt/c/Workspace/quartus/npu/sim/../rtl/mac_pe_ctrl.v /mnt/c/Workspace/quartus/npu/sim/../rtl/npu_ctrl.v /mnt/c/Workspace/quartus/npu/sim/../rtl/npu_stream_ctrl.v /mnt/c/Workspace/quartus/npu/sim/../rtl/systolic_array.v /mnt/c/Workspace/quartus/npu/sim/../rtl/systolic_core.v /mnt/c/Workspace/quartus/npu/sim/../rtl/npu_unit.v
+/mnt/c/Workspace/quartus/npu/sim/../rtl/systolic_core.v:99: warning: Port 9 (valid_out_x) of systolic_array expects 8 bits, got 1.
+/mnt/c/Workspace/quartus/npu/sim/../rtl/systolic_core.v:99:        : Padding 7 high bits of the port.
+/mnt/c/Workspace/quartus/npu/sim/../rtl/systolic_core.v:110: warning: output port ready_in is coerced to inout.
+/home/morer/.local/lib/python3.10/site-packages/cocotb_tools/makefiles/simulators/Makefile.icarus:66: Using MODULE is deprecated, please use COCOTB_TEST_MODULES instead.
+rm -f results.xml
+COCOTB_TEST_MODULES=test_npu COCOTB_TESTCASE= COCOTB_TEST_FILTER= COCOTB_TOPLEVEL=npu_unit TOPLEVEL_LANG=verilog \
+         /usr/bin/vvp -M /home/morer/.local/lib/python3.10/site-packages/cocotb/libs -m libcocotbvpi_icarus   sim_build/sim.vvp   
+     -.--ns INFO     gpi                                ..mbed/gpi_embed.cpp:93   in _embed_init_python              Using Python 3.10.14 interpreter at /usr/bin/python3
+     -.--ns INFO     gpi                                ../gpi/GpiCommon.cpp:79   in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 11.0 (stable)
+     0.00ns WARNING  gpi                                vpi_iterate returned NULL for type vpiInstance for object NULL
+     0.00ns INFO     cocotb                             Seeding Python random module with 1771978892
+     0.00ns INFO     cocotb                             Initialized cocotb v2.0.1 from /home/morer/.local/lib/python3.10/site-packages/cocotb
+     0.00ns INFO     cocotb                             Running tests
+     0.00ns INFO     cocotb.regression                  running test_npu.test_npu_stream (1/1)
+                                                            Test NPU with Avalon-ST Sink and Source (8x8)
+    20.00ns INFO     cocotb.npu_unit                    Setting mode to Load Weight...
+    90.00ns INFO     cocotb.npu_unit                    Sending Weights over Avalon-ST...
+   480.00ns INFO     cocotb.npu_unit                    Triggering Global Weight Latch Enable...
+   580.00ns INFO     cocotb.npu_unit                    --- Internal Weight Registers Loaded ---
+   580.00ns INFO     cocotb.npu_unit                    Row 0: [-49, 43, 12, 59, 28, -11, -42, 58]
+   580.00ns INFO     cocotb.npu_unit                    Row 1: [-29, 3, -22, 21, -1, 24, 53, 23]
+   580.00ns INFO     cocotb.npu_unit                    Row 2: [31, -2, -56, 40, -61, -14, 12, 24]
+   580.00ns INFO     cocotb.npu_unit                    Row 3: [-18, -52, 26, -47, 24, -38, -45, -40]
+   580.00ns INFO     cocotb.npu_unit                    Row 4: [52, 49, 10, 35, -62, -13, -36, 35]
+   580.00ns INFO     cocotb.npu_unit                    Row 5: [34, 25, 3, -6, -33, 62, -57, 14]
+   580.00ns INFO     cocotb.npu_unit                    Row 6: [-11, -50, -10, -63, 42, 19, -44, -47]
+   580.00ns INFO     cocotb.npu_unit                    Row 7: [-29, -53, -49, -28, -14, 4, -36, 45]
+   580.00ns INFO     cocotb.npu_unit                    Setting mode to Execute...
+   650.00ns INFO     cocotb.npu_unit                    Sending Data over Avalon-ST...
+   740.00ns INFO     cocotb.npu_unit                    Waiting for Output (8 rows * 4 flits = 32 64-bit flits)...
+  1140.00ns INFO     cocotb.npu_unit                    --- Detailed Matrix Comparison ---
+  1140.00ns INFO     cocotb.npu_unit                    Weight Matrix:
+                                                        [[-49  43  12  59  28 -11 -42  58]
+                                                         [-29   3 -22  21  -1  24  53  23]
+                                                         [ 31  -2 -56  40 -61 -14  12  24]
+                                                         [-18 -52  26 -47  24 -38 -45 -40]
+                                                         [ 52  49  10  35 -62 -13 -36  35]
+                                                         [ 34  25   3  -6 -33  62 -57  14]
+                                                         [-11 -50 -10 -63  42  19 -44 -47]
+                                                         [-29 -53 -49 -28 -14   4 -36  45]]
+  1140.00ns INFO     cocotb.npu_unit                    Input Matrix:
+                                                        [[4 8 4 6 5 8 3 6]
+                                                         [3 1 2 4 0 7 8 8]
+                                                         [1 7 0 7 7 8 4 2]
+                                                         [9 4 5 0 7 7 4 1]
+                                                         [7 9 4 2 4 9 7 1]
+                                                         [1 1 7 0 2 9 1 6]
+                                                         [6 3 5 0 4 7 7 7]
+                                                         [9 4 9 4 1 7 5 2]]
+  1140.00ns INFO     cocotb.npu_unit                    Expected Result:
+                                                        [[  -87  -147  -446    52  -528   376  -950   688]
+                                                         [ -268  -729  -445  -680    50   429 -1268   167]
+                                                         [  156   -63    -4  -234  -369   380  -942   198]
+                                                         [  127   654  -258   738  -568   350  -969   934]
+                                                         [ -108   234  -338   285  -274   650  -860   611]
+                                                         [  364   -13  -659   145  -863   490  -750   668]
+                                                         [  -60   -93  -626    78  -423   479 -1136   761]
+                                                         [ -173    41  -497   409  -316   243  -965   658]]
+  1140.00ns INFO     cocotb.npu_unit                    Actual Result Captured:
+                                                        [[  -87  -147  -446    52  -528   376  -950   688]
+                                                         [ -268  -729  -445  -680    50   429 -1268   167]
+                                                         [  156   -63    -4  -234  -369   380  -942   198]
+                                                         [  127   654  -258   738  -568   350  -969   934]
+                                                         [ -108   234  -338   285  -274   650  -860   611]
+                                                         [  364   -13  -659   145  -863   490  -750   668]
+                                                         [  -60   -93  -626    78  -423   479 -1136   761]
+                                                         [ -173    41  -497   409  -316   243  -965   658]]
+  1140.00ns INFO     cocotb.npu_unit                    Avalon-ST Streaming Test (8x8) Passed Successfully without Duplication!
+  1140.00ns INFO     cocotb.regression                  test_npu.test_npu_stream passed
+  1140.00ns INFO     cocotb.regression                  **************************************************************************************
+                                                        ** TEST                          STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        **************************************************************************************
+                                                        ** test_npu.test_npu_stream       PASS        1140.00           0.11      10048.07  **
+                                                        **************************************************************************************
+                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0               1140.00           0.13       8991.66  **
+                                                        **************************************************************************************
+make[1]: Leaving directory '/mnt/c/Workspace/quartus/npu/sim'

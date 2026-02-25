@@ -33,4 +33,11 @@ char get_char_async();
 // Returns current physical cycles (50MHz) since boot
 unsigned long long get_total_cycles();
 
+// MSGDMA Helpers
+void msgdma_init(alt_u32 csr_base);
+void msgdma_read_stream_push(alt_u32 descriptor_base, alt_u32 src_addr,
+                             alt_u32 length);
+void msgdma_write_stream_push(alt_u32 descriptor_base, alt_u32 dst_addr,
+                              alt_u32 length);
+
 #endif /* COMMON_H_ */

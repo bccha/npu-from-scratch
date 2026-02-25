@@ -114,20 +114,21 @@ module DE10_NANO_SoC_GHRD(
   wire        npu_unit_waitrequest;
   wire        npu_unit_readdatavalid;
 
-// npu_unit DMA Read Master wires
-  wire        npu_dma_rd_waitrequest;
-  wire [31:0] npu_dma_rd_readdata;
-  wire        npu_dma_rd_readdatavalid;
-  wire [4:0]  npu_dma_rd_burstcount;
-  wire [31:0] npu_dma_rd_address;
-  wire        npu_dma_rd_read;
+// npu_unit Avalon-ST Source (to MSGDMA Write)
+  wire [63:0] npu_st_source_data;
+  wire        npu_st_source_valid;
+  wire        npu_st_source_ready;
+  wire        npu_st_source_startofpacket;
+  wire        npu_st_source_endofpacket;
+  wire [2:0]  npu_st_source_empty;
 
-// npu_unit DMA Write Master wires
-  wire        npu_dma_wr_waitrequest;
-  wire [4:0]  npu_dma_wr_burstcount;
-  wire [31:0] npu_dma_wr_address;
-  wire        npu_dma_wr_write;
-  wire [31:0] npu_dma_wr_writedata;
+// npu_unit Avalon-ST Sink (from MSGDMA Read)
+  wire [63:0] npu_st_sink_data;
+  wire        npu_st_sink_valid;
+  wire        npu_st_sink_ready;
+  wire        npu_st_sink_startofpacket;
+  wire        npu_st_sink_endofpacket;
+  wire [2:0]  npu_st_sink_empty;
 
 
 
@@ -234,28 +235,20 @@ soc_system u0 (
 		  .npu_ctrl_byteenable    (),
 		  .npu_ctrl_debugaccess   (),
 
-	  // NPU DMA Masters -> soc_system Bridge
-	  .dma_read_m_waitrequest   (npu_dma_rd_waitrequest),
-	  .dma_read_m_readdata      (npu_dma_rd_readdata),
-	  .dma_read_m_readdatavalid (npu_dma_rd_readdatavalid),
-	  .dma_read_m_burstcount    (npu_dma_rd_burstcount),
-	  .dma_read_m_writedata     (),
-	  .dma_read_m_address       (npu_dma_rd_address),
-	  .dma_read_m_write         (1'b0),
-	  .dma_read_m_read          (npu_dma_rd_read),
-	  .dma_read_m_byteenable    (8'hFF),
-	  .dma_read_m_debugaccess   (1'b0),
+	  // MSGDMA Avalon-ST Interface -> NPU Unit
+	  .ddr_read_st_source_data           (npu_st_sink_data),
+	  .ddr_read_st_source_valid          (npu_st_sink_valid),
+	  .ddr_read_st_source_ready          (npu_st_sink_ready),
+	  .ddr_read_st_source_startofpacket  (npu_st_sink_startofpacket),
+	  .ddr_read_st_source_endofpacket    (npu_st_sink_endofpacket),
+	  .ddr_read_st_source_empty          (npu_st_sink_empty),
 
-	  .dma_write_m_waitrequest  (npu_dma_wr_waitrequest),
-	  .dma_write_m_readdata     (),
-	  .dma_write_m_readdatavalid(),
-	  .dma_write_m_burstcount   (npu_dma_wr_burstcount),
-	  .dma_write_m_writedata    (npu_dma_wr_writedata),
-	  .dma_write_m_address      (npu_dma_wr_address),
-	  .dma_write_m_write        (npu_dma_wr_write),
-	  .dma_write_m_read         (1'b0),
-	  .dma_write_m_byteenable   (8'hFF),
-	  .dma_write_m_debugaccess  (1'b0)
+	  .ddr_write_st_sink_data            (npu_st_source_data),
+	  .ddr_write_st_sink_valid           (npu_st_source_valid),
+	  .ddr_write_st_sink_ready           (npu_st_source_ready),
+	  .ddr_write_st_sink_startofpacket   (npu_st_source_startofpacket),
+	  .ddr_write_st_sink_endofpacket     (npu_st_source_endofpacket),
+	  .ddr_write_st_sink_empty           (npu_st_source_empty)
  );
 
 // NPU Unit (Encapsulates Controller + PE)
@@ -270,20 +263,21 @@ npu_unit u_npu_unit (
 	.avs_readdata (npu_avs_readdata),
 	.avs_readdatavalid (npu_unit_readdatavalid),
 
-	// Avalon-MM Read Master (DMA)
-	.dma_rd_m_waitrequest    (npu_dma_rd_waitrequest),
-	.dma_rd_m_readdata       (npu_dma_rd_readdata),
-	.dma_rd_m_readdatavalid  (npu_dma_rd_readdatavalid),
-	.dma_rd_m_burstcount     (npu_dma_rd_burstcount),
-	.dma_rd_m_address        (npu_dma_rd_address),
-	.dma_rd_m_read           (npu_dma_rd_read),
+	// Avalon-ST Sink Interface (from MSGDMA Read)
+	.st_sink_data           (npu_st_sink_data),
+	.st_sink_valid          (npu_st_sink_valid),
+	.st_sink_ready          (npu_st_sink_ready),
+	.st_sink_startofpacket  (npu_st_sink_startofpacket),
+	.st_sink_endofpacket    (npu_st_sink_endofpacket),
+	.st_sink_empty          (npu_st_sink_empty),
 
-	// Avalon-MM Write Master (DMA)
-	.dma_wr_m_waitrequest    (npu_dma_wr_waitrequest),
-	.dma_wr_m_burstcount     (npu_dma_wr_burstcount),
-	.dma_wr_m_address        (npu_dma_wr_address),
-	.dma_wr_m_write          (npu_dma_wr_write),
-	.dma_wr_m_writedata      (npu_dma_wr_writedata)
+	// Avalon-ST Source Interface (to MSGDMA Write)
+	.st_source_data           (npu_st_source_data),
+	.st_source_valid          (npu_st_source_valid),
+	.st_source_ready          (npu_st_source_ready),
+	.st_source_startofpacket  (npu_st_source_startofpacket),
+	.st_source_endofpacket    (npu_st_source_endofpacket),
+	.st_source_empty          (npu_st_source_empty)
 );
 
 // Debounce logic to clean out glitches within 1ms

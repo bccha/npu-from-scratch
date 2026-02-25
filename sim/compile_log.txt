@@ -1,0 +1,37 @@
+rm -f results.xml
+"make" -f Makefile results.xml
+make[1]: Entering directory '/mnt/c/Workspace/quartus/npu/sim'
+/home/morer/.local/lib/python3.10/site-packages/cocotb_tools/makefiles/simulators/Makefile.icarus:66: Using MODULE is deprecated, please use COCOTB_TEST_MODULES instead.
+rm -f results.xml
+COCOTB_TEST_MODULES=test_npu COCOTB_TESTCASE= COCOTB_TEST_FILTER= COCOTB_TOPLEVEL=npu_unit TOPLEVEL_LANG=verilog \
+         /usr/bin/vvp -M /home/morer/.local/lib/python3.10/site-packages/cocotb/libs -m libcocotbvpi_icarus   sim_build/sim.vvp   
+     -.--ns INFO     gpi                                ..mbed/gpi_embed.cpp:93   in _embed_init_python              Using Python 3.10.14 interpreter at /usr/bin/python3
+     -.--ns INFO     gpi                                ../gpi/GpiCommon.cpp:79   in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 11.0 (stable)
+     0.00ns WARNING  gpi                                vpi_iterate returned NULL for type vpiInstance for object NULL
+     0.00ns INFO     cocotb                             Seeding Python random module with 1771972175
+     0.00ns INFO     cocotb                             Initialized cocotb v2.0.1 from /home/morer/.local/lib/python3.10/site-packages/cocotb
+     0.00ns INFO     cocotb                             Running tests
+     0.00ns INFO     cocotb.regression                  running test_npu.test_npu_stream (1/1)
+                                                            Test NPU with Avalon-ST Sink and Source (8x8)
+    20.00ns INFO     cocotb.npu_unit                    Setting mode to Load Weight...
+    90.00ns INFO     cocotb.npu_unit                    Sending Weights over Avalon-ST...
+   300.00ns INFO     cocotb.npu_unit                    --- Internal Weight Registers Loaded ---
+   300.00ns WARNING  .. test_npu_stream.test_npu_stream npu_unit.u_systolic_core.u_array contains no child object named row
+                                                        Traceback (most recent call last):
+                                                          File "/mnt/c/Workspace/quartus/npu/sim/test_npu.py", line 118, in test_npu_stream
+                                                            w = dut.u_systolic_core.u_array.row[row].col[col].u_pe.weight_reg.value
+                                                          File "/home/morer/.local/lib/python3.10/site-packages/cocotb/handle.py", line 484, in __getattr__
+                                                            raise AttributeError(f"{self._path} contains no child object named {name}")
+                                                        AttributeError: npu_unit.u_systolic_core.u_array contains no child object named row
+   300.00ns WARNING  cocotb.regression                  test_npu.test_npu_stream failed
+   300.00ns INFO     cocotb.regression                  **************************************************************************************
+                                                        ** TEST                          STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        **************************************************************************************
+                                                        ** test_npu.test_npu_stream       FAIL         300.00           0.02      12314.58  **
+                                                        **************************************************************************************
+                                                        ** TESTS=1 PASS=0 FAIL=1 SKIP=0                300.00           0.04       7748.10  **
+                                                        **************************************************************************************
+make[1]: *** [/home/morer/.local/lib/python3.10/site-packages/cocotb_tools/makefiles/simulators/Makefile.icarus:67: results.xml] Error 1
+make[1]: Leaving directory '/mnt/c/Workspace/quartus/npu/sim'
+make: *** [/home/morer/.local/lib/python3.10/site-packages/cocotb_tools/makefiles/Makefile.inc:17: sim] Error 2

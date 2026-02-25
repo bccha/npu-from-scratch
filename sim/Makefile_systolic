@@ -2,6 +2,8 @@
 SIM ?= icarus
 TOPLEVEL_LANG ?= verilog
 
+export WAVES=1
+
 VERILOG_SOURCES += $(PWD)/../rtl/mac_pe.v
 VERILOG_SOURCES += $(PWD)/../rtl/systolic_array.v
 VERILOG_SOURCES += $(PWD)/../rtl/systolic_core.v

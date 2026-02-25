@@ -14,20 +14,21 @@ module npu_unit #(
     output wire [31:0] avs_readdata,
     output wire        avs_readdatavalid,
 
-    // Avalon-MM Read Master Interface (DMA)
-    input  wire        dma_rd_m_waitrequest,
-    input  wire [AXI_WIDTH-1:0] dma_rd_m_readdata,
-    input  wire        dma_rd_m_readdatavalid,
-    output wire [4:0]  dma_rd_m_burstcount,
-    output wire [31:0] dma_rd_m_address,
-    output wire        dma_rd_m_read,
+    // Avalon-ST Sink Interface (from Memory/MSGDMA)
+    input  wire [63:0] st_sink_data,
+    input  wire        st_sink_valid,
+    output wire        st_sink_ready,
+    input  wire        st_sink_startofpacket,
+    input  wire        st_sink_endofpacket,
+    input  wire [2:0]  st_sink_empty,
 
-    // Avalon-MM Write Master Interface (DMA)
-    input  wire        dma_wr_m_waitrequest,
-    output wire [4:0]  dma_wr_m_burstcount,
-    output wire [31:0] dma_wr_m_address,
-    output wire        dma_wr_m_write,
-    output wire [AXI_WIDTH-1:0] dma_wr_m_writedata
+    // Avalon-ST Source Interface (to Memory/MSGDMA)
+    output wire [63:0] st_source_data,
+    output wire        st_source_valid,
+    input  wire        st_source_ready,
+    output wire        st_source_startofpacket,
+    output wire        st_source_endofpacket,
+    output wire [2:0]  st_source_empty
 );
 
     // Pipeline avs_readdata due to NPU CTRL having 1 cycle latency
@@ -46,27 +47,21 @@ module npu_unit #(
     wire [31:0] seq_total_rows;
     wire        seq_busy;
     wire        seq_done;
+    wire        weight_latch_en;
 
-    // Control <-> DMA
-    wire [31:0] dma_rd_addr;
-    wire [31:0] dma_rd_len;
-    wire        dma_rd_start;
-    wire [31:0] dma_wr_addr;
-    wire [31:0] dma_wr_len;
-    wire        dma_wr_start;
-    wire        dma_rd_busy;
-    wire        dma_rd_done;
-    wire        dma_wr_busy;
-    wire        dma_wr_done;
+    // The DMA and Sequencer wires have been removed as they are now handled by MSGDMA via Avalon-ST.
+    // Control <-> NPU Stream (Mode Control etc.)
+    // TODO: Connect seq_start or seq_mode to the stream controller if mode switching is needed.
 
-    // Control <-> Legacy PE
-    wire        pe_load_weight;
-    wire        pe_valid_in;
-    wire [7:0]  pe_x_in;
-    wire [31:0] pe_y_in;
-    wire [7:0]  pe_x_out;
-    wire [31:0] pe_y_out;
-    wire        pe_valid_out;
+
+    // Control <-> Legacy PE (CSR Testing Only)
+    wire        csr_pe_load_weight;
+    wire        csr_pe_valid_in;
+    wire [7:0]  csr_pe_x_in;
+    wire [31:0] csr_pe_y_in;
+    wire [7:0]  csr_pe_x_out;
+    wire [31:0] csr_pe_y_out;
+    wire        csr_pe_valid_out;
 
     npu_ctrl u_npu_ctrl (
         .clk            (clk),
@@ -83,146 +78,102 @@ module npu_unit #(
         .seq_total_rows (seq_total_rows),
         .seq_busy       (seq_busy),
         .seq_done       (seq_done),
+        .weight_latch_en(weight_latch_en),
         
-        .dma_rd_addr    (dma_rd_addr),
-        .dma_rd_len     (dma_rd_len),
-        .dma_rd_start   (dma_rd_start),
-        .dma_wr_addr    (dma_wr_addr),
-        .dma_wr_len     (dma_wr_len),
-        .dma_wr_start   (dma_wr_start),
-        .dma_rd_busy    (dma_rd_busy),
-        .dma_rd_done    (dma_rd_done),
-        .dma_wr_busy    (dma_wr_busy),
-        .dma_wr_done    (dma_wr_done),
-        
-        .pe_load_weight (pe_load_weight),
-        .pe_valid_in    (pe_valid_in),
-        .pe_x_in        (pe_x_in),
-        .pe_y_in        (pe_y_in),
-        .pe_x_out       (pe_x_out),
-        .pe_y_out       (pe_y_out),
-        .pe_valid_out   (pe_valid_out)
+        .pe_load_weight (csr_pe_load_weight),
+        .pe_valid_in    (csr_pe_valid_in),
+        .pe_x_in        (csr_pe_x_in),
+        .pe_y_in        (csr_pe_y_in),
+        .pe_x_out       (csr_pe_x_out),
+        .pe_y_out       (csr_pe_y_out),
+        .pe_valid_out   (csr_pe_valid_out)
     );
 
     // ------------------------------------------------------------------
-    // 2. Data Move Engine (DMA)
+    // 2. NPU Stream Controller (replaces DMA & Sequencer)
     // ------------------------------------------------------------------
-    wire [AXI_WIDTH-1:0] dma_data_to_npu;
-    wire        dma_data_to_npu_valid;
-    wire [AXI_WIDTH-1:0] dma_data_from_npu;
-    wire        dma_data_from_npu_valid;
+    wire [63:0] pe_din;
+    wire        pe_valid_in;
+    wire        pe_ready_in; 
+    wire [255:0] pe_dout;
+    wire        pe_valid_out;
+    wire        pe_ready_out;
 
-    npu_dma #(.AXI_WIDTH(AXI_WIDTH)) u_npu_dma (
-        .clk                  (clk),
-        .rst_n                (rst_n),
+    npu_stream_ctrl u_npu_stream_ctrl (
+        .clk                     (clk),
+        .rst_n                   (rst_n),
         
-        // Control interface
-        .rd_addr              (dma_rd_addr),
-        .rd_len               (dma_rd_len),
-        .rd_start_pulse       (dma_rd_start),
-        .wr_addr              (dma_wr_addr),
-        .wr_len               (dma_wr_len),
-        .wr_start_pulse       (dma_wr_start),
-        .rd_busy              (dma_rd_busy),
-        .rd_done              (dma_rd_done),
-        .wr_busy              (dma_wr_busy),
-        .wr_done              (dma_wr_done),
-        
-        // Masters
-        .rd_m_waitrequest     (dma_rd_m_waitrequest),
-        .rd_m_readdata        (dma_rd_m_readdata),
-        .rd_m_readdatavalid   (dma_rd_m_readdatavalid),
-        .rd_m_burstcount      (dma_rd_m_burstcount),
-        .rd_m_address         (dma_rd_m_address),
-        .rd_m_read            (dma_rd_m_read),
-        
-        .wr_m_waitrequest     (dma_wr_m_waitrequest),
-        .wr_m_burstcount      (dma_wr_m_burstcount),
-        .wr_m_address         (dma_wr_m_address),
-        .wr_m_write           (dma_wr_m_write),
-        .wr_m_writedata       (dma_wr_m_writedata),
-        
-        // NPU Data stream
-        .data_to_npu          (dma_data_to_npu),
-        .data_to_npu_valid    (dma_data_to_npu_valid),
-        .data_to_npu_ready    (dma_data_to_npu_ready),
-        .data_from_npu        (dma_data_from_npu),
-        .data_from_npu_valid  (dma_data_from_npu_valid),
-        .data_from_npu_ready  (dma_data_from_npu_ready)
+        // Avalon-ST Sink
+        .st_sink_data            (st_sink_data),
+        .st_sink_valid           (st_sink_valid),
+        .st_sink_ready           (st_sink_ready),
+        .st_sink_startofpacket   (st_sink_startofpacket),
+        .st_sink_endofpacket     (st_sink_endofpacket),
+        .st_sink_empty           (st_sink_empty),
+
+        // Avalon-ST Source
+        .st_source_data          (st_source_data),
+        .st_source_valid         (st_source_valid),
+        .st_source_ready         (st_source_ready),
+        .st_source_startofpacket (st_source_startofpacket),
+        .st_source_endofpacket   (st_source_endofpacket),
+        .st_source_empty         (st_source_empty),
+
+        // NPU Global Configuration
+        .seq_total_rows          (seq_total_rows),
+
+        // NPU PE Interface
+        .pe_din                  (pe_din),
+        .pe_valid_in             (pe_valid_in),
+        .pe_ready_in             (pe_ready_in),
+
+        .pe_dout                 (pe_dout),
+        .pe_valid_out            (pe_valid_out),
+        .pe_ready_out            (pe_ready_out)
     );
 
-    // ------------------------------------------------------------------
-    // 3. NPU Sequencer
-    // ------------------------------------------------------------------
-    wire        core_load_weight;
-    wire [7:0]  core_valid_in;
-    wire [63:0] core_x_in;
-    wire [255:0]core_y_in;
-    wire [255:0]core_y_out;
-    wire [7:0]  core_valid_out;
-
-    npu_sequencer #(
-        .N(4),
-        .DATA_WIDTH(8),
-        .AXI_WIDTH(AXI_WIDTH)
-    ) u_npu_sequencer (
-        .clk                  (clk),
-        .rst_n                (rst_n),
-        .start                (seq_start),
-        .mode                 (seq_mode),
-        .total_rows           (seq_total_rows),
-        .busy                 (seq_busy),
-        .done                 (seq_done),
-
-        // DMA stream
-        .dma_data_in          (dma_data_to_npu),
-        .dma_data_in_valid    (dma_data_to_npu_valid),
-        .dma_data_in_ready    (dma_data_to_npu_ready),
-
-        .dma_data_out         (dma_data_from_npu),
-        .dma_data_out_valid   (dma_data_from_npu_valid),
-        .dma_data_out_ready   (dma_data_from_npu_ready),
-
-        // Core
-        .core_load_weight     (core_load_weight),
-        .core_valid_in        (core_valid_in),
-        .core_x_in            (core_x_in),
-        .core_y_in            (core_y_in),
-        .core_y_out           (core_y_out),
-        .core_valid_out       (core_valid_out)
-    );
-
-    // ------------------------------------------------------------------
-    // --- 4. Systolic Array 8x8 Core ---
     // ------------------------------------------------------------------
     systolic_core #(
-        .N(4),
+        .N(8),
         .DATA_WIDTH(8),
         .ACC_WIDTH(32)
     ) u_systolic_core (
-        .clk          (clk),
-        .rst_n        (rst_n),
-        .load_weight  (core_load_weight),
-        .valid_in     (core_valid_in),
-        .x_in         (core_x_in),
-        .y_in         ({8*32{1'b0}}),
-        .y_out        (core_y_out),
-        .valid_out    (core_valid_out)
+        .clk             (clk),
+        .rst_n           (rst_n),
+        .load_weight_in  ({8{seq_mode[0] & pe_valid_in}}),
+        .valid_in        (pe_valid_in),
+        .ready_out       (pe_ready_in), // connect upstream ready to stream controller
+        .x_in            (pe_din[63:0]),
+        .y_in            (256'd0),
+        .weight_latch_en (weight_latch_en),
+        .y_out           (pe_dout),
+        .valid_out       (pe_valid_out),
+        .ready_in        (pe_ready_out) // stream controller pulling outputs
     );
 
     // ------------------------------------------------------------------
-    // 5. Legacy Single MAC PE (Test Mode)
+    // 5. Legacy Single MAC PE (Test Mode via CSR)
     // ------------------------------------------------------------------
     mac_pe u_mac_pe (
-        .clk          (clk),
-        .rst_n        (rst_n),
-        .load_weight  (pe_load_weight),
-        .valid_in     (pe_valid_in),
-        .x_in         (pe_x_in),
-        .y_in         (pe_y_in),
-        .x_out        (pe_x_out),
-        .y_out        (pe_y_out),
-        .valid_out    (pe_valid_out)
+        .clk              (clk),
+        .rst_n            (rst_n),
+        .valid_in_x       (csr_pe_valid_in),
+        .ready_out_x      (),
+        .weight_shift_in  (csr_pe_load_weight),
+        .x_in             (csr_pe_x_in),
+        .valid_out_x      (),
+        .ready_in_x       (1'b1),
+        .weight_shift_out (),
+        .x_out            (csr_pe_x_out),
+        
+        .valid_in_y       (csr_pe_valid_in),
+        .ready_out_y      (),
+        .y_in             (csr_pe_y_in),
+        .valid_out_y      (csr_pe_valid_out),
+        .ready_in_y       (1'b1),
+        .y_out            (csr_pe_y_out),
+        
+        .weight_latch_en  (1'b1) // Always latch immediately for single CSR test mode
     );
 
 endmodule

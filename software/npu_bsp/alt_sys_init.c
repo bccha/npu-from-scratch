@@ -4,7 +4,7 @@
  * Machine generated for CPU 'nios2_gen2_0' in SOPC Builder design 'soc_system'
  * SOPC Builder design path: C:/Workspace/quartus/npu/soc_system.sopcinfo
  *
- * Generated: Sun Feb 22 16:49:27 EST 2026
+ * Generated: Tue Feb 24 15:49:42 EST 2026
  */
 
 /*
@@ -61,6 +61,7 @@
 #include "altera_nios2_gen2_irq.h"
 #include "altera_avalon_jtag_uart.h"
 #include "altera_avalon_timer.h"
+#include "altera_msgdma.h"
 
 /*
  * Allocate the device storage
@@ -69,6 +70,8 @@
 ALTERA_NIOS2_GEN2_IRQ_INSTANCE ( NIOS2_GEN2_0, nios2_gen2_0);
 ALTERA_AVALON_JTAG_UART_INSTANCE ( JTAG_UART, jtag_uart);
 ALTERA_AVALON_TIMER_INSTANCE ( TIMER_0, timer_0);
+ALTERA_MSGDMA_CSR_DESCRIPTOR_SLAVE_INSTANCE ( DDR_READ_ST, DDR_READ_ST_CSR, DDR_READ_ST_DESCRIPTOR_SLAVE, ddr_read_st);
+ALTERA_MSGDMA_CSR_DESCRIPTOR_SLAVE_INSTANCE ( DDR_WRITE_ST, DDR_WRITE_ST_CSR, DDR_WRITE_ST_DESCRIPTOR_SLAVE, ddr_write_st);
 
 /*
  * Initialize the interrupt controller devices
@@ -93,4 +96,6 @@ void alt_sys_init( void )
 {
     ALTERA_AVALON_TIMER_INIT ( TIMER_0, timer_0);
     ALTERA_AVALON_JTAG_UART_INIT ( JTAG_UART, jtag_uart);
+    ALTERA_MSGDMA_INIT ( DDR_READ_ST, ddr_read_st);
+    ALTERA_MSGDMA_INIT ( DDR_WRITE_ST, ddr_write_st);
 }

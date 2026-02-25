@@ -2,21 +2,37 @@ import cocotb
 from cocotb.triggers import Timer, RisingEdge
 from cocotb.clock import Clock
 import numpy as np
+import random
+import os
 
 async def reset_dut(dut):
     dut.rst_n.value = 0
+    dut.valid_in.value = 0
+    dut.ready_in.value = 0
+    dut.load_weight_in.value = 0
+    dut.x_in.value = 0
+    dut.y_in.value = 0
     await Timer(20, unit="ns")
     dut.rst_n.value = 1
     await RisingEdge(dut.clk)
 
 @cocotb.test()
-async def test_systolic_core_stress(dut):
-    """Stress Test: Load Weight Once, Stream 100 Matrices (400 Rows)"""
+async def test_systolic_core_flow_control(dut):
+    """Stress Test: Valid/Ready Flow Control with Random Stalls"""
+    if os.environ.get("WAVES") == "1":
+        # iverilog dump is usually done in verilog or through Makefile
+        pass
+        
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
     await reset_dut(dut)
-    N = 4
-    NUM_MATRICES = 100
+    
+    N = 8
+    NUM_MATRICES = 10  # Reduced for random stall test
     TOTAL_ROWS = NUM_MATRICES * N
+    
+    # Random seeded for reproducibility
+    np.random.seed(37)
+    random.seed(37)
     
     # 1. Prepare Data
     weights = np.random.randint(-64, 63, size=(N, N)).astype(np.int8)
@@ -25,109 +41,108 @@ async def test_systolic_core_stress(dut):
     # Expected Result: (TOTAL_ROWS, N)
     expected_batch_y = np.matmul(batch_inputs.astype(np.int32), weights.astype(np.int32))
 
-    # 2. Phase 1: Load Weights (8 cycles)
-    # HW shifts left-to-right, so we feed Col 7 first, then Col 6... Col 0 last.
-    # systolic_core handles the diagonal skew internally.
-    dut._log.info("Starting Weight Loading (8 cycles)...")
-    dut.load_weight.value = 1
-    for t in range(N):
-        c = (N - 1) - t # Col 7, 6, ..., 0
-        cycle_val = 0
-        for r in range(N):
-            w_val = int(weights[r, c]) & 0xFF
-            cycle_val |= (w_val << (r * 8))
-        dut.x_in.value = cycle_val
-        await RisingEdge(dut.clk)
-    
-    dut.load_weight.value = 0
-    dut.x_in.value = 0
-    await RisingEdge(dut.clk)
+    dut._log.info("Starting Flow Control Test...")
 
-    # 3. Phase 2: Feed Inputs (Streaming 800 rows without gaps)
-    dut._log.info(f"Streaming {TOTAL_ROWS} Input Rows...")
-    dut.y_in.value = 0
-    
-    results = []
-    pipeline_errors = 0
-    first_valid_cycle = -1
-    
-    async def feed_inputs():
+    # Let's fix the driver for true AXI-Stream random stalls
+    async def robust_driver():
+        # A) Load Weights
+        for t in range(N):
+            c = (N - 1) - t 
+            cycle_val = 0
+            for r in range(N):
+                w_val = int(weights[r, c]) & 0xFF
+                cycle_val |= (w_val << (r * 8))
+            
+            dut.x_in.value = cycle_val
+            dut.load_weight_in.value = (1 << N) - 1
+            
+            while True:
+                is_valid = random.choice([0, 1, 1])
+                dut.valid_in.value = is_valid
+                await RisingEdge(dut.clk)
+                if is_valid and int(dut.ready_out.value) == 1:
+                    break
+        # Flush weights through skew buffers and shift registers
+        dut.valid_in.value = 0
+        dut.load_weight_in.value = 0
+        for _ in range(30):
+            await RisingEdge(dut.clk)
+            
+        # Global Weight Latch
+        dut.weight_latch_en.value = 1
+        await RisingEdge(dut.clk)
+        dut.weight_latch_en.value = 0
+        
+        # B) Stream Inputs
         for t in range(TOTAL_ROWS):
             val = 0
             for r in range(N):
                 x_val = int(batch_inputs[t, r]) & 0xFF
                 val |= (x_val << (r * 8))
             
-            dut.valid_in.value = 0xF 
             dut.x_in.value = val
-            await RisingEdge(dut.clk)
-        dut.valid_in.value = 0
-        dut.x_in.value = 0
-
-    # 4. Phase 3: Collect Results and Check Pipeline
-    async def collect_results():
-        nonlocal first_valid_cycle, pipeline_errors
-        # Initial Latency: Skew(0) + Array(8) + Deskew(7) = 15 cycles.
-        # Plus 1 cycle PE output reg? Let's check.
-        
-        for cycle in range(TOTAL_ROWS + 50): 
-            await RisingEdge(dut.clk)
-            val_out = dut.valid_out.value
+            dut.load_weight_in.value = 0
             
-            if val_out.is_resolvable and (int(val_out) == 0xF):
-                if first_valid_cycle == -1:
-                    first_valid_cycle = cycle
-                    dut._log.info(f"First valid result captured at cycle {cycle}")
-                
-                y_out_raw = str(dut.y_out.value)
-                row_res = []
-                for col in range(N):
-                    start = (N - 1 - col) * 32
-                    end = start + 32
-                    chunk_str = y_out_raw[start:end]
-                    
-                    if 'x' in chunk_str.lower() or 'z' in chunk_str.lower():
-                        row_res.append(0xDEADBEEF)
-                    else:
-                        chunk = int(chunk_str, 2)
-                        if chunk & 0x80000000:
-                            chunk -= 0x100000000
-                        row_res.append(chunk)
-                results.append(row_res)
-                
-                if len(results) == TOTAL_ROWS:
+            while True:
+                is_valid = random.choice([0, 1, 1, 1])
+                dut.valid_in.value = is_valid
+                await RisingEdge(dut.clk)
+                if is_valid and int(dut.ready_out.value) == 1:
+                    dut._log.debug(f"Row {t} sent: {batch_inputs[t]}")
                     break
-            else:
-                # If we are in the middle of a batch and valid drops, that's a pipeline gap!
-                if first_valid_cycle != -1 and len(results) < TOTAL_ROWS:
-                    dut._log.error(f"Cycle {cycle}: Pipeline gap detected! valid_out={val_out}")
-                    pipeline_errors += 1
+                    
+        dut.valid_in.value = 0
 
-    # Start streaming
-    cocotb.start_soon(feed_inputs())
-    await collect_results()
+    # ---------------------------------------------------------
+    # Monitor Task (Receives outputs with random ready drops)
+    # ---------------------------------------------------------
+    results = []
+    async def monitor():
+        while len(results) < TOTAL_ROWS:
+            is_ready = random.choice([0, 1, 1]) # 66% chance ready
+            dut.ready_in.value = is_ready
+            await RisingEdge(dut.clk)
+            
+            if is_ready and int(dut.valid_out.value) == 1:
+                # Capture result
+                y_val = int(dut.y_out.value)
+                row_res = []
+                for j in range(N):
+                    extract = (y_val >> (j * 32)) & 0xFFFFFFFF
+                    if extract & 0x80000000:
+                        extract -= 0x100000000
+                    row_res.append(extract)
+                results.append(row_res)
 
-    # 5. Final Evaluation
+    # ---------------------------------------------------------
+    # Run Simulation
+    # ---------------------------------------------------------
+    dut.y_in.value = 0
+    cocotb.start_soon(robust_driver())
+    monitor_task = cocotb.start_soon(monitor())
+    
+    # Timeout watch
+    timeout = 0
+    while len(results) < TOTAL_ROWS and timeout < 20000:
+        await RisingEdge(dut.clk)
+        timeout += 1
+
+    if timeout >= 20000:
+        dut._log.error(f"Timeout! Captured {len(results)}/{TOTAL_ROWS} rows")
+        assert False
+
+    # ---------------------------------------------------------
+    # Verify
+    # ---------------------------------------------------------
     got = np.array(results)
-    dut._log.info(f"Stream Complete. Rows Captured: {len(results)}, Pipeline Errors: {pipeline_errors}")
     
-    # 6. Detailed Visibility for USER
-    dut._log.info("--- Detailed Matrix Comparison (First 4x4 Matrix: A_0) ---")
-    dut._log.info(f"Weight Matrix (B):\n{weights}")
-    dut._log.info(f"First Input Matrix (A_0):\n{batch_inputs[0:4]}")
-    dut._log.info(f"Expected Result (A_0 * B):\n{expected_batch_y[0:4]}")
-    dut._log.info(f"Actual Result Captured:\n{got[0:4]}")
-    
-    dut._log.info("--- Detailed Matrix Comparison (Last 4x4 Matrix: A_99) ---")
-    dut._log.info(f"Last Input Matrix (A_99):\n{batch_inputs[-4:]}")
-    dut._log.info(f"Expected Result (A_99 * B):\n{expected_batch_y[-4:]}")
-    dut._log.info(f"Actual Result Captured:\n{got[-4:]}")
-    
-    if len(results) < TOTAL_ROWS:
-        assert False, f"Verification Failed: Captured only {len(results)}/{TOTAL_ROWS} rows."
-
-    assert pipeline_errors == 0, "Verification Failed: Pipeline bubbles detected during streaming!"
-
-    # Math Verification for all 100 matrices
-    np.testing.assert_array_equal(got, expected_batch_y, "Streaming result mismatch!")
-    dut._log.info("Systolic Core Stress Test (100 Matrices) Passed!")
+    try:
+        np.testing.assert_array_equal(got, expected_batch_y)
+        dut._log.info("Flow Control Test Passed! No duplicated or lost data.")
+        dut._log.info(f"\n--- Weights Matrix ---\n{weights}")
+        dut._log.info(f"\n--- Input Matrix (First 5 Rows) ---\n{batch_inputs[:5]}")
+        dut._log.info(f"\n--- Expected Output (First 5 Rows) ---\n{expected_batch_y[:5]}")
+        dut._log.info(f"\n--- Hardware Output (First 5 Rows) ---\n{got[:5]}")
+    except Exception as e:
+        dut._log.error(f"Mismatch:\nExpected:\n{expected_batch_y[:5]}\nGot:\n{got[:5]}")
+        raise e

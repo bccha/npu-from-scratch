@@ -18,6 +18,7 @@ module npu_ctrl (
     output reg  [31:0] seq_total_rows,
     input  wire        seq_busy,
     input  wire        seq_done,
+    output reg         weight_latch_en,
 
     // DMA Control
     output reg  [31:0] dma_rd_addr,
@@ -71,6 +72,7 @@ module npu_ctrl (
             seq_start <= 1'b0;
             seq_mode  <= 2'd0;
             seq_total_rows <= 32'd0;
+            weight_latch_en <= 1'b0;
             dma_rd_addr <= 32'd0;
             dma_rd_len  <= 32'd0;
             dma_rd_start <= 1'b0;
@@ -81,6 +83,7 @@ module npu_ctrl (
             seq_start <= 1'b0;
             dma_rd_start <= 1'b0;
             dma_wr_start <= 1'b0;
+            weight_latch_en <= 1'b0;
 
             if (write && select_sys) begin
                 case (address[2:0])
@@ -97,6 +100,7 @@ module npu_ctrl (
                         dma_wr_start <= writedata[17];
                     end
                     3'd6: seq_total_rows <= writedata;
+                    3'd7: weight_latch_en <= writedata[0];
                     default: ;
                 endcase
             end
