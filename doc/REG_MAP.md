@@ -294,3 +294,88 @@ void run_npu_inference(uint32_t *weight_addr, uint32_t *input_stream_addr,
 4.  **`DIRECT` (Byte Offset) vs 일반 매크로 (Register Index) 차이:**
     *   `IOWR_32DIRECT` / `IORD_32DIRECT`: 넘겨준 `offset` 파라미터 그대로 바이트 단위 주소 덧셈을 수행합니다. 데이터시트나 문서의 Byte Offset(예: 0x00, 0x04, 0x08) 항목을 보고 코딩할 때 유용합니다.
     *   `IOWR` / `IORD`: `(reg) * 4`를 연산식에 포함시켜 두었습니다. 우리가 흔히 문서의 Word Address 항목에 기재된 "N번째 레지스터"(예: reg = 0번, 1번, 2번...) 인덱스 번호를 넣으면 매크로가 바이트 단위 간격인 4의 배수로 내부에서 수식 스케일링을 대신 해줍니다. (예: 1번 레지스터 = `(1) * 4 = base + 4` Byte)
+
+---
+
+## 부록 (Appendix): ARM HPS (Linux) 환경의 메모리 맵핑 (`mmap`) 예제
+
+앞서 설명한 바와 같이, ARM Cortex-A9 기반의 HPS (Linux User Space)에서는 하드웨어 물리 주소(Physical Address)에 직접 포인터로 접근할 수 없으므로 `/dev/mem`과 `mmap()` 시스템 콜을 이용해 가상 주소 공간으로 끌어와야(Virtual Memory Mapping) 합니다.
+
+다음은 **1. LWHPS2FPGA 브릿지 (NPU / DMA 제어용)** 밎 **2. HPS-to-FPGA 브릿지 (DDR3 물리 메모리 접근용)** 를 각각 맵핑하여 포인터를 획득하는 C 코드 예제입니다.
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <unistd.h>
+#include <stdint.h>
+
+// ==========================================
+// Physical Addresses (Qsys Board Settings)
+// ==========================================
+// 1. Light-Weight HPS-to-FPGA Bridge
+#define LWHPS2FPGA_BASE 0xFF200000
+#define LWHPS2FPGA_SPAN 0x00200000
+
+// 2. HPS-to-FPGA Bridge (Direct DDR3 Memory Access)
+#define HPS_FPGA_RAM_BASE 0x20000000
+#define HPS_FPGA_RAM_SPAN 0x01000000 // 16MB Window
+
+// H/W Component Offsets from LWHPS2FPGA Bridge Base
+#define NPU_CTRL_OFFSET  0x00030000
+#define MSGDMA_RX_OFFSET 0x00031000
+
+int main() {
+    volatile uint8_t *lw_bridge_map = NULL;
+    volatile uint8_t *ddr_map = NULL;
+    
+    volatile uint8_t *NPU_CTRL_BASE;
+    volatile uint8_t *MSGDMA_RX_CSR_BASE;
+    volatile uint8_t *DDR3_WINDOW_BASE;
+
+    // 1. /dev/mem 디바이스 파일 열기 (O_SYNC로 캐시 동기화 보장)
+    int fd = open("/dev/mem", O_RDWR | O_SYNC);
+    if (fd < 0) {
+        perror("Failed to open /dev/mem");
+        return EXIT_FAILURE;
+    }
+
+    // 2. LWHPS2FPGA Bridge 가상 메모리 맵핑 (NPU, MSGDMA 등의 CSR 접근용)
+    lw_bridge_map = (uint8_t *)mmap(NULL, LWHPS2FPGA_SPAN, PROT_READ | PROT_WRITE,
+                                    MAP_SHARED, fd, LWHPS2FPGA_BASE);
+    if (lw_bridge_map == MAP_FAILED) {
+        perror("mmap lw_bridge_map failed");
+        close(fd);
+        return EXIT_FAILURE;
+    }
+
+    // 3. HPS-to-FPGA Bridge 가상 메모리 맵핑 (FPGA가 직접 접근할 DDR3 메모리 영역)
+    ddr_map = (uint8_t *)mmap(NULL, HPS_FPGA_RAM_SPAN, PROT_READ | PROT_WRITE,
+                              MAP_SHARED, fd, HPS_FPGA_RAM_BASE);
+    if (ddr_map == MAP_FAILED) {
+        perror("mmap ddr_map failed");
+        munmap((void *)lw_bridge_map, LWHPS2FPGA_SPAN);
+        close(fd);
+        return EXIT_FAILURE;
+    }
+
+    // ==========================================
+    // 4. 가상 주소 Base 포인터 계산 완료
+    // ==========================================
+    // 이제부터 이 포인터들을 위에서 설명한 IOWR_32DIRECT 매크로의 파라미터로 넘겨 제어합니다.
+    NPU_CTRL_BASE      = lw_bridge_map + NPU_CTRL_OFFSET;
+    MSGDMA_RX_CSR_BASE = lw_bridge_map + MSGDMA_RX_OFFSET;
+    DDR3_WINDOW_BASE   = ddr_map; // DDR 메모리 0번지 포인터
+
+    printf("NPU_CTRL_BASE Virtual Addr: %p\n", NPU_CTRL_BASE);
+    printf("DDR3 Initial Data: 0x%08X\n", *(volatile uint32_t*)DDR3_WINDOW_BASE);
+
+    // 프로그램 종료 시 자원 해제
+    munmap((void *)ddr_map, HPS_FPGA_RAM_SPAN);
+    munmap((void *)lw_bridge_map, LWHPS2FPGA_SPAN);
+    close(fd);
+
+    return 0;
+}
+```
