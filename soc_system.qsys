@@ -516,7 +516,7 @@
   <parameter name="EXPOSE_ST_PORT" value="0" />
   <parameter name="FIX_ADDRESS_WIDTH" value="32" />
   <parameter name="MAX_BURST_COUNT" value="16" />
-  <parameter name="MAX_BYTE" value="4096" />
+  <parameter name="MAX_BYTE" value="1048576" />
   <parameter name="MAX_STRIDE" value="1" />
   <parameter name="MODE" value="1" />
   <parameter name="PACKET_ENABLE" value="1" />
@@ -559,7 +559,7 @@
   <parameter name="EXPOSE_ST_PORT" value="0" />
   <parameter name="FIX_ADDRESS_WIDTH" value="32" />
   <parameter name="MAX_BURST_COUNT" value="16" />
-  <parameter name="MAX_BYTE" value="4096" />
+  <parameter name="MAX_BYTE" value="1048576" />
   <parameter name="MAX_STRIDE" value="1" />
   <parameter name="MODE" value="2" />
   <parameter name="PACKET_ENABLE" value="1" />

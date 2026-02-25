@@ -48,5 +48,5 @@ DE10-Nano(Cyclone V SoC) FPGA 위에서 NPU를 밑바닥부터 설계하는 프�
 
 ### 3. ARM Cortex-A9 CPU vs FPGA NPU 성능 벤치마크 구축
 - **Linux HPS 제어 API (`linux_software/npu_test`):** `/dev/mem`을 통해 AXI Bridge 공간을 Memory-Map(`mmap`)하여, CPU가 직접 캐시를 우회하여 FPGA RAM 영역과 MSGDMA, NPU 컨트롤러를 직접 제어하는 C언어 드라이버 구현.
-- **공정한 실측(Speedup) 측정:** 31 배치(Batch) 연속 8x8 행렬 스트리밍 연산을 ARM Cortex-A9 CPU (`gcc -O2` 최적화 3중 for문)와 FPGA 하드웨어 NPU (MSGDMA 오프로드) 상에서 수행하고 `gettimeofday` 단위로 엄밀하게 측정하여 정확성(PASS)과 실행 시간을 비교 검증.
-- **성능 측정 결과**: 800MHz 프로세서 대비 **50MHz NPU가 약 3.59배 (3.59x) 더 빠른 실행 속도**를 달성함을 실제 환경에서 확인 완료. (CPU: 133us / NPU: 37us [DMA 오버헤드 포함])
+- **공정한 실측(Speedup) 측정:** 5000 배치(Batch) 연속 8x8 행렬 스트리밍 연산을 ARM Cortex-A9 CPU (`gcc -O2` 최적화 3중 for문)와 FPGA 하드웨어 NPU (MSGDMA 오프로드) 상에서 수행하고 `gettimeofday` 단위로 엄밀하게 측정하여 정확성(PASS)과 실행 시간을 비교 검증.
+- **성능 측정 결과**: 800MHz 프로세서 대비 **50MHz NPU가 약 4.64배 (4.64x) 더 빠른 실행 속도**를 달성함을 실제 환경에서 확인 완료. (CPU: 22298us / NPU: 4807us [DMA 오버헤드 포함])

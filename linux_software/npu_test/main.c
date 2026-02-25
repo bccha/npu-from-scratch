@@ -309,8 +309,8 @@ void verify_streaming_batch() {
 
   uint32_t physical_base = 0x20000000;
   volatile uint8_t *weights_addr = DDR3_WINDOW_BASE;
-  volatile uint8_t *inputs_addr = DDR3_WINDOW_BASE + 0x1000;
-  volatile uint8_t *outputs_addr = DDR3_WINDOW_BASE + 0x8000;
+  volatile uint8_t *inputs_addr = DDR3_WINDOW_BASE + 0x100000;
+  volatile uint8_t *outputs_addr = DDR3_WINDOW_BASE + 0x200000;
 
   signed char weight_matrix[8][8];
   for (int r = 0; r < 8; r++) {
@@ -342,8 +342,8 @@ void verify_streaming_batch() {
 
   IOWR(NPU_CTRL_BASE, REG_SEQ_ROWS, 10 * 8);
 
-  npu_get_matrix(physical_base + 0x8000, 10);
-  npu_load_matrix(physical_base + 0x1000, 10);
+  npu_get_matrix(physical_base + 0x200000, 10);
+  npu_load_matrix(physical_base + 0x100000, 10);
 
   npu_wait_execution();
 
@@ -471,8 +471,8 @@ void verify_performance_cpu_vs_npu(int batch_count) {
 
   uint32_t physical_base = 0x20000000;
   volatile uint8_t *weights_addr = DDR3_WINDOW_BASE;
-  volatile uint8_t *inputs_addr = DDR3_WINDOW_BASE + 0x1000;
-  volatile uint8_t *outputs_addr = DDR3_WINDOW_BASE + 0x8000;
+  volatile uint8_t *inputs_addr = DDR3_WINDOW_BASE + 0x100000;
+  volatile uint8_t *outputs_addr = DDR3_WINDOW_BASE + 0x200000;
 
   // 1. Generate Random Data
   signed char weight_matrix[8][8];
@@ -531,8 +531,8 @@ void verify_performance_cpu_vs_npu(int batch_count) {
   double npu_start = get_time_us();
   // Batch Execution Request
   IOWR(NPU_CTRL_BASE, REG_SEQ_ROWS, batch_count * 8);
-  npu_get_matrix(physical_base + 0x8000, batch_count);
-  npu_load_matrix(physical_base + 0x1000, batch_count);
+  npu_get_matrix(physical_base + 0x200000, batch_count);
+  npu_load_matrix(physical_base + 0x100000, batch_count);
 
   // Wait for completion
   npu_wait_execution();

@@ -123,13 +123,13 @@ NPU System Verification (Full Framework)
 q. Quit
 Choose: 4
 
-Enter number of batches (e.g., 10, 100, 1000): 31
+Enter number of batches (e.g., 10, 100, 1000): 5000
 
-Starting CPU vs NPU Performance Comparison (31 Batches of 8x8)...
+Starting CPU vs NPU Performance Comparison (5000 Batches of 8x8)...
 
-=== Performance Results (31 Batches) ===
+=== Performance Results (5000 Batches) ===
 Verification: PASS (NPU output perfectly matches CPU)
-CPU Time : 133.000 us
-NPU Time : 37.000 us (Includes DMA Setup overhead)
-Speedup  : 3.59 x
+CPU Time : 22298.000 us
+NPU Time : 4807.000 us (Includes DMA Setup overhead)
+Speedup  : 4.64 x
 ```

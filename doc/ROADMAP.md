@@ -11,9 +11,9 @@ FPGA 기반 NPU 설계 경험을 쌓기 위한 단계별 로드맵.
 - [x] 8×8 Systolic Array MAC 어레이 RTL 구현 (Weight Stationary)
 - [x] Avalon 컨트롤 및 스트리밍 제어 분리 (npu_ctrl, npu_stream_ctrl)
 - [x] 패킷 송수신 신호 정밀화 (EOP Batch Streaming) 보완
-- [x] Linux `/dev/mem` 및 Python `mmap`으로 Numpy/C-Driver 결과 직접 검증 및 벤치마크 
+- [x] Linux `/dev/mem` 및 Python `mmap`으로 Numpy/C-Driver 결과 직접 검증 및 벤치마크 (완료)
 
-**결과물:** "행렬곱 가속기 스택 (H/W + S/W)" 조기 완성
+**결과물:** "행렬곱 가속기 스택 (H/W + S/W)" 조기 완성. Bare-metal(Nios II) 및 리눅스(ARM Cortex-A9) 완벽 호환 구현 달성.
 
 ---
 
