@@ -129,13 +129,32 @@ Base Address: `MSGDMA_DESCRIPTOR_BASE`
 #define NPU_SEQ_TOTAL_ROWS_REG 0x18
 #define NPU_WEIGHT_LATCH_REG   0x1C
 
-// MSGDMA Descriptor Control Flag
-#define MSGDMA_DESC_GO_BIT     (1 << 31)
-#define MSGDMA_DESC_GEN_SOP    (1 << 8)
-#define MSGDMA_DESC_GEN_EOP    (1 << 9)
+// MSGDMA Descriptor Control Flags (Standard Descriptor)
+// 공통
+#define MSGDMA_DESC_GO               (1 << 31) // 0x80000000
+// Read DMA (Memory to NPU: Avalon-ST 생성)
+#define MSGDMA_DESC_GEN_EOP          (1 << 9)  // 0x00000200
+#define MSGDMA_DESC_GEN_SOP          (1 << 8)  // 0x00000100
+// Write DMA (NPU to Memory: Avalon-ST 수신)
+#define MSGDMA_DESC_END_ON_EOP       (1 << 12) // 0x00001000
 
-void run_npu_inference(uint32_t *weight_addr, uint32_t *input_stream_addr, uint32_t *output_stream_addr, uint32_t in_bytes, uint32_t out_bytes, uint32_t rows) {
+// MSGDMA 초기화 헬퍼 함수
+void msgdma_init(uint32_t csr_base) {
+    // 1. 상태 레지스터(Status) 클리어: W1C (Write 1 to Clear) 속성의 비트들을 1로 써서 초기화
+    IOWR_32DIRECT(csr_base, 0x00, 0xFFFFFFFF);
+    // 2. 제어 레지스터(Control) 클리어: Stop Dispatcher(bit 5) 등을 해제하고 활성화 상태로 만듦
+    IOWR_32DIRECT(csr_base, 0x04, 0x00000000); 
+}
+
+void run_npu_inference(uint32_t *weight_addr, uint32_t *input_stream_addr, 
+        uint32_t *output_stream_addr, uint32_t in_bytes, uint32_t out_bytes, 
+        uint32_t rows) {
     
+    // ====================================================================
+    // 0. MSGDMA 초기화
+    // ====================================================================
+    msgdma_init(MSGDMA_RX_CSR_BASE);
+    msgdma_init(MSGDMA_TX_CSR_BASE);
     // ====================================================================
     // 1. NPU 초기화 및 Weight Load 모드 진입
     // ====================================================================
@@ -156,9 +175,10 @@ void run_npu_inference(uint32_t *weight_addr, uint32_t *input_stream_addr, uint3
     IOWR_32DIRECT(MSGDMA_RX_DESC_BASE, 0x08, in_bytes); 
     
     // Control Register 설정 후 Go 비트 켜서 전송(Dispatcher Commit) 시작
-    // SOP(Start of Packet)나 EOP(End of Packet)가 필요하다면 OR 연산으로 추가
-    uint32_t desc_ctrl = MSGDMA_DESC_GEN_SOP | MSGDMA_DESC_GEN_EOP | MSGDMA_DESC_GO_BIT;
-    IOWR_32DIRECT(MSGDMA_RX_DESC_BASE, 0x0C, desc_ctrl);
+    // Read DMA는 NPU 향으로 SOP, EOP 신호를 직접 생성(Generate)해 주어야 합니다.
+    // 0x80000000(GO) | 0x00000200(GEN_EOP) | 0x00000100(GEN_SOP) = 0x80000300
+    uint32_t rx_desc_ctrl = MSGDMA_DESC_GO | MSGDMA_DESC_GEN_EOP | MSGDMA_DESC_GEN_SOP;
+    IOWR_32DIRECT(MSGDMA_RX_DESC_BASE, 0x0C, rx_desc_ctrl);
 
     // ====================================================================
     // 3. Weight 데이터 전송 완료 대기 (DMA CSR 이용)
@@ -188,10 +208,11 @@ void run_npu_inference(uint32_t *weight_addr, uint32_t *input_stream_addr, uint3
     // 수신할 총 Byte 길이
     IOWR_32DIRECT(MSGDMA_TX_DESC_BASE, 0x08, out_bytes); 
     
-    // 수신 측(Write DMA)은 NPU 하드웨어(Avalon-ST Source)가 보내주는 SOP/EOP 신호를 
-    // 수동적으로 받아서 패킷을 끊으므로, S/W Descriptor에 SOP/EOP 생성 비트를 켤 필요가 없습니다.
-    // 대신 전송 완료 인터럽트나 폴링을 위해 Transfer Complete IRQ 비트를 켤 수 있습니다.
-    uint32_t tx_desc_ctrl = (1 << 14) | MSGDMA_DESC_GO_BIT; // 14번 비트: Transfer Complete IRQ Enable
+    // 수신 측(Write DMA)은 NPU(Avalon-ST Source)가 보내주는 패킷 신호와
+    // 설정한 Length 중 하나를 만나면 전송을 종료하도록 End 비트를 켭니다.
+    // (Length에 의한 종료는 본래 기본 동작이므로 별도의 비트 없이 Length 레지스터 값에 의해 자동으로 끝납니다)
+    // 0x80000000(GO) | 0x00001000(End on EOP) = 0x80001000
+    uint32_t tx_desc_ctrl = MSGDMA_DESC_GO | MSGDMA_DESC_END_ON_EOP; 
     IOWR_32DIRECT(MSGDMA_TX_DESC_BASE, 0x0C, tx_desc_ctrl); // 수신 대기 시작 (Go)
     
     // ====================================================================
@@ -209,7 +230,7 @@ void run_npu_inference(uint32_t *weight_addr, uint32_t *input_stream_addr, uint3
     IOWR_32DIRECT(MSGDMA_RX_DESC_BASE, 0x00, (uint32_t)input_stream_addr); 
     IOWR_32DIRECT(MSGDMA_RX_DESC_BASE, 0x04, 0x00000000); 
     IOWR_32DIRECT(MSGDMA_RX_DESC_BASE, 0x08, in_bytes); 
-    IOWR_32DIRECT(MSGDMA_RX_DESC_BASE, 0x0C, desc_ctrl); // 전송 시작! (Go)
+    IOWR_32DIRECT(MSGDMA_RX_DESC_BASE, 0x0C, rx_desc_ctrl); // 전송 시작! (Go)
 
     // ====================================================================
     // 6. NPU 연산 및 Output 수신 완료 대기 
