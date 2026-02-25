@@ -4,7 +4,7 @@ FPGA 기반 NPU 설계 경험을 쌓기 위한 단계별 로드맵.
 
 ---
 
-## 2월: Systolic Array & DMA Offload — 행렬곱 가속기 통신 완성
+## Phase 1: Systolic Array & DMA Offload — 행렬곱 가속기 통신 완성 (완료)
 
 **목표:** 8×8 MAC 어레이 RTL 구현 및 Linux/Python 행렬곱 벤치마크 완벽 구동
 
@@ -17,7 +17,7 @@ FPGA 기반 NPU 설계 경험을 쌓기 위한 단계별 로드맵.
 
 ---
 
-## 3~4월: TVM/MLIR 분석 — NPU 컴파일러 경험 연동
+## Phase 2: TVM/MLIR 분석 — NPU 컴파일러 광속 연동 (진행 중)
 
 **목표:** TVM 코드베이스 분석 및 FPGA 백엔드 연결 실험 (가속기 통합 연동)
 
@@ -30,7 +30,7 @@ FPGA 기반 NPU 설계 경험을 쌓기 위한 단계별 로드맵.
 
 ---
 
-## 5~6월: 구조 고도화 — 하드웨어 및 NPU 역량 확장
+## Phase 3: 구조 고도화 — 하드웨어 및 NPU 역량 확장
 
 **목표:** SRAM 버퍼 구조 확장 및 Activation 추가 지원
 
