@@ -462,6 +462,16 @@ void verify_performance_cpu_vs_npu(int batch_count) {
     return;
   }
 
+  // MSGDMA Maximum Transfer Length is 1MB.
+  // 1MB / 256 bytes per output matrix = exactly 4096 batch max.
+  // We limit to 4000 to be safe and prevent hardware hang.
+  if (batch_count > 4000) {
+    printf("\n[ERROR] Batch count exceeds hardware DMA limits!\n");
+    printf("        Maximum allowed is 4000 batches to stay under the 1MB "
+           "MSGDMA transfer limit.\n");
+    return;
+  }
+
   printf(
       "\nStarting CPU vs NPU Performance Comparison (%d Batches of 8x8)...\n",
       batch_count);
