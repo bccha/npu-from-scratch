@@ -20,8 +20,6 @@
 // ==========================================
 // Component Offsets (Extracted from Qsys)
 // ==========================================
-#define ADDRESS_SPAN_EXTENDER_0_CNTL_OFFSET 0x00000080
-#define ADDRESS_SPAN_EXTENDER_0_WINDOWED_SLAVE_OFFSET 0x08000000
 #define DDR_READ_ST_CSR_OFFSET 0x31000
 #define DDR_READ_ST_DESC_OFFSET 0x31040
 #define DDR_WRITE_ST_CSR_OFFSET 0x31020
@@ -52,7 +50,6 @@ volatile uint8_t *DDR_READ_ST_CSR_BASE;
 volatile uint8_t *DDR_READ_ST_DESCRIPTOR_SLAVE_BASE;
 volatile uint8_t *DDR_WRITE_ST_CSR_BASE;
 volatile uint8_t *DDR_WRITE_ST_DESCRIPTOR_SLAVE_BASE;
-volatile uint8_t *ADDRESS_SPAN_EXTENDER_0_CNTL_BASE;
 volatile uint8_t *DDR3_WINDOW_BASE;
 
 // ============================================================================
@@ -217,8 +214,6 @@ void verify_full_system() {
   while ((IORD(NPU_CTRL_BASE, REG_STATUS) & 0x01) != 0) {
   }
 
-  IOWR_32DIRECT(ADDRESS_SPAN_EXTENDER_0_CNTL_BASE, 0, 0x20000000);
-
   uint32_t physical_base = 0x20000000;
   volatile uint8_t *weights_addr = DDR3_WINDOW_BASE;
   volatile uint8_t *inputs_addr = DDR3_WINDOW_BASE + 0x1000;
@@ -311,8 +306,6 @@ void verify_streaming_batch() {
 
   msgdma_init(DDR_READ_ST_CSR_BASE);
   msgdma_init(DDR_WRITE_ST_CSR_BASE);
-
-  IOWR_32DIRECT(ADDRESS_SPAN_EXTENDER_0_CNTL_BASE, 0, 0x20000000);
 
   uint32_t physical_base = 0x20000000;
   volatile uint8_t *weights_addr = DDR3_WINDOW_BASE;
@@ -475,7 +468,6 @@ void verify_performance_cpu_vs_npu(int batch_count) {
 
   msgdma_init(DDR_READ_ST_CSR_BASE);
   msgdma_init(DDR_WRITE_ST_CSR_BASE);
-  IOWR_32DIRECT(ADDRESS_SPAN_EXTENDER_0_CNTL_BASE, 0, 0x20000000);
 
   uint32_t physical_base = 0x20000000;
   volatile uint8_t *weights_addr = DDR3_WINDOW_BASE;
@@ -620,8 +612,6 @@ int main() {
   DDR_READ_ST_DESCRIPTOR_SLAVE_BASE = lw_bridge_map + DDR_READ_ST_DESC_OFFSET;
   DDR_WRITE_ST_CSR_BASE = lw_bridge_map + DDR_WRITE_ST_CSR_OFFSET;
   DDR_WRITE_ST_DESCRIPTOR_SLAVE_BASE = lw_bridge_map + DDR_WRITE_ST_DESC_OFFSET;
-  ADDRESS_SPAN_EXTENDER_0_CNTL_BASE =
-      lw_bridge_map + ADDRESS_SPAN_EXTENDER_0_CNTL_OFFSET;
   DDR3_WINDOW_BASE = ddr_map;
 
   while (1) {
