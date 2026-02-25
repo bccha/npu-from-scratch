@@ -65,7 +65,8 @@ void msgdma_read_stream_push(volatile uint8_t *descriptor_base,
   IOWR_32DIRECT(descriptor_base, 0x00, src_addr);
   IOWR_32DIRECT(descriptor_base, 0x04, 0x00000000);
   IOWR_32DIRECT(descriptor_base, 0x08, length);
-  IOWR_32DIRECT(descriptor_base, 0x0C, 0x8C000000);
+  IOWR_32DIRECT(descriptor_base, 0x0C,
+                0x80000300); // GO | GEN_EOP(9) | GEN_SOP(8)
 }
 
 void msgdma_write_stream_push(volatile uint8_t *descriptor_base,
@@ -73,7 +74,7 @@ void msgdma_write_stream_push(volatile uint8_t *descriptor_base,
   IOWR_32DIRECT(descriptor_base, 0x00, 0x00000000);
   IOWR_32DIRECT(descriptor_base, 0x04, dst_addr);
   IOWR_32DIRECT(descriptor_base, 0x08, length);
-  IOWR_32DIRECT(descriptor_base, 0x0C, 0x80C00000);
+  IOWR_32DIRECT(descriptor_base, 0x0C, 0x80001000); // GO | End on EOP(12)
 }
 
 // ============================================================================

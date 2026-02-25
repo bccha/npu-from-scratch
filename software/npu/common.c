@@ -52,12 +52,12 @@ void msgdma_read_stream_push(alt_u32 descriptor_base, alt_u32 src_addr,
   IOWR_32DIRECT(descriptor_base, 0x04, 0x00000000);
   IOWR_32DIRECT(descriptor_base, 0x08, length);
 
-  // Standard Descriptor Control:
-  // Bit 31: GO
-  // Bit 27: Generate EOP
-  // Bit 26: Generate SOP
-  // 0x8C000000 sets GO, Gen-EOP, Gen-SOP.
-  IOWR_32DIRECT(descriptor_base, 0x0C, 0x8C000000);
+  // Standard Descriptor Control (Altera MSGDMA):
+  // Bit 31: GO           (0x80000000)
+  // Bit 9:  Generate EOP (0x00000200)
+  // Bit 8:  Generate SOP (0x00000100)
+  // 0x80000000 | 0x00000200 | 0x00000100 = 0x80000300
+  IOWR_32DIRECT(descriptor_base, 0x0C, 0x80000300);
 }
 
 void msgdma_write_stream_push(alt_u32 descriptor_base, alt_u32 dst_addr,
@@ -66,9 +66,10 @@ void msgdma_write_stream_push(alt_u32 descriptor_base, alt_u32 dst_addr,
   IOWR_32DIRECT(descriptor_base, 0x04, dst_addr);
   IOWR_32DIRECT(descriptor_base, 0x08, length);
 
-  // Bit 31: GO
-  // Bit 23: End on Length (1)
-  // Bit 22: End on EOP (1)
-  // 0x80000000 | 0x00800000 | 0x00400000 = 0x80C00000
-  IOWR_32DIRECT(descriptor_base, 0x0C, 0x80C00000);
+  // Standard Descriptor Control (Altera MSGDMA):
+  // Bit 31: GO           (0x80000000)
+  // Bit 12: End on EOP   (0x00001000)
+  // (End on Length is natively handled by the length register)
+  // 0x80000000 | 0x00001000 = 0x80001000
+  IOWR_32DIRECT(descriptor_base, 0x0C, 0x80001000);
 }
