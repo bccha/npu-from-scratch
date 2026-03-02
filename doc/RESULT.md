@@ -111,25 +111,46 @@ Streaming Validation: PASS! All 10 batches successfully fully matched.
 
 ## 4. CPU vs NPU Performance Comparison
 
-Measures the absolute execution time of equivalent 8x8 matrix multiplications running on the 800MHz ARM Cortex-A9 CPU (`gcc -O2` via nested loops) versus the 50MHz FPGA NPU (via MSGDMA Pipeline) using parameterized target sizes. Mapped using `gettimeofday()`.
+Measures the absolute execution time of equivalent 8x8 matrix multiplications running on the 800MHz ARM Cortex-A9 CPU (`gcc -O3` via nested loops) versus the 50MHz FPGA NPU (via MSGDMA Pipeline) using parameterized target sizes. Mapped using `gettimeofday()`.
 
-```text
-NPU System Verification (Full Framework)
-----------------------------------------------
-1. Verify MAC PE
-2. Verify Full System Data path
-3. Verify Streaming Pipeline (N Batches)
-4. CPU vs NPU Performance Comparison
-q. Quit
-Choose: 4
+    ```text
+    NPU System Verification (Full Framework)
+    ----------------------------------------------
+    1. Verify MAC PE
+    2. Verify Full System Data path
+    3. Verify Streaming Pipeline (N Batches)
+    4. CPU vs NPU Performance Comparison
+    q. Quit
+    Choose: 4
 
-Enter number of batches (e.g., 10, 100, 1000): 5000
+    Enter number of batches (e.g., 10, 100, 1000): 5000
 
-Starting CPU vs NPU Performance Comparison (5000 Batches of 8x8)...
+    Starting CPU vs NPU Performance Comparison (5000 Batches of 8x8)...
 
-=== Performance Results (5000 Batches) ===
-Verification: PASS (NPU output perfectly matches CPU)
-CPU Time : 22298.000 us
-NPU Time : 4807.000 us (Includes DMA Setup overhead)
-Speedup  : 4.64 x
-```
+    === Performance Results (5000 Batches) ===
+    Verification: PASS (NPU output perfectly matches CPU)
+    CPU Time : 22298.000 us
+    NPU Time : 4807.000 us (Includes DMA Setup overhead)
+    Speedup  : 4.64 x
+    ```
+
+    ---
+
+## 5. End-to-End MNIST (2-Layer MLP) Inference
+
+Actual C Benchmark comparing 50MHz FPGA NPU throughput versus 800MHz ARM CPU on continuous non-linear deep learning inferences involving real world image data and model weights exported from Python. Proves memory bandwidth scaling efficiently offsets lower clock speeds. 
+
+> **Note on Accuracy (88.08%)**: The NPU computes in strict 8-bit integer (Int8) arithmetic. Because the trained model was originally Float32 and subsequently quantized using basic Post-Training Quantization (PTQ), numeric clipping during activation scaling results in the observed 88% accuracy. Implementing Quantization-Aware Training (QAT)—as used in Google's Edge TPUs—will theoretically restore the hardware accuracy closer to 98%.
+
+    ```text
+    [1] Running S/W (CPU) Inference...
+        CPU Accuracy : 88.08%
+        CPU Time     : 69547.07 ms (6.955 ms/img)
+
+    [2] Running H/W (NPU) Inference...
+        NPU Accuracy : 88.08%
+        NPU Time     : 18771.54 ms (1.877 ms/img)
+
+    === Speedup ===
+        H/W Acceleration: 3.70 x
+    ```

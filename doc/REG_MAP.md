@@ -251,6 +251,28 @@ void run_npu_inference(uint32_t *weight_addr, uint32_t *input_stream_addr,
 
 ---
 
+## 부록 (Appendix) 1: SOP / EOP (Packet Framing) 사용 주의사항
+
+NPU와 MSGDMA 간의 통신은 **Avalon-ST (Streaming)** 인터페이스를 사용합니다. Avalon-ST의 패킷 동기화를 위해서는 `SOP (Start of Packet)`와 `EOP (End of Packet)` 신호 처리가 매우 중요합니다.
+
+디버깅 과정에서 밝혀진 바에 따르면, C 소프트웨어 드라이버에서 Descriptor의 Control Register 비트를 어떻게 설정하느냐에 따라 패킷 밀림(동기화 어긋남) 및 데이터 중복 이슈가 발생할 수 있습니다.
+
+### 1. Read DMA (메모리 $\rightarrow$ NPU) 방향
+* **역할:** HPS 메모리에서 NPU 로 입력 데이터(`input_stream`)를 밀어 넣는 채널.
+* **SOP/EOP 설정 (`0x00000300`):** NPU 로직은 내부적으로 스트림의 시작과 끝을 인지하여 FSM을 전환할 수 있도록, **반드시 MSGDMA가 SOP와 EOP를 생성(Generate)하여 패킷 프레임 경계를 만들어 전송하도록 설정해야 합니다.**
+* **설정 매크로:** `MSGDMA_DESC_GEN_SOP | MSGDMA_DESC_GEN_EOP`
+
+### 2. Write DMA (NPU $\rightarrow$ 메모리) 방향 🚨 (주의 요망)
+* **역할:** NPU 연산 결과 스트림을 HPS 메모리로 수신하는 채널.
+* **END_ON_EOP 비트 삭제 (`0x00001000` 배제):**
+    * 기존 초기 버전에서는 Write DMA 수신 시 `End on EOP (0x00001000)` 비트를 켰습니다. (NPU가 하드웨어적으로 발생시킨 EOP를 수신하면 해당 DMA 트랜잭션을 일찍 종료하려는 의도)
+    * **[문제점]:** 여러 개의 행렬(배치, 연속 레이어)을 반복적으로 연산할 때, NPU의 스트림 생성 FSM 타이밍과 MSGDMA의 수신 Dispatcher 대기 타이밍 간에 미묘한 클럭 어긋남(Mismatch)이 발생했습니다. 이로 인해 다음 배치의 데이터가 이전 배치의 EOP에 휩쓸려 잘려나가거나, MSGDMA 상태 레지스터가 꼬여 연산 결과 전체가 Left-Shift 되는 치명적 데이터 오염 현상이 나타났습니다.
+    * **[해결책]:** Write DMA Descriptor 세팅에서 `End on EOP` 제어 비트를 **완전히 제거(`0x00000000`)** 하십시오. 대신 MSGDMA는 이미 전달된 `Length` 값(`out_bytes`)만큼만 정확히 수신하고 트랜잭션을 안전하게 자체 종료합니다.
+    * **수정된 세팅:** `MSGDMA_DESC_GO` (오로지 Go 비트만 켜서 제출)
+
+---
+
+
 ## 부록 (Appendix): 하드웨어 접근 매크로 (Hardware Access Macros)
 
 제공된 C 코드에서는 하드웨어 레지스터에 데이터를 읽고 쓰기 위해 다음과 같은 매크로를 정의하여 사용합니다.

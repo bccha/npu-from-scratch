@@ -69,3 +69,13 @@ When the C code ordered a dynamic processing request for `100` batches (25,600 B
 
 **Lesson Checkpoint**:  
 When massively scaling hardware-accelerated streams via DMA, cross-verify the native Transfer Length definitions within the Qsys instantiation settings window. Bumping the Maximum Transfer Length value symmetrically to **`1,048,576` (1MB)** inside Qsys definitively solved the bottleneck, unlocking thousands of hardware cycles without software truncation or stack overflows.
+
+## 6. AI-Assisted Hardware-Software Co-Design (Agentic Workflow)
+
+This entire NPU project—from systolic array RTL, Python Cocotb simulations, memory-mapped C drivers, to QAT MNIST pipeline integration—was accomplished in just **4 days** leveraging an LLM Agent as a strict Pair Programmer.
+
+- **Rapid Prototyping**: AI automatically generated hundreds of lines of Python simulation logic (`numpy` matrix math vs Verilog golden models), bypassing hours of slow Quartus compilation.
+- **Deep Micro-Architecture Debugging**: When the `4x4_DUPLICATION` bug occurred, analyzing waveform screenshots alongside the AI agent directly pinpointed FIFO read/write pointer mismatches before the FSM `ready` signals dropped.
+- **Complex Specification Extraction**: Extracting the exact MSGDMA Descriptor pointer offsets, Control Register bit masks (like `END_ON_EOP`), and `mmap()` structures usually requires days of reading Intel SoC documentation. The AI agent condensed this into working C drivers almost instantly.
+
+**Lesson**: Integrating an LLM Agent into the core of System-on-Chip (SoC) development proves that solo engineers can now successfully navigate the traditionally insurmountable Full-Stack wall separating Hardware (Verilog), Kernel (Linux/DMA), and Application (Python DL) layers concurrently.

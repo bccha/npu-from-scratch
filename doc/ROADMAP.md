@@ -17,7 +17,19 @@ FPGA 기반 NPU 설계 경험을 쌓기 위한 단계별 로드맵.
 
 ---
 
-## Phase 2: TVM/MLIR 분석 — NPU 컴파일러 광속 연동 (진행 중)
+## Phase 2: MNIST & CNN 성능 한계 돌파 (진행 중)
+
+**목표:** 최신 NPU 기술인 Quantization Aware Training (QAT) 도입 및 합성곱 연산 가속화
+
+- [ ] Python 학습 파이프라인에서 QAT를 통한 int8/int32 Symmetric Quantization 오차 최소화
+- [ ] 2-Layer MLP (MNIST) 모델 최적화 배포 및 실제 정확도 추론 98%+ 달성
+- [ ] 단일 MAC 어레이 구조를 넘어선 기초적인 Convolution(CNN) 매핑 알고리즘 구상
+
+**결과물:** "실전 추론 NPU 딥러닝 정확도 및 성능 최적화 파이프라인" 완성
+
+---
+
+## Phase 3: TVM/MLIR 분석 — NPU 컴파일러 광속 연동
 
 **목표:** TVM 코드베이스 분석 및 FPGA 백엔드 연결 실험 (가속기 통합 연동)
 
@@ -30,7 +42,7 @@ FPGA 기반 NPU 설계 경험을 쌓기 위한 단계별 로드맵.
 
 ---
 
-## Phase 3: 구조 고도화 — 하드웨어 및 NPU 역량 확장
+## Phase 4: 구조 고도화 — 하드웨어 및 NPU 역량 확장
 
 **목표:** SRAM 버퍼 구조 확장 및 Activation 추가 지원
 

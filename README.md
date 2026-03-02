@@ -1,6 +1,6 @@
 # npu-from-scratch
 
-DE10-Nano(Cyclone V SoC) FPGA 위에서 NPU를 밑바닥부터 설계하는 프로젝트.
+DE10-Nano(Cyclone V SoC) FPGA 위에서 NPU를 밑바닥부터 설계하는 프로젝트입니다. **단일 MAC 어레이 설계를 넘어, Python 모델 학습부터 Linux Application 기반의 실제 MNIST 필기체 인식(Inference) 추론까지 End-to-End로 동작하는 완벽한 풀스택 AI 가속기 시스템**을 구현했습니다.
 <p align="center">
   <img src="doc/assets/image.png" width="400">
 </p>
@@ -9,9 +9,10 @@ DE10-Nano(Cyclone V SoC) FPGA 위에서 NPU를 밑바닥부터 설계하는 프�
 
 | 구분 | 단계 | 목표 | 
 |------|------|------|
-| Phase 1 | Systolic Array & Linux DMA | 8×8 MAC 어레이 RTL 구현, Linux C/Python 벤치마크 시스템 오프로딩 **[완료]** | 
-| Phase 2 | TVM/MLIR 컴파일러 연동 | NPU 컴파일러 코드베이스 경험 및 커스텀 오퍼레이터 매핑 |
-| Phase 3 | 하드웨어 고도화 | SRAM 버퍼 크기 증가 및 지원 연산 (Activation, Pooling 등) 확장 설계 |
+| Phase 1 | Systolic Array & Linux DMA | 8×8 MAC 어레이 RTL 구현, Linux C/Python 벤치마크 시스템 오프로딩 **[완료(4일)]** | 
+| Phase 2 | MNIST & CNN 성능 한계 돌파 | Quantization Aware Training(QAT) 도입 및 합성곱 연산(Convolution)의 효율적 하드웨어 매핑 구조 설계 |
+| Phase 3 | TVM/MLIR 컴파일러 연동 | NPU 컴파일러 코드베이스 경험 및 커스텀 오퍼레이터 매핑 |
+| Phase 4 | 하드웨어 고도화 | SRAM 버퍼 크기 증가 및 지원 연산 (Activation, Pooling 등) 확장 설계 |
 
 자세한 내용 → [doc/ROADMAP.md](doc/ROADMAP.md)
 
@@ -40,7 +41,9 @@ DE10-Nano(Cyclone V SoC) FPGA 위에서 NPU를 밑바닥부터 설계하는 프�
 *   [**ROADMAP.md**](doc/ROADMAP.md): 프로젝트 전체 로드맵 및 단계별 세부 구현 목표.
 *   [**DESIGN.md**](doc/DESIGN.md): (초기) NPU 아키텍처 및 기본 설계 방향 문서.
 *   [**DESIGN_2ND.md**](doc/DESIGN_2ND.md): (현재) Avalon-ST (Streaming) 기반의 Bufferless NPU 아키텍처 및 MSGDMA 직렬화 파이프라인 최신 설계 사양.
-*   [**REG_MAP.md**](doc/REG_MAP.md): NPU(`npu_ctrl`) 및 DMA(MSGDMA CSR/Descriptor) 관련 Memory-mapped 레지스터 맵 및 C 코드 제어 예제.
+*   [**REG_MAP.md**](doc/REG_MAP.md): MSGDMA 제어 레지스터 및 NPU CSR (Control and Status Register) 세부 구조 다큐멘테이션.
+*   [**DESIGN_AI.md**](doc/DESIGN_AI.md): NPU 위에서 동작하는 AI 신경망(MNIST MLP 등)의 Layer 구성 및 수학적 매핑 아키텍처 다큐멘테이션.
+*   [**TESTS.md**](doc/TESTS.md): Verilator / Cocotb 기반의 Python $\leftrightarrow$ RTL Co-simulation 시나리오 (행렬 연산 검증).
 *   [**RESULT.md**](doc/RESULT.md): CPU vs NPU (FPGA) 간의 성능 검증 벤치마크 결과 및 프로파일링 데이터.
 *   [**LESSONS_LEARNED.md**](doc/LESSONS_LEARNED.md): 설계 과정 및 디버깅 중 얻은 기술적 교훈 (Quartus, SoC, MSGDMA 관련).
 *   [**STUDY.md**](doc/STUDY.md): 딥러닝 가속기(Systolic Array 등) 구조 및 관련 개념 학습 정리.
@@ -63,11 +66,26 @@ DE10-Nano(Cyclone V SoC) FPGA 위에서 NPU를 밑바닥부터 설계하는 프�
 ### 3. Full-Stack End-to-End System Integration (Verilog to Linux S/W)
 *   단순히 Verilog RTL 단위 설계에 그치지 않고, Qsys(Platform Designer)를 통한 AXI 버스 연결 아키텍처를 주도적으로 구성했습니다.
 *   **Linux ARM HPS (Cortex-A9)** 환경에서 물리 메모리(`0x20000000`)와 LWH2F Avalon 버스 브릿지(`0xFF200000`)를 `/dev/mem` 및 `mmap()`을 활용하여 가상 메모리(Virtual Memory)로 끌어와 IP를 직접 제어하는 **User-space C 드라이버(API)를 스크래치부터 구현**했습니다.
-*   **성능 실측 (Benchmarking):** CPU(`gcc -O2` 최적화 3중 for문)와 FPGA 하드웨어 (MSGDMA 오프로드) 상에서 동일한 4000 Batch 연산을 수행하고 `gettimeofday` 단위로 엄밀하게 비교한 결과, **50MHz NPU가 800MHz 듀얼코어 프로세서 대비 약 4.64배 (4.64x) 빠른 압도적인 실행 속도**를 냄을 실제 환경에서 정량적으로 증명했습니다. (DMA 세팅 오버헤드 포함)
+*   **성능 실측 (Benchmarking):** CPU(`gcc -O3` 최적화 3중 for문)와 FPGA 하드웨어 (MSGDMA 오프로드) 성능을 `gettimeofday` 단위로 엄밀하게 비교한 결과 (DMA 세팅 오버헤드 포함),
+    *   **1) 순수 8x8 행렬 곱셈 (4000 Batch 연산):** **50MHz NPU가 800MHz 듀얼코어 프로세서 대비 약 4.64배 (4.64x) 빠른 압도적인 실행 속도** 증명.
+    *   **2) MNIST 추론 (2-Layer 파이프라인):** **NPU / CPU C Inference 결과 완벽 일치 (88.08%) 및 약 3.7배 (3.7x) 빠른 실행 속도** 증명.
+        ```text
+        [1] Running S/W (CPU) Inference...
+            CPU Accuracy : 88.08%
+            CPU Time     : 69547.07 ms (6.955 ms/img)
+
+        [2] Running H/W (NPU) Inference...
+            NPU Accuracy : 88.08%
+            NPU Time     : 18771.54 ms (1.877 ms/img)
+
+        ```
+        *(※ 정확도가 88%에 머무는 이유(8-bit 양자화 제약) 및 구체적인 신경망 레이어(Layer 1, Layer 2) 매핑 구조는 [DESIGN_AI.md](doc/DESIGN_AI.md)를 참조하십시오.)*
 
 ## AI-Assisted Development Journey (단 4일간의 여정)
 
-**🚀 개발 기간: 2026년 2월 22일 ~ 2026년 2월 25일 (총 4일)**
+**🚀 개발 기간:**
+*   **Phase 1 (기반 설계 및 DMA 통신 완료):** 2026년 2월 22일 ~ 2026년 2월 25일 (총 4일)
+*   **Phase 2 (MNIST 추론 완벽 이식):** 2026년 3월 1일 (단 1일)
 
 이 프로젝트는 처음부터 끝까지 **LLM(AI 에이전트) 기반의 애자일(Agile)한 Hardware-Software Co-design** 방법론을 한껏 활용하여, 단 4일 만에 초기 아키텍처 구상부터 Linux 벤치마크 완료까지 진행되었습니다. 단순한 AI 코드 생성을 넘어, AI를 '시니어 페어 프로그래머(Pair Programmer)'로 삼아 다음과 같은 고난이도 엔지니어링 맹점들을 돌파했습니다.
 
