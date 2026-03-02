@@ -56,7 +56,19 @@ volatile uint8_t *DDR3_WINDOW_BASE;
 // MSGDMA Helpers
 // ============================================================================
 void msgdma_init(volatile uint8_t *csr_base) {
+  // 1. Issue Reset Command (Bit 1 of Control Register)
+  IOWR_32DIRECT(csr_base, 0x04, (1 << 1));
+
+  // 2. Wait for Hardware to Finish Resetting (Poll Status Bit 6)
+  while (IORD_32DIRECT(csr_base, 0x00) & (1 << 6)) {
+    // Loop actively while resetting
+  }
+
+  // 3. Clear existing status bits (W1C bits)
   IOWR_32DIRECT(csr_base, 0x00, 0xFFFFFFFF);
+
+  // 4. Enable dispatcher globally
+  // Disable Interrupts, Clear Stop Dispatcher, Clear Reset.
   IOWR_32DIRECT(csr_base, 0x04, 0x00000000);
 }
 
@@ -74,7 +86,8 @@ void msgdma_write_stream_push(volatile uint8_t *descriptor_base,
   IOWR_32DIRECT(descriptor_base, 0x00, 0x00000000);
   IOWR_32DIRECT(descriptor_base, 0x04, dst_addr);
   IOWR_32DIRECT(descriptor_base, 0x08, length);
-  IOWR_32DIRECT(descriptor_base, 0x0C, 0x80001000); // GO | End on EOP(12)
+  IOWR_32DIRECT(descriptor_base, 0x0C,
+                0x80000000); // GO (No END_ON_EOP to prevent early termination)
 }
 
 // ============================================================================
@@ -215,7 +228,8 @@ void verify_full_system() {
   while ((IORD(NPU_CTRL_BASE, REG_STATUS) & 0x01) != 0) {
   }
 
-  uint32_t physical_base = 0x20000000;
+  uint32_t physical_base = 0x20000000; // Local window representation of DDR
+
   volatile uint8_t *weights_addr = DDR3_WINDOW_BASE;
   volatile uint8_t *inputs_addr = DDR3_WINDOW_BASE + 0x1000;
   volatile uint8_t *dst_addr = DDR3_WINDOW_BASE + 0x2000;
@@ -308,7 +322,8 @@ void verify_streaming_batch() {
   msgdma_init(DDR_READ_ST_CSR_BASE);
   msgdma_init(DDR_WRITE_ST_CSR_BASE);
 
-  uint32_t physical_base = 0x20000000;
+  uint32_t physical_base = 0x20000000; // Local window representation of DDR
+
   volatile uint8_t *weights_addr = DDR3_WINDOW_BASE;
   volatile uint8_t *inputs_addr = DDR3_WINDOW_BASE + 0x100000;
   volatile uint8_t *outputs_addr = DDR3_WINDOW_BASE + 0x200000;
@@ -480,7 +495,8 @@ void verify_performance_cpu_vs_npu(int batch_count) {
   msgdma_init(DDR_READ_ST_CSR_BASE);
   msgdma_init(DDR_WRITE_ST_CSR_BASE);
 
-  uint32_t physical_base = 0x20000000;
+  uint32_t physical_base = 0x20000000; // Local window representation of DDR
+
   volatile uint8_t *weights_addr = DDR3_WINDOW_BASE;
   volatile uint8_t *inputs_addr = DDR3_WINDOW_BASE + 0x100000;
   volatile uint8_t *outputs_addr = DDR3_WINDOW_BASE + 0x200000;
@@ -624,6 +640,11 @@ int main() {
   DDR_WRITE_ST_CSR_BASE = lw_bridge_map + DDR_WRITE_ST_CSR_OFFSET;
   DDR_WRITE_ST_DESCRIPTOR_SLAVE_BASE = lw_bridge_map + DDR_WRITE_ST_DESC_OFFSET;
   DDR3_WINDOW_BASE = ddr_map;
+
+  // Set Address Extender window to map 0x20000000 Avalon calls directly to
+  // 0x00000000 SDRAM
+  // IOWR_32DIRECT(NPU_DDR_CNTL_BASE, 0, 0x00000000);
+  // IOWR_32DIRECT(NPU_DDR_CNTL_BASE, 4, 0x00000000);
 
   while (1) {
     printf("\nNPU System Verification (Full Framework)\n");

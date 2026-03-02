@@ -154,3 +154,18 @@ Actual C Benchmark comparing 50MHz FPGA NPU throughput versus 800MHz ARM CPU on 
     === Speedup ===
         H/W Acceleration: 3.70 x
     ```
+
+---
+
+## 6. OCM (On-Chip Memory) Buffer Optimization
+
+To further eliminate DDR access contention, the FPGA's internal OCM was introduced as an intermediate scratchpad for the NPU outputs. This led to a substantial investigation into optimal bridge bandwidth usage:
+
+1. **LWHPS2FPGA (Lightweight Bridge) Bottleneck:** 
+   Initially, the OCM was mapped to the Lightweight Bridge (`0xFF20_0000`). Performance massively degraded (to 43.2ms / 1.62x) because CPU data formatting over the LightWeight Bridge induced severe latency stalls on individual 32-bit read/write transactions.
+2. **HPS2FPGA AXI (Heavyweight Bridge) Migration:** 
+   The OCM was remapped over the high-speed AXI Bridge (`0xC0_0000_00`), reducing time to **25.26 ms**, which confirmed the AXI throughput difference but still fell short of pure DDR (19.3ms).
+3. **Hardware-Decoupled Stack `memcpy` Bursting:** 
+   The core issue was identified as the CPU's memory access pattern. Doing calculations directly on `/dev/mem` pointers caused intense bus transactions. By altering the software to `memcpy` the 256-byte NPU results directly into a CPU stack buffer, doing the ReLU/Bias formatting locally, and `memcpy`-ing the block back out, bus transactions became highly efficient bursts.
+
+**Final Result:** With AXI + `memcpy` stack buffering, the OCM pipeline hit **16.33 ms / img (4.26x Acceleration)**, successfully breaking past the DDR limitations entirely!

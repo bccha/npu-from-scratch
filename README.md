@@ -68,16 +68,18 @@ DE10-Nano(Cyclone V SoC) FPGA 위에서 NPU를 밑바닥부터 설계하는 프�
 *   **Linux ARM HPS (Cortex-A9)** 환경에서 물리 메모리(`0x20000000`)와 LWH2F Avalon 버스 브릿지(`0xFF200000`)를 `/dev/mem` 및 `mmap()`을 활용하여 가상 메모리(Virtual Memory)로 끌어와 IP를 직접 제어하는 **User-space C 드라이버(API)를 스크래치부터 구현**했습니다.
 *   **성능 실측 (Benchmarking):** CPU(`gcc -O3` 최적화 3중 for문)와 FPGA 하드웨어 (MSGDMA 오프로드) 성능을 `gettimeofday` 단위로 엄밀하게 비교한 결과 (DMA 세팅 오버헤드 포함),
     *   **1) 순수 8x8 행렬 곱셈 (4000 Batch 연산):** **50MHz NPU가 800MHz 듀얼코어 프로세서 대비 약 4.64배 (4.64x) 빠른 압도적인 실행 속도** 증명.
-    *   **2) MNIST 추론 (2-Layer 파이프라인):** **NPU / CPU C Inference 결과 완벽 일치 (88.08%) 및 약 3.7배 (3.7x) 빠른 실행 속도** 증명.
+    *   **2) MNIST 추론 (2-Layer 파이프라인):** **NPU / CPU C Inference 결과 완벽 일치 (88.08%) 및 약 4.26배 (4.26x) 빠른 실행 속도** 증명 (OCM Scratchpad 최적화 적용).
         ```text
         [1] Running S/W (CPU) Inference...
             CPU Accuracy : 88.08%
-            CPU Time     : 69547.07 ms (6.955 ms/img)
+            CPU Time     : 69634.76 ms (6.963 ms/img)
 
         [2] Running H/W (NPU) Inference...
             NPU Accuracy : 88.08%
-            NPU Time     : 18771.54 ms (1.877 ms/img)
+            NPU Time     : 16334.81 ms (1.633 ms/img)
 
+        === Speedup ===
+            H/W Acceleration: 4.26 x
         ```
         *(※ 정확도가 88%에 머무는 이유(8-bit 양자화 제약) 및 구체적인 신경망 레이어(Layer 1, Layer 2) 매핑 구조는 [DESIGN_AI.md](doc/DESIGN_AI.md)를 참조하십시오.)*
 
