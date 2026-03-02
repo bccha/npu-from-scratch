@@ -28,7 +28,23 @@ module npu_unit #(
     input  wire        st_source_ready,
     output wire        st_source_startofpacket,
     output wire        st_source_endofpacket,
-    output wire [2:0]  st_source_empty
+    output wire [2:0]  st_source_empty,
+
+    // Post-Processor Avalon-MM Master (Read)
+    output wire [31:0] pp_read_address,
+    output wire        pp_read_read,
+    input  wire [31:0] pp_read_readdata,
+    input  wire        pp_read_waitrequest,
+    input  wire        pp_read_readdatavalid,
+    output wire [7:0]  pp_read_burstcount,
+
+    // Post-Processor Avalon-MM Master (Write)
+    output wire [31:0] pp_write_address,
+    output wire        pp_write_write,
+    output wire [31:0] pp_write_writedata,
+    output wire [3:0]  pp_write_byteenable,
+    input  wire        pp_write_waitrequest,
+    output wire [7:0]  pp_write_burstcount
 );
 
     // Pipeline avs_readdata due to NPU CTRL having 1 cycle latency
@@ -63,6 +79,14 @@ module npu_unit #(
     wire [31:0] csr_pe_y_out;
     wire        csr_pe_valid_out;
 
+    wire        pp_start;
+    wire        pp_done;
+    wire [31:0] pp_src_addr;
+    wire [31:0] pp_dst_addr;
+    wire [31:0] pp_bias_addr;
+    wire [31:0] pp_num_elements;
+    wire [31:0] pp_shift_val;
+
     npu_ctrl u_npu_ctrl (
         .clk            (clk),
         .rst_n          (rst_n),
@@ -86,7 +110,45 @@ module npu_unit #(
         .pe_y_in        (csr_pe_y_in),
         .pe_x_out       (csr_pe_x_out),
         .pe_y_out       (csr_pe_y_out),
-        .pe_valid_out   (csr_pe_valid_out)
+        .pe_valid_out   (csr_pe_valid_out),
+        
+        // Post-Processor Interface
+        .pp_start       (pp_start),
+        .pp_done        (pp_done),
+        .pp_src_addr    (pp_src_addr),
+        .pp_dst_addr    (pp_dst_addr),
+        .pp_bias_addr   (pp_bias_addr),
+        .pp_num_elements(pp_num_elements),
+        .pp_shift_val   (pp_shift_val)
+    );
+
+    // ------------------------------------------------------------------
+    // Hardware Post-Processor (Bias + Quantize + Shift + ReLU + Pack)
+    // ------------------------------------------------------------------
+    npu_post_processor u_npu_post_processor (
+        .clk                    (clk),
+        .rst_n                  (rst_n),
+        .start                  (pp_start),
+        .done                   (pp_done),
+        .src_addr               (pp_src_addr),
+        .dst_addr               (pp_dst_addr),
+        .bias_addr              (pp_bias_addr),
+        .num_elements           (pp_num_elements),
+        .shift_val              (pp_shift_val),
+        
+        .avm_read_address       (pp_read_address),
+        .avm_read_read          (pp_read_read),
+        .avm_read_readdata      (pp_read_readdata),
+        .avm_read_waitrequest   (pp_read_waitrequest),
+        .avm_read_readdatavalid (pp_read_readdatavalid),
+        .avm_read_burstcount    (pp_read_burstcount),
+        
+        .avm_write_address      (pp_write_address),
+        .avm_write_write        (pp_write_write),
+        .avm_write_writedata    (pp_write_writedata),
+        .avm_write_byteenable   (pp_write_byteenable),
+        .avm_write_waitrequest  (pp_write_waitrequest),
+        .avm_write_burstcount   (pp_write_burstcount)
     );
 
     // ------------------------------------------------------------------

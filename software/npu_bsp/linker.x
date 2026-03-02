@@ -4,7 +4,7 @@
  * Machine generated for CPU 'nios2_gen2_0' in SOPC Builder design 'soc_system'
  * SOPC Builder design path: C:/Workspace/quartus/npu/soc_system.sopcinfo
  *
- * Generated: Tue Feb 24 15:49:42 EST 2026
+ * Generated: Mon Mar 02 10:10:24 EST 2026
  */
 
 /*
@@ -50,11 +50,13 @@
 
 MEMORY
 {
+    npu_ocm : ORIGIN = 0x40000, LENGTH = 131072
     reset : ORIGIN = 0x80000, LENGTH = 32
     onchip_memory2_0 : ORIGIN = 0x80020, LENGTH = 99968
 }
 
 /* Define symbols for each memory base-address */
+__alt_mem_npu_ocm = 0x40000;
 __alt_mem_onchip_memory2_0 = 0x80000;
 
 OUTPUT_FORMAT( "elf32-littlenios2",
@@ -307,7 +309,24 @@ SECTIONS
      *
      */
 
-    .onchip_memory2_0 LOADADDR (.bss) + SIZEOF (.bss) : AT ( LOADADDR (.bss) + SIZEOF (.bss) )
+    .npu_ocm : AT ( LOADADDR (.bss) + SIZEOF (.bss) )
+    {
+        PROVIDE (_alt_partition_npu_ocm_start = ABSOLUTE(.));
+        *(.npu_ocm .npu_ocm. npu_ocm.*)
+        . = ALIGN(4);
+        PROVIDE (_alt_partition_npu_ocm_end = ABSOLUTE(.));
+    } > npu_ocm
+
+    PROVIDE (_alt_partition_npu_ocm_load_addr = LOADADDR(.npu_ocm));
+
+    /*
+     *
+     * This section's LMA is set to the .text region.
+     * crt0 will copy to this section's specified mapped region virtual memory address (VMA)
+     *
+     */
+
+    .onchip_memory2_0 LOADADDR (.npu_ocm) + SIZEOF (.npu_ocm) : AT ( LOADADDR (.npu_ocm) + SIZEOF (.npu_ocm) )
     {
         PROVIDE (_alt_partition_onchip_memory2_0_start = ABSOLUTE(.));
         *(.onchip_memory2_0 .onchip_memory2_0. onchip_memory2_0.*)

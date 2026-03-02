@@ -149,17 +149,24 @@ void verify_full_system() {
   while ((IORD(NPU_CTRL_BASE, 1) & 0x01) != 0)
     ;
 
-  IOWR_32DIRECT(ADDRESS_SPAN_EXTENDER_0_CNTL_BASE, 0, 0x20000000);
-  alt_u32 physical_base = 0x20000000;
-  alt_u32 weights_addr = DDR3_WINDOW_BASE;
-  alt_u32 inputs_addr = DDR3_WINDOW_BASE + 0x1000;
-  alt_u32 dst_addr = DDR3_WINDOW_BASE + 0x2000;
+  // Switch to using the newly added OCM for Nios NPU hardware validation
+  // instead of DDR!
+  alt_u32 cpu_base = (NPU_OCM_BASE | CACHE_BYPASS_MASK);
+  alt_u32 dma_base = NPU_OCM_BASE;
 
-  printf("Clearing Memories...\n");
+  alt_u32 cpu_weights_addr = cpu_base;
+  alt_u32 cpu_inputs_addr = cpu_base + 0x1000;
+  alt_u32 cpu_dst_addr = cpu_base + 0x2000;
+
+  alt_u32 dma_weights_addr = dma_base;
+  alt_u32 dma_inputs_addr = dma_base + 0x1000;
+  alt_u32 dma_dst_addr = dma_base + 0x2000;
+
+  printf("Clearing OCM Memories...\n");
   for (int i = 0; i < 64; i++) { // Clear 256 bytes per region
-    IOWR_32DIRECT(weights_addr, i * 4, 0);
-    IOWR_32DIRECT(inputs_addr, i * 4, 0);
-    IOWR_32DIRECT(dst_addr, i * 4, 0);
+    IOWR_32DIRECT(cpu_weights_addr, i * 4, 0);
+    IOWR_32DIRECT(cpu_inputs_addr, i * 4, 0);
+    IOWR_32DIRECT(cpu_dst_addr, i * 4, 0);
   }
 
   printf("Preparing 8x8 Identity Weight Matrix...\n");
@@ -180,20 +187,21 @@ void verify_full_system() {
     }
   }
 
-  // C 배열을 64-byte 크기의 DMA 친화적인 포맷으로 변환 후 DDR에 기록
-  npu_format_weights(weights_addr, test_weights);
-  npu_format_inputs(inputs_addr, test_inputs);
+  // C 배열을 64-byte 크기의 DMA 친화적인 포맷으로 변환 후 Extender 윈도우
+  // 버퍼(DDR)에 기록
+  npu_format_weights(cpu_weights_addr, test_weights);
+  npu_format_inputs(cpu_inputs_addr, test_inputs);
 
   // Flush the Nios II Data Cache so that MSGDMA (Hardware) sees the new data
   alt_dcache_flush_all();
 
   printf("Phase 1: Loading Weights via MSGDMA API...\n");
-  npu_load_weights(physical_base, 1); // 1 matrix
+  npu_load_weights(dma_weights_addr, 1); // 1 matrix
   printf("Weights Loaded!\n");
 
   printf("Phase 2: Execution via MSGDMA API...\n");
-  npu_get_matrix(physical_base + 0x2000, 1);
-  npu_load_matrix(physical_base + 0x1000, 1);
+  npu_get_matrix(dma_dst_addr, 1);
+  npu_load_matrix(dma_inputs_addr, 1);
 
   npu_wait_execution();
   printf("Execution Finished!\n\n");
@@ -203,7 +211,7 @@ void verify_full_system() {
   printf("Verifying Output (Expecting Y=X for 8x8 matrix)...\n");
 
   alt_u32 hw_matrix[8][8];
-  npu_parse_output(dst_addr, hw_matrix);
+  npu_parse_output(cpu_dst_addr, hw_matrix);
 
   printf("\n=== Hardware Output Matrix ===\n");
   for (int r = 0; r < 8; r++) {
@@ -249,11 +257,17 @@ void verify_streaming_batch() {
   msgdma_init(DDR_READ_ST_CSR_BASE);
   msgdma_init(DDR_WRITE_ST_CSR_BASE);
 
-  IOWR_32DIRECT(ADDRESS_SPAN_EXTENDER_0_CNTL_BASE, 0, 0x20000000);
-  alt_u32 physical_base = 0x20000000;
-  alt_u32 weights_addr = DDR3_WINDOW_BASE;
-  alt_u32 inputs_addr = DDR3_WINDOW_BASE + 0x1000;
-  alt_u32 outputs_addr = DDR3_WINDOW_BASE + 0x8000;
+  // Use OCM Memory for Streaming Pipeline!
+  alt_u32 cpu_base = (NPU_OCM_BASE | CACHE_BYPASS_MASK);
+  alt_u32 dma_base = NPU_OCM_BASE;
+
+  alt_u32 cpu_weights_addr = cpu_base;
+  alt_u32 cpu_inputs_addr = cpu_base + 0x1000;
+  alt_u32 cpu_outputs_addr = cpu_base + 0x8000;
+
+  alt_u32 dma_weights_addr = dma_base;
+  alt_u32 dma_inputs_addr = dma_base + 0x1000;
+  alt_u32 dma_outputs_addr = dma_base + 0x8000;
 
   // 1. Prepare 1 Weight Matrix (Identity)
   signed char weight_matrix[8][8];
@@ -262,7 +276,7 @@ void verify_streaming_batch() {
       weight_matrix[r][c] = (r == c) ? 1 : 0;
     }
   }
-  npu_format_weights(weights_addr, weight_matrix);
+  npu_format_weights(cpu_weights_addr, weight_matrix);
 
   // 2. Prepare 10 Input Matrices
   for (int i = 0; i < 10; i++) {
@@ -273,19 +287,19 @@ void verify_streaming_batch() {
         in_mat[r][c] = (signed char)(((i * 10 + r * 8 + c) % 256) - 128);
       }
     }
-    npu_format_inputs(inputs_addr + i * NPU_MAT_BYTES, in_mat);
+    npu_format_inputs(cpu_inputs_addr + i * NPU_MAT_BYTES, in_mat);
   }
 
   printf("Clearing Memories...\n");
   for (int i = 0; i < (10 * NPU_OUT_BYTES) / 4; i++) {
-    IOWR_32DIRECT(outputs_addr, i * 4, 0);
+    IOWR_32DIRECT(cpu_outputs_addr, i * 4, 0);
   }
 
   // Flush the Nios II Data Cache so that MSGDMA (Hardware) sees the new data
   alt_dcache_flush_all();
 
   printf("Loading Weights...\n");
-  npu_load_weights(physical_base, 1);
+  npu_load_weights(dma_weights_addr, 1);
 
   printf("Firing 10-Batch Streaming Pipeline...\n");
 
@@ -293,9 +307,9 @@ void verify_streaming_batch() {
   IOWR(NPU_CTRL_BASE, REG_SEQ_ROWS, 10 * 8);
 
   // Queue 10 output reads
-  npu_get_matrix(physical_base + 0x8000, 10);
+  npu_get_matrix(dma_outputs_addr, 10);
   // Queue 10 input writes
-  npu_load_matrix(physical_base + 0x1000, 10);
+  npu_load_matrix(dma_inputs_addr, 10);
 
   // Wait for all execution to stream through hardware
   npu_wait_execution();
@@ -304,7 +318,7 @@ void verify_streaming_batch() {
   int total_errors = 0;
   for (int i = 0; i < 10; i++) {
     alt_u32 hw_matrix[8][8];
-    npu_parse_output(outputs_addr + i * NPU_OUT_BYTES, hw_matrix);
+    npu_parse_output(cpu_outputs_addr + i * NPU_OUT_BYTES, hw_matrix);
 
     int errors = 0;
     for (int r = 0; r < 8; r++) {

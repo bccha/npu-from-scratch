@@ -16,9 +16,10 @@
 // Nios II Data Cache Bypass Mask (Bit 31)
 #define CACHE_BYPASS_MASK 0x80000000
 
-// DDR3 Window Base Address
-#define DDR3_WINDOW_BASE                                                       \
-  (ADDRESS_SPAN_EXTENDER_0_WINDOWED_SLAVE_BASE | CACHE_BYPASS_MASK)
+// DDR3 Memory Hardware Offset (for Nios Direct CPU Access)
+// Adjust if NIOS natively accesses DDR at a different Qsys base address.
+// Without a direct connection, Nios cannot access DDR natively.
+#define DDR3_WINDOW_BASE (0x10000000 | CACHE_BYPASS_MASK)
 
 // ============================================================================
 // Helper Functions

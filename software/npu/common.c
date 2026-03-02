@@ -36,14 +36,20 @@ unsigned long long get_total_cycles() {
 }
 
 void msgdma_init(alt_u32 csr_base) {
-  // Clear status register (W1C bits)
+  // 1. Issue Reset Command (Bit 1 of Control Register)
+  IOWR_32DIRECT(csr_base, 0x04, (1 << 1));
+
+  // 2. Wait for Hardware to Finish Resetting (Poll Status Bit 6)
+  while (IORD_32DIRECT(csr_base, 0x00) & (1 << 6)) {
+    // Loop actively while resetting
+  }
+
+  // 3. Clear existing status bits (W1C bits)
   IOWR_32DIRECT(csr_base, 0x00, 0xFFFFFFFF);
-  // Enable dispatcher globally (Bit 4 = Global Interrupt Enable, Bit 5 = Stop
-  // Dispatcher) To start, we just need to ensure bits 1 (Reset) and 5 (Stop)
-  // are 0, and bit 4 (Interrupt) is 0 since we poll. Actually, for generic
-  // Altera MSGDMA, writing 0 to the Control register clears the Stop bit.
-  IOWR_32DIRECT(csr_base, 0x04,
-                0x00000000); // Clear Stop Dispatcher, Disable Interrupts.
+
+  // 4. Enable dispatcher globally
+  // Disable Interrupts, Clear Stop Dispatcher, Clear Reset.
+  IOWR_32DIRECT(csr_base, 0x04, 0x00000000);
 }
 
 void msgdma_read_stream_push(alt_u32 descriptor_base, alt_u32 src_addr,
@@ -68,8 +74,8 @@ void msgdma_write_stream_push(alt_u32 descriptor_base, alt_u32 dst_addr,
 
   // Standard Descriptor Control (Altera MSGDMA):
   // Bit 31: GO           (0x80000000)
-  // Bit 12: End on EOP   (0x00001000)
-  // (End on Length is natively handled by the length register)
-  // 0x80000000 | 0x00001000 = 0x80001000
-  IOWR_32DIRECT(descriptor_base, 0x0C, 0x80001000);
+  // We use exactly 'length' bytes, avoiding END_ON_EOP to ensure robustness
+  // against spurious EOPs from the Avalon-ST sink which cause early
+  // termination.
+  IOWR_32DIRECT(descriptor_base, 0x0C, 0x80000000);
 }

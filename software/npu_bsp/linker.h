@@ -4,7 +4,7 @@
  * Machine generated for CPU 'nios2_gen2_0' in SOPC Builder design 'soc_system'
  * SOPC Builder design path: C:/Workspace/quartus/npu/soc_system.sopcinfo
  *
- * Generated: Tue Feb 24 15:49:42 EST 2026
+ * Generated: Mon Mar 02 10:10:24 EST 2026
  */
 
 /*
@@ -65,6 +65,8 @@
  *
  */
 
+#define NPU_OCM_REGION_BASE 0x40000
+#define NPU_OCM_REGION_SPAN 131072
 #define ONCHIP_MEMORY2_0_REGION_BASE 0x80020
 #define ONCHIP_MEMORY2_0_REGION_SPAN 99968
 #define RESET_REGION_BASE 0x80000

@@ -104,11 +104,12 @@ void npu_load_weights(uint32_t weights_addr, int num_bytes) {
     }
   }
 
+  IOWR(NPU_CTRL_BASE, REG_CTRL,
+       0x00000000); // seq_mode=0 (Weight load), start=0
+
   msgdma_read_stream_push(DDR_READ_ST_CSR_BASE,
                           DDR_READ_ST_DESCRIPTOR_SLAVE_BASE, weights_addr,
                           num_bytes);
-  IOWR(NPU_CTRL_BASE, REG_CTRL,
-       0x00000001); // seq_mode=0 (Weight load), start=1
 
   // Wait for DMA flush
   timeout = 0;
@@ -212,6 +213,9 @@ double get_time_us() {
 // Memory Layout Constants
 uint32_t phys_base;
 uint8_t *virt_base;
+
+// NPU Memory mapped offsets (relative to NPU_DDR_WINDOWED_SLAVE_BASE)
+uint32_t npu_ddr_base = 0x08000000;
 uint32_t inputs_offset = 0x000000;
 uint32_t conv_w_offset = 0x800000;
 uint32_t fc_w_offset = 0x840000;
@@ -311,11 +315,11 @@ void run_cnn_inference(int num_batches, bool use_npu, double *time_ms,
 
         // Load the 3x3x8 Filter kernel into the NPU PE latches
         // Weights must be reloaded for each independent DMA burst
-        npu_load_weights(phys_base + conv_w_offset, 128);
+        npu_load_weights(npu_ddr_base + conv_w_offset, 128);
 
         // Stream chunk of patches
-        npu_run_inference(phys_base + im2col_offset + (patch_start * 16),
-                          phys_base + npu_out_offset, chunk_size * 16,
+        npu_run_inference(npu_ddr_base + im2col_offset + (patch_start * 16),
+                          npu_ddr_base + npu_out_offset, chunk_size * 16,
                           chunk_size * 32, 16);
 
         npu_wait_execution();
@@ -362,12 +366,12 @@ void run_cnn_inference(int num_batches, bool use_npu, double *time_ms,
 
         for (int chunk = 0; chunk < 169; chunk++) {
           // Load 1 tiled 8x8 weight slice (64 bytes)
-          npu_load_weights(phys_base + curr_w_offset + (chunk * 64), 64);
+          npu_load_weights(npu_ddr_base + curr_w_offset + (chunk * 64), 64);
 
           // Stream 1 tile of FC inputs (8 elements * 1 byte = 8 bytes) -> 32
           // byte result
-          npu_run_inference(phys_base + scratch_offset + (chunk * 8),
-                            phys_base + npu_out_offset, 8, 32, 1);
+          npu_run_inference(npu_ddr_base + scratch_offset + (chunk * 8),
+                            npu_ddr_base + npu_out_offset, 8, 32, 1);
 
           npu_wait_execution();
 
@@ -430,6 +434,11 @@ int main(int argc, char **argv) {
   DDR_READ_ST_DESCRIPTOR_SLAVE_BASE = lw_bridge_map + DDR_READ_ST_DESC_OFFSET;
   DDR_WRITE_ST_CSR_BASE = lw_bridge_map + DDR_WRITE_ST_CSR_OFFSET;
   DDR_WRITE_ST_DESCRIPTOR_SLAVE_BASE = lw_bridge_map + DDR_WRITE_ST_DESC_OFFSET;
+
+  // Master HW Reset: Clear Control flags and Latches, empty sequencer
+  IOWR(NPU_CTRL_BASE, REG_CTRL, 0x00000000);
+  IOWR(NPU_CTRL_BASE, 7, 0);
+  IOWR(NPU_CTRL_BASE, REG_SEQ_ROWS, 0);
 
   msgdma_init(DDR_READ_ST_CSR_BASE);
   msgdma_init(DDR_WRITE_ST_CSR_BASE);

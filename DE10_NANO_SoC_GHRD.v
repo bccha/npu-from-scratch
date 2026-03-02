@@ -130,6 +130,22 @@ module DE10_NANO_SoC_GHRD(
   wire        npu_st_sink_endofpacket;
   wire [2:0]  npu_st_sink_empty;
 
+// npu_post_processor Avalon-MM Master (Read)
+  wire [31:0] pp_read_address;
+  wire        pp_read_read;
+  wire [31:0] pp_read_readdata;
+  wire        pp_read_waitrequest;
+  wire        pp_read_readdatavalid;
+  wire [7:0]  pp_read_burstcount;
+
+// npu_post_processor Avalon-MM Master (Write)
+  wire [31:0] pp_write_address;
+  wire        pp_write_write;
+  wire [31:0] pp_write_writedata;
+  wire [3:0]  pp_write_byteenable;
+  wire        pp_write_waitrequest;
+  wire [7:0]  pp_write_burstcount;
+
 
 
 
@@ -248,8 +264,46 @@ soc_system u0 (
 	  .ddr_write_st_sink_ready           (npu_st_source_ready),
 	  .ddr_write_st_sink_startofpacket   (npu_st_source_startofpacket),
 	  .ddr_write_st_sink_endofpacket     (npu_st_source_endofpacket),
-	  .ddr_write_st_sink_empty           (npu_st_source_empty)
+	  .ddr_write_st_sink_empty           (npu_st_source_empty),
+      
+      // Post-Processor Bridge (Exported from QSys)
+      .pp_bridge_address         (pp_bridge_address),
+      .pp_bridge_read            (pp_bridge_read),
+      .pp_bridge_readdata        (pp_bridge_readdata),
+      .pp_bridge_write           (pp_bridge_write),
+      .pp_bridge_writedata       (pp_bridge_writedata),
+      .pp_bridge_waitrequest     (pp_bridge_waitrequest),
+      .pp_bridge_readdatavalid   (pp_bridge_readdatavalid),
+      .pp_bridge_burstcount      (pp_bridge_burstcount),
+      .pp_bridge_byteenable      (pp_bridge_byteenable),
+      .pp_bridge_debugaccess     (1'b0)
  );
+
+// --- Avalon-MM Multiplexer for single Qsys Bridge ---
+// The read and write states in npu_post_processor are mutually exclusive.
+wire [18:0] pp_bridge_address;
+wire        pp_bridge_read;
+wire [31:0] pp_bridge_readdata;
+wire        pp_bridge_write;
+wire [31:0] pp_bridge_writedata;
+wire        pp_bridge_waitrequest;
+wire        pp_bridge_readdatavalid;
+wire [5:0]  pp_bridge_burstcount;
+wire [3:0]  pp_bridge_byteenable;
+
+assign pp_bridge_address     = pp_write_write ? pp_write_address[18:0] : pp_read_address[18:0];
+assign pp_bridge_read        = pp_read_read;
+assign pp_bridge_write       = pp_write_write;
+assign pp_bridge_writedata   = pp_write_writedata;
+assign pp_bridge_byteenable  = pp_write_write ? pp_write_byteenable : 4'hF;
+assign pp_bridge_burstcount  = 6'd4; // Fixed burst count of 4 for writes
+
+// Return signals
+assign pp_read_readdata      = pp_bridge_readdata;
+assign pp_read_waitrequest   = pp_bridge_waitrequest;
+assign pp_read_readdatavalid = pp_bridge_readdatavalid;
+assign pp_write_waitrequest  = pp_bridge_waitrequest;
+// ----------------------------------------------------
 
 // NPU Unit (Encapsulates Controller + PE)
 npu_unit u_npu_unit (
@@ -277,7 +331,23 @@ npu_unit u_npu_unit (
 	.st_source_ready          (npu_st_source_ready),
 	.st_source_startofpacket  (npu_st_source_startofpacket),
 	.st_source_endofpacket    (npu_st_source_endofpacket),
-	.st_source_empty          (npu_st_source_empty)
+	.st_source_empty          (npu_st_source_empty),
+    
+    // Post-Processor Read Master
+    .pp_read_address          (pp_read_address),
+    .pp_read_read             (pp_read_read),
+    .pp_read_readdata         (pp_read_readdata),
+    .pp_read_waitrequest      (pp_read_waitrequest),
+    .pp_read_readdatavalid    (pp_read_readdatavalid),
+    .pp_read_burstcount       (pp_read_burstcount),
+    
+    // Post-Processor Write Master
+    .pp_write_address         (pp_write_address),
+    .pp_write_write           (pp_write_write),
+    .pp_write_writedata       (pp_write_writedata),
+    .pp_write_byteenable      (pp_write_byteenable),
+    .pp_write_waitrequest     (pp_write_waitrequest),
+    .pp_write_burstcount      (pp_write_burstcount)
 );
 
 // Debounce logic to clean out glitches within 1ms

@@ -2,8 +2,8 @@
 <sch:Settings xmlns:sch="http://www.altera.com/embeddedsw/bsp/schema">
         <BspType>hal</BspType>
         <BspVersion>default</BspVersion>
-        <BspGeneratedTimeStamp>Feb 24, 2026 3:53:09 PM</BspGeneratedTimeStamp>
-        <BspGeneratedUnixTimeStamp>1771966389963</BspGeneratedUnixTimeStamp>
+        <BspGeneratedTimeStamp>Mar 2, 2026 2:49:25 PM</BspGeneratedTimeStamp>
+        <BspGeneratedUnixTimeStamp>1772480965065</BspGeneratedUnixTimeStamp>
         <BspGeneratedLocation>C:\Workspace\quartus\npu\software\npu_bsp</BspGeneratedLocation>
         <BspSettingsFile>settings.bsp</BspSettingsFile>
         <SopcDesignFile>C:\Workspace\quartus\npu\soc_system.sopcinfo</SopcDesignFile>
@@ -899,16 +899,16 @@
                 <Group xsi:nil="true" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
         </Setting>
         <MemoryMap>
-                <slaveDescriptor>timer_0</slaveDescriptor>
-                <addressRange>0x00000060 - 0x0000007F</addressRange>
-                <addressSpan>32</addressSpan>
-                <attributes>timer</attributes>
-        </MemoryMap>
-        <MemoryMap>
                 <slaveDescriptor>address_span_extender_0_cntl</slaveDescriptor>
-                <addressRange>0x00000080 - 0x00000087</addressRange>
+                <addressRange>0x00000008 - 0x0000000F</addressRange>
                 <addressSpan>8</addressSpan>
                 <attributes/>
+        </MemoryMap>
+        <MemoryMap>
+                <slaveDescriptor>timer_0</slaveDescriptor>
+                <addressRange>0x00000020 - 0x0000003F</addressRange>
+                <addressSpan>32</addressSpan>
+                <attributes>timer</attributes>
         </MemoryMap>
         <MemoryMap>
                 <slaveDescriptor>npu_ctrl</slaveDescriptor>
@@ -941,6 +941,18 @@
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
+                <slaveDescriptor>npu_ocm</slaveDescriptor>
+                <addressRange>0x00040000 - 0x0005FFFF</addressRange>
+                <addressSpan>131072</addressSpan>
+                <attributes>memory</attributes>
+        </MemoryMap>
+        <MemoryMap>
+                <slaveDescriptor>npu_ddr_cntl</slaveDescriptor>
+                <addressRange>0x00060000 - 0x00060007</addressRange>
+                <addressSpan>8</addressSpan>
+                <attributes/>
+        </MemoryMap>
+        <MemoryMap>
                 <slaveDescriptor>jtag_uart</slaveDescriptor>
                 <addressRange>0x00070000 - 0x00070007</addressRange>
                 <addressSpan>8</addressSpan>
@@ -956,6 +968,12 @@
                 <slaveDescriptor>address_span_extender_0_windowed_slave</slaveDescriptor>
                 <addressRange>0x08000000 - 0x0FFFFFFF</addressRange>
                 <addressSpan>134217728</addressSpan>
+                <attributes/>
+        </MemoryMap>
+        <MemoryMap>
+                <slaveDescriptor>npu_ddr_windowed_slave</slaveDescriptor>
+                <addressRange>0x20000000 - 0x3FFFFFFF</addressRange>
+                <addressSpan>536870912</addressSpan>
                 <attributes/>
         </MemoryMap>
         <LinkerSection>

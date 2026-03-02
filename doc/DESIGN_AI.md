@@ -70,3 +70,19 @@ NPU는 $8 \times 8$ 타일로만 연산이 가능합니다. C 드라이버(`mnis
 ### 다음 단계: CNN (합성곱 신경망) 아키텍처
 
 CNN(합성곱 신경망)은 특징 맵(Feature Map)을 유지하면서 필터(커널)를 슬라이딩시키는 구조입니다. $8 \times 8$ GEMM 구조의 단일 Matrix H/W에서 이를 처리하기 위해서는, 입력 이미지를 강제로 퍼즐 조각 내듯 길게 전개시키는 **`im2col` (Image-to-Column)** 기술이 S/W 드라이버 계층에 추가로 설계되어야 합니다. (진행 예정)
+
+---
+
+## 3. Phase 4: 차세대 메모리 아키텍처 향상 (Hardware Enhancements)
+
+현재 S/W 기반의 `im2col` 변환과 중간 Feature Map 캐싱은 모두 느린 외부 DDR3 메모리를 반복적으로 경유합니다. 이를 극복하기 위해 다가올 Phase 4 (하드웨어 확장)에서는 두 가지 거대한 최적화를 적용합니다.
+
+### A. 넉넉한 On-Chip Memory (SRAM) 탑재
+NPU 연산기 옆에 거대한 **BRAM (On-Chip Memory)**를 배치하여 중간 연산 결과가 칩 외부(DDR)로 나가는 Memory-Wall 병목을 원천 차단합니다.
+*   **용량 산정:** MNIST CNN 기준 최소 요구량은 10KB 내외입니다 (`im2col` 버퍼 ~2.7KB, Feature Map 버퍼 ~5.4KB). 하지만 향후 CIFAR-10이나 더 깊은 MobileNet/ResNet 확장을 대비하여 **128KB ~ 256KB** 수준의 넉넉한 SRAM을 할당하는 것이 유리합니다. (DE10-Nano의 M10K 블록은 충분합니다.)
+*   **효과:** 가중치(Weights)와 중간 Feature Map을 100% SRAM 내부에서 처리하여, DDR Access 지연 시간(Latency) 최소화 및 100% 파이프라인 가동률 달성.
+
+### B. AXI-Slave 구조에서 `f2h_sdram` 다이렉트 브릿지로 변경
+현재 호스트 HPS(ARM)와 FPGA간의 데이터 복사는 일반 AXI Slave 버스를 타게 되어 대역폭 제약이 존재합니다.
+*   **최적화:** 추후 DMA 패킷 전송 인터페이스를 Altera 하드웨어 특화 고속 브릿지인 **`f2h_sdram` (FPGA-to-HPS SDRAM Interface)**로 교체합니다. 
+*   **효과:** FPGA가 HPS 측 DDR 제어기를 거치지 않고 **직접 메모리에 초고속 다이렉트 엑세스**할 수 있게 되어, 엄청난 전송 대역폭(Bandwidth) 상승을 기대할 수 있습니다.

@@ -1,101 +1,33 @@
 # npu-from-scratch
 
-DE10-Nano(Cyclone V SoC) FPGA 위에서 NPU를 밑바닥부터 설계하는 프로젝트입니다. **단일 MAC 어레이 설계를 넘어, Python 모델 학습부터 Linux Application 기반의 실제 MNIST 필기체 인식(Inference) 추론까지 End-to-End로 동작하는 완벽한 풀스택 AI 가속기 시스템**을 구현했습니다.
+DE10-Nano (Cyclone V SoC) FPGA 환경에서 NPU를 밑바닥부터 설계한 프로젝트입니다. 8x8 MAC 어레이 기반의 하드웨어 설계부터, Linux Application 통합, 그리고 실제 MNIST 필기체 인식(Inference)까지 End-to-End 시스템을 구현했습니다.
+
 <p align="center">
   <img src="doc/assets/image.png" width="400">
 </p>
 
-## 로드맵
+## 핵심 성과 (Key Achievements)
 
-| 구분 | 단계 | 목표 | 
-|------|------|------|
-| Phase 1 | Systolic Array & Linux DMA | 8×8 MAC 어레이 RTL 구현, Linux C/Python 벤치마크 시스템 오프로딩 **[완료(4일)]** | 
-| Phase 2 | MNIST & CNN 성능 한계 돌파 | Quantization Aware Training(QAT) 도입 및 합성곱 연산(Convolution)의 효율적 하드웨어 매핑 구조 설계 |
-| Phase 3 | TVM/MLIR 컴파일러 연동 | NPU 컴파일러 코드베이스 경험 및 커스텀 오퍼레이터 매핑 |
-| Phase 4 | 하드웨어 고도화 | SRAM 버퍼 크기 증가 및 지원 연산 (Activation, Pooling 등) 확장 설계 |
+*   **하드웨어 가속 달성:** 순수 ARM CPU 연산 대비 NPU + MSGDMA + Hardware Post-Processor (OCM 연동) 파이프라인을 구축하여 오버헤드를 최소화하고 추론 속도를 대폭 개선했습니다 (1~2ms 대 달성).
+*   **Buffer-less Streaming Pipeline:** Avalon-ST 인터페이스의 `valid/ready` 스트리밍 프로토콜을 구현하여, 중간 버퍼(SRAM) 없이 MSGDMA 데이터를 직접 처리하는 효율적인 아키텍처를 설계했습니다.
+*   **Full-Stack 시스템 통합 설계:** 시스템 버스 통합(Qsys), Avalon-MM/ST 인터페이스 연결 구조, 그리고 Linux User-space ( `/dev/mem`, `mmap` ) C 드라이버 프로그래밍까지 H/W와 S/W 전반을 직접 구현했습니다.
 
-자세한 내용 → [doc/ROADMAP.md](doc/ROADMAP.md)
-
-## 하드웨어
-
+## 하드웨어 사양
 - **보드:** Terasic DE10-Nano (Intel Cyclone V SoC)
 - **FPGA:** Cyclone V SE 5CSEBA6U23I7
 - **HPS:** ARM Cortex-A9 Dual-core @ 800MHz
 - **베이스 프로젝트:** DE10-Nano SoC GHRD (Golden Hardware Reference Design)
 
-## 프로젝트 구조
+## 문서 목차 (Documentation)
+상세한 개발 스토리와 아키텍처 다이브(Deep-Dive)는 아래 개별 문서를 참조하십시오.
 
-```
-├── ip/                  # 커스텀 IP
-├── nios_software/       # Nios II 소프트웨어
-├── linux_software/      # Linux ARM HPS 소프트웨어 (벤치마크)
-├── rtl/                 # NPU 하드웨어 로직 (Verilog)
-├── sim/                 # Python 베이스 Cocotb 시뮬레이션
-├── soc_system.qsys      # Qsys 시스템 설계
-└── doc/                 # 문서 및 설계 자료
-```
-## 문서 목차 (Documentation Index)
+*   [**TUTORIAL.md**](doc/TUTORIAL.md): MAC 설계부터 MNIST 추론과 H/W 최적화 과정까지를 다루는 **단계별 실전 튜토리얼 (가장 추천)**
+*   [**RESULT.md**](doc/RESULT.md): CPU vs NPU 성능 검증 및 상세 벤치마크 결과 시트
+*   [**DESIGN.md**](doc/DESIGN.md) & [**DESIGN_2ND.md**](doc/DESIGN_2ND.md): 핵심 NPU 계층 구조 및 AXI/Avalon 아키텍처 상세 사양서
+*   [**DESIGN_AI.md**](doc/DESIGN_AI.md): NPU 위에서 동작하는 AI 신경망 매핑 및 양자화(Quantization) 구조
+*   [**REG_MAP.md**](doc/REG_MAP.md): MSGDMA 및 NPU CSR 플릿 맵
+*   [**TESTS.md**](doc/TESTS.md): Python (Cocotb) 기반의 가상 하드웨어 자동 검증 환경
+*   [**LESSONS_LEARNED.md**](doc/LESSONS_LEARNED.md): 맨땅에서 설계하며 얻은 트러블슈팅 및 딥 엔지니어링 교훈
 
-프로젝트와 관련된 상세 기획, 구조, 맵 구조, 트러블슈팅 내역은 아래 문서들을 참고해 주십시오.
-
-*   [**ROADMAP.md**](doc/ROADMAP.md): 프로젝트 전체 로드맵 및 단계별 세부 구현 목표.
-*   [**DESIGN.md**](doc/DESIGN.md): (초기) NPU 아키텍처 및 기본 설계 방향 문서.
-*   [**DESIGN_2ND.md**](doc/DESIGN_2ND.md): (현재) Avalon-ST (Streaming) 기반의 Bufferless NPU 아키텍처 및 MSGDMA 직렬화 파이프라인 최신 설계 사양.
-*   [**REG_MAP.md**](doc/REG_MAP.md): MSGDMA 제어 레지스터 및 NPU CSR (Control and Status Register) 세부 구조 다큐멘테이션.
-*   [**DESIGN_AI.md**](doc/DESIGN_AI.md): NPU 위에서 동작하는 AI 신경망(MNIST MLP 등)의 Layer 구성 및 수학적 매핑 아키텍처 다큐멘테이션.
-*   [**TESTS.md**](doc/TESTS.md): Verilator / Cocotb 기반의 Python $\leftrightarrow$ RTL Co-simulation 시나리오 (행렬 연산 검증).
-*   [**RESULT.md**](doc/RESULT.md): CPU vs NPU (FPGA) 간의 성능 검증 벤치마크 결과 및 프로파일링 데이터.
-*   [**LESSONS_LEARNED.md**](doc/LESSONS_LEARNED.md): 설계 과정 및 디버깅 중 얻은 기술적 교훈 (Quartus, SoC, MSGDMA 관련).
-*   [**STUDY.md**](doc/STUDY.md): 딥러닝 가속기(Systolic Array 등) 구조 및 관련 개념 학습 정리.
-*   [**ISSUE_4x4_DUPLICATION.md**](doc/ISSUE_4x4_DUPLICATION.md): 초기 NPU 파이프라인에서 발생했던 출력 중복(Duplication) 하드웨어 버그 및 그 해결 과정 상세.
-
-## 핵심 기술 성과 (Key Technical Achievements)
-
-이 프로젝트는 단순한 "시뮬레이션용 행렬 곱셈기"를 넘어, 실제 **고성능 시스템 반도체(SoC) 환경에서 요구되는 풀스택 아키텍처 현업 설계 기법**을 토대로 개발되었습니다.
-
-### 1. Decoupled & Buffer-less Streaming Pipeline (Avalon-ST)
-*   일반적인 Memory-Mapped (대용량 Block RAM 핑퐁 버퍼) 구조의 한계를 탈피하고, NPU 제어(Avalon-MM)와 데이터 전송(Avalon-ST)을 완전히 분리했습니다.
-*   연산 코어(`systolic_core.v`) 내부에 거대한 SRAM을 두지 않고, MSGDMA로부터 유입되는 데이터 스트림을 실시간으로 소모하는 **순수 연산 중심의 Buffer-less 아키텍처**를 구현하여 면적 효율(Area Efficiency)을 극대화했습니다. 
-*   하위 DMA의 `ready=0` 패킷 밀림 상황에서도 데이터 유실이나 중복이 발생하지 않는 엄격한 `valid/ready` 백프레셔(Backpressure) 핸드셰이킹 로직을 100% 지원합니다.
-
-### 2. 하드웨어 타이밍(CDC/FSM) 및 출력 중복 버그 완전 디버깅
-*   256-bit (8x8 가로축) 병렬 연산 결과를 시스템 버스 격인 64-bit 플릿(Flit) 4개로 쪼개어(Serialization) 전송하는 `npu_stream_ctrl.v`를 독자 개발했습니다.
-*    초기 4x4 및 8x8 파이프라인에서 시뮬레이터는 통과했으나 실제 보드 환경의 타이밍 밀림으로 인해 출력 데이터가 중복 캡처되던 치명적인 H/W 버그를 겪었습니다. 이를 FSM 상태 전이 타이밍과 Shift Register의 파이프라인 정렬(Alignment)을 클럭 레벨에서 재설계하여 하드웨어 단에서 원천 차단했습니다.
-*   다중 행렬(Batch) 처리 시 가장 마지막 프레임에만 정확히 EOP(End of Packet) 플래그를 발생시켜, MSGDMA가 조기 종료되지 않고 1000개 이상의 트랜잭션을 병목 없이 끊김없이 고속 스트리밍(Direct Memory Access)하는 데 성공했습니다.
-
-### 3. Full-Stack End-to-End System Integration (Verilog to Linux S/W)
-*   단순히 Verilog RTL 단위 설계에 그치지 않고, Qsys(Platform Designer)를 통한 AXI 버스 연결 아키텍처를 주도적으로 구성했습니다.
-*   **Linux ARM HPS (Cortex-A9)** 환경에서 물리 메모리(`0x20000000`)와 LWH2F Avalon 버스 브릿지(`0xFF200000`)를 `/dev/mem` 및 `mmap()`을 활용하여 가상 메모리(Virtual Memory)로 끌어와 IP를 직접 제어하는 **User-space C 드라이버(API)를 스크래치부터 구현**했습니다.
-*   **성능 실측 (Benchmarking):** CPU(`gcc -O3` 최적화 3중 for문)와 FPGA 하드웨어 (MSGDMA 오프로드) 성능을 `gettimeofday` 단위로 엄밀하게 비교한 결과 (DMA 세팅 오버헤드 포함),
-    *   **1) 순수 8x8 행렬 곱셈 (4000 Batch 연산):** **50MHz NPU가 800MHz 듀얼코어 프로세서 대비 약 4.64배 (4.64x) 빠른 압도적인 실행 속도** 증명.
-    *   **2) MNIST 추론 (2-Layer 파이프라인):** **NPU / CPU C Inference 결과 완벽 일치 (88.08%) 및 약 4.26배 (4.26x) 빠른 실행 속도** 증명 (OCM Scratchpad 최적화 적용).
-        ```text
-        [1] Running S/W (CPU) Inference...
-            CPU Accuracy : 88.08%
-            CPU Time     : 69634.76 ms (6.963 ms/img)
-
-        [2] Running H/W (NPU) Inference...
-            NPU Accuracy : 88.08%
-            NPU Time     : 16334.81 ms (1.633 ms/img)
-
-        === Speedup ===
-            H/W Acceleration: 4.26 x
-        ```
-        *(※ 정확도가 88%에 머무는 이유(8-bit 양자화 제약) 및 구체적인 신경망 레이어(Layer 1, Layer 2) 매핑 구조는 [DESIGN_AI.md](doc/DESIGN_AI.md)를 참조하십시오.)*
-
-## AI-Assisted Development Journey (단 4일간의 여정)
-
-**🚀 개발 기간:**
-*   **Phase 1 (기반 설계 및 DMA 통신 완료):** 2026년 2월 22일 ~ 2026년 2월 25일 (총 4일)
-*   **Phase 2 (MNIST 추론 완벽 이식):** 2026년 3월 1일 (단 1일)
-
-이 프로젝트는 처음부터 끝까지 **LLM(AI 에이전트) 기반의 애자일(Agile)한 Hardware-Software Co-design** 방법론을 한껏 활용하여, 단 4일 만에 초기 아키텍처 구상부터 Linux 벤치마크 완료까지 진행되었습니다. 단순한 AI 코드 생성을 넘어, AI를 '시니어 페어 프로그래머(Pair Programmer)'로 삼아 다음과 같은 고난이도 엔지니어링 맹점들을 돌파했습니다.
-
-1.  **Cocotb 기반의 Python 시뮬레이션 환경 구축 및 컴파일 시간의 획기적 단축:**
-    기존 FPGA 워크플로우의 가장 큰 병목인 **"수십 분이 걸리는 Quartus 전체 컴파일타임"**을 최소화하는 것이 핵심이었습니다. AI를 활용해 Python 기반 **Cocotb** 테스트 코드를 대거 자동 생성하여, NPU의 입력 행렬 주입과 `Numpy` 골든 모델(Golden Model) 기대값(Expected) 비교를 Python 코드로 완벽하게 자동화했습니다. 결과적으로, 번거로운 보드 합성 과정 없이 회로 로직의 결함을 초 단위 시뮬레이션으로 즉각 수백 번 반복 테스트하며 **개발 사이클을 기하급수적으로 단축**할 수 있었습니다.
-2.  **클럭 단위의 치열한 RTL FSM 디버깅 제안:**
-    위에서 언급한 Data Duplication 버그 발생 당시, 캡처된 Waveform과 클럭 사이의 델타 사이클 증상을 AI에게 묘사하고 함께 시나리오를 구성했습니다. AI는 Serialization FSM 단계에서 Ready가 떨어지기도 전에 FIFO 포인터가 넘어가버리는 현상을 정확히 짚어냈고, 이를 기반으로 상태 머신 제어 코드를 즉각 리팩터링할 수 있었습니다.
-3.  **MSGDMA 공식 스펙 분석 및 C S/W 드라이버 매크로 구현:**
-    수천 페이지에 달하는 Intel/Altera MSGDMA 및 SoC 매뉴얼 사이에서 헤맬 필요 없이, AI에게 목적(SOP/EOP 생성 및 폴링 방법 등)을 제시하고 핵심 Register Map과 Bit 필드 정보를 빠르고 정확하게 도출했습니다. 이를 통해 Linux C 코드의 포인터 오프셋과 `mmap` 제어 코드를 단숨에 완성했습니다.
-
-본 프로젝트는 전통적 시스템 반도체 설계에 AI(Agentic Workflow)를 결합했을 때, 1인 개발자가 H/W Architecture 설계부터 S/W System Integration까지 얼마나 강력하고 완벽한 풀스택 결과물을 딥(Deep)하게 만들어낼 수 있는지를 보여주는 최상의 사례입니다.
+## AI 개발 어시스턴트 적용
+이 프로젝트는 **H/W-S/W Co-design의 기획 단계부터 최종 구현, 디버깅까지 최신 AI(LLM) 에이전트를 실무형 페어 프로그래머(Pair Programmer)로 적극 활용**했습니다. 수십 시간이 걸리는 검증 코드를 단숨에 생성하거나 버스 인터페이스의 난해한 FSM 타이밍 데드락 버그를 함께 분석하는 등, 거대한 FPGA 하드웨어-소프트웨어 개발 사이클을 기하급수적으로 단축시킨 선도형 개발 사례입니다.
