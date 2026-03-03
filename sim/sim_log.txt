@@ -1,0 +1,33 @@
+rm -f results.xml
+"make" -f Makefile_post_processor results.xml
+make[1]: Entering directory '/mnt/c/Workspace/quartus/npu/sim'
+mkdir -p sim_build
+/usr/bin/iverilog -o sim_build/sim.vvp -s npu_post_processor -g2012 -f sim_build/cmds.f  /mnt/c/Workspace/quartus/npu/sim/../rtl/npu_post_processor.v
+/home/morer/.local/lib/python3.10/site-packages/cocotb_tools/makefiles/simulators/Makefile.icarus:66: Using MODULE is deprecated, please use COCOTB_TEST_MODULES instead.
+rm -f results.xml
+COCOTB_TEST_MODULES=test_npu_post_processor COCOTB_TESTCASE= COCOTB_TEST_FILTER= COCOTB_TOPLEVEL=npu_post_processor TOPLEVEL_LANG=verilog \
+         /usr/bin/vvp -M /home/morer/.local/lib/python3.10/site-packages/cocotb/libs -m libcocotbvpi_icarus   sim_build/sim.vvp   
+     -.--ns INFO     gpi                                ..mbed/gpi_embed.cpp:93   in _embed_init_python              Using Python 3.10.14 interpreter at /usr/bin/python3
+     -.--ns INFO     gpi                                ../gpi/GpiCommon.cpp:79   in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 11.0 (stable)
+     0.00ns WARNING  gpi                                vpi_iterate returned NULL for type vpiInstance for object NULL
+     0.00ns INFO     cocotb                             Seeding Python random module with 1772508367
+     0.00ns INFO     cocotb                             Initialized cocotb v2.0.1 from /home/morer/.local/lib/python3.10/site-packages/cocotb
+     0.00ns INFO     cocotb                             Running tests
+     0.00ns INFO     cocotb.regression                  running test_npu_post_processor.test_npu_post_processor (1/1)
+     0.00ns WARNING  py.warnings                        /mnt/c/Workspace/quartus/npu/sim/test_npu_post_processor.py:63: DeprecationWarning: The 'units' argument has been renamed to 'unit'.
+                                                          clock = Clock(dut.clk, 10, units="ns")
+     0.00ns WARNING  py.warnings                        /mnt/c/Workspace/quartus/npu/sim/test_npu_post_processor.py:78: DeprecationWarning: The 'units' argument has been renamed to 'unit'.
+                                                          await Timer(20, units="ns")
+  2160.00ns WARNING  py.warnings                        /mnt/c/Workspace/quartus/npu/sim/test_npu_post_processor.py:117: DeprecationWarning: The 'units' argument has been renamed to 'unit'.
+                                                          await Timer(50, units="ns")
+  2210.00ns INFO     cocotb.npu_post_processor          SUCCESS: Post processor test passed!
+  2210.00ns INFO     cocotb.regression                  test_npu_post_processor.test_npu_post_processor passed
+  2210.00ns INFO     cocotb.regression                  *********************************************************************************************************
+                                                        ** TEST                                             STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        *********************************************************************************************************
+                                                        ** test_npu_post_processor.test_npu_post_processor   PASS        2210.00           0.04      49946.72  **
+                                                        *********************************************************************************************************
+                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                                  2210.00           0.05      41477.96  **
+                                                        *********************************************************************************************************
+make[1]: Leaving directory '/mnt/c/Workspace/quartus/npu/sim'

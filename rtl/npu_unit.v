@@ -7,7 +7,7 @@ module npu_unit #(
     input  wire        rst_n,
 
     // Avalon-MM Slave Interface (Unified)
-    input  wire [3:0]  avs_address,
+    input  wire [7:0]  avs_address,
     input  wire        avs_write,
     input  wire [31:0] avs_writedata,
     input  wire        avs_read,

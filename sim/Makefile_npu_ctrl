@@ -1,0 +1,11 @@
+SIM ?= icarus
+TOPLEVEL_LANG ?= verilog
+
+VERILOG_SOURCES += $(PWD)/../rtl/npu_ctrl.v
+VERILOG_SOURCES += $(PWD)/../rtl/mac_pe_ctrl.v
+
+TOPLEVEL = npu_ctrl
+MODULE = test_npu_ctrl
+SIM_BUILD = sim_build_npu_ctrl
+
+include $(shell cocotb-config --makefiles)/Makefile.sim

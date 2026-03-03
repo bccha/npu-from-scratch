@@ -85,7 +85,7 @@ module npu_post_processor (
                         pack_counter <= 3'd0;
                         packed_word <= 32'd0;
                         
-                        avm_read_address <= bias_addr;
+                        avm_read_address <= bias_addr; // the very first bias read at elements_processed=0
                         avm_read_read <= 1'b1;
                         avm_write_address <= dst_addr;
                     end
@@ -125,7 +125,8 @@ module npu_post_processor (
 
                 STATE_PROCESS: begin
                     // $Z + Bias -> Shift -> ReLU/Clamp
-                    h_raw = current_z + current_bias;
+                    // Hardware Z values from NPU output are byte-swapped, matching __builtin_bswap32 in C code
+                    h_raw = {current_z[7:0], current_z[15:8], current_z[23:16], current_z[31:24]} + current_bias;
                     h_shift = h_raw >>> shift_val;
                     
                     if (h_shift < 0) begin
@@ -136,8 +137,11 @@ module npu_post_processor (
                         h_final = h_shift;
                     end
 
-                    // Pack into the 32-bit register based on pack_counter
-                    case (pack_counter)
+                    // Pack into the 32-bit register.
+                    // To match the `hw_c = c ^ 1` logic in C, we must swap pairs of columns.
+                    // Since pack_counter (0,1,2,3) corresponds to 4 columns, we XOR it with 1 
+                    // to write the data into the correct byte position of `packed_word`.
+                    case (pack_counter ^ 3'd1)
                         3'd0: packed_word[7:0]   <= h_final[7:0];
                         3'd1: packed_word[15:8]  <= h_final[7:0];
                         3'd2: packed_word[23:16] <= h_final[7:0];
@@ -151,17 +155,18 @@ module npu_post_processor (
                         state <= STATE_WRITE_CMD;
                         avm_write_write <= 1'b1;
                         
-                        // Guarantee the latest byte is combo-assigned to write data
-                        avm_write_writedata[31:24] <= (pack_counter == 3'd3) ? h_final[7:0] : packed_word[31:24];
-                        avm_write_writedata[23:16] <= (pack_counter == 3'd2) ? h_final[7:0] : packed_word[23:16];
-                        avm_write_writedata[15:8]  <= (pack_counter == 3'd1) ? h_final[7:0] : packed_word[15:8];
-                        avm_write_writedata[7:0]   <= (pack_counter == 3'd0) ? h_final[7:0] : packed_word[7:0];
+                        // Guarantee the latest byte is combo-assigned to write data matching the XOR layout
+                        avm_write_writedata[31:24] <= ((pack_counter ^ 3'd1) == 3'd3) ? h_final[7:0] : packed_word[31:24];
+                        avm_write_writedata[23:16] <= ((pack_counter ^ 3'd1) == 3'd2) ? h_final[7:0] : packed_word[23:16];
+                        avm_write_writedata[15:8]  <= ((pack_counter ^ 3'd1) == 3'd1) ? h_final[7:0] : packed_word[15:8];
+                        avm_write_writedata[7:0]   <= ((pack_counter ^ 3'd1) == 3'd0) ? h_final[7:0] : packed_word[7:0];
                         
                         pack_counter <= 3'd0;
                     end else begin
                         pack_counter <= pack_counter + 3'd1;
                         state <= STATE_READ_BIAS_CMD;
-                        avm_read_address <= bias_addr + ((elements_processed + 1) << 2);
+                        // Wrap bias reads every 8 elements for MAC columns using bitwise AND.
+                        avm_read_address <= bias_addr + (( (elements_processed + 1) & 32'd7 ) << 2);
                         avm_read_read <= 1'b1;
                     end
                 end
@@ -176,7 +181,8 @@ module npu_post_processor (
                             state <= STATE_DONE;
                         end else begin
                             state <= STATE_READ_BIAS_CMD;
-                            avm_read_address <= bias_addr + (elements_processed << 2);
+                            // Wrap bias reads every 8 elements using bitwise AND
+                            avm_read_address <= bias_addr + (( elements_processed & 32'd7 ) << 2);
                             avm_read_read <= 1'b1;
                         end
                     end

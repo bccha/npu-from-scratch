@@ -65,6 +65,8 @@ module npu_ctrl (
     );
 
     // System Registers
+    reg pp_done_latched;
+
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             seq_start <= 1'b0;
@@ -82,6 +84,13 @@ module npu_ctrl (
             seq_start <= 1'b0;
             weight_latch_en <= 1'b0;
             pp_start <= 1'b0;
+
+            // PP Done Latch Logic
+            if (pp_start) begin
+                pp_done_latched <= 1'b0;
+            end else if (pp_done) begin
+                pp_done_latched <= 1'b1;
+            end
 
             if (write && select_sys) begin
                 case (address[2:0])
@@ -137,7 +146,7 @@ module npu_ctrl (
             if (read && select_pp) begin
                 case (address[3:0])
                     4'h0: pp_readdata <= {31'd0, 1'b0}; // Start bit is self-clearing, always read 0
-                    4'h1: pp_readdata <= {31'd0, pp_done}; // Status Register
+                    4'h1: pp_readdata <= {31'd0, pp_done_latched}; // Latch the Status
                     4'h2: pp_readdata <= pp_src_addr;
                     4'h3: pp_readdata <= pp_dst_addr;
                     4'h4: pp_readdata <= pp_bias_addr;

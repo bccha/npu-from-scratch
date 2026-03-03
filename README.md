@@ -8,7 +8,7 @@ DE10-Nano (Cyclone V SoC) FPGA 환경에서 NPU를 밑바닥부터 설계한 프
 
 ## 핵심 성과 (Key Achievements)
 
-*   **하드웨어 가속 달성:** 순수 ARM CPU 연산 대비 NPU + MSGDMA + Hardware Post-Processor (OCM 연동) 파이프라인을 구축하여 오버헤드를 최소화하고 추론 속도를 대폭 개선했습니다 (1~2ms 대 달성).
+*   **하드웨어 가속 달성:** 순수 ARM CPU 연산 대비 NPU + MSGDMA + Hardware Post-Processor (OCM 연동) 파이프라인을 구축하여 오버헤드를 최소화하고 추론 속도를 대폭 개선했습니다 (16.33 ms / img (4.26x Acceleration))
 *   **Buffer-less Streaming Pipeline:** Avalon-ST 인터페이스의 `valid/ready` 스트리밍 프로토콜을 구현하여, 중간 버퍼(SRAM) 없이 MSGDMA 데이터를 직접 처리하는 효율적인 아키텍처를 설계했습니다.
 *   **Full-Stack 시스템 통합 설계:** 시스템 버스 통합(Qsys), Avalon-MM/ST 인터페이스 연결 구조, 그리고 Linux User-space ( `/dev/mem`, `mmap` ) C 드라이버 프로그래밍까지 H/W와 S/W 전반을 직접 구현했습니다.
 

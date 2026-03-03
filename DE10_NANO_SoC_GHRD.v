@@ -103,8 +103,8 @@ module DE10_NANO_SoC_GHRD(
   assign fpga_clk_50=FPGA_CLK1_50;
 // npu_unit Avalon-MM wires
   wire [7:0]  npu_avs_full_address;
-  wire [3:0]  npu_avs_address;
-  assign npu_avs_address = npu_avs_full_address[3:0];
+  wire [7:0]  npu_avs_address;
+  assign npu_avs_address = npu_avs_full_address;
   wire        npu_avs_write;
   wire [31:0] npu_avs_writedata;
   wire        npu_avs_read;
@@ -296,7 +296,7 @@ assign pp_bridge_read        = pp_read_read;
 assign pp_bridge_write       = pp_write_write;
 assign pp_bridge_writedata   = pp_write_writedata;
 assign pp_bridge_byteenable  = pp_write_write ? pp_write_byteenable : 4'hF;
-assign pp_bridge_burstcount  = 6'd4; // Fixed burst count of 4 for writes
+assign pp_bridge_burstcount  = pp_write_write ? pp_write_burstcount[5:0] : pp_read_burstcount[5:0];
 
 // Return signals
 assign pp_read_readdata      = pp_bridge_readdata;

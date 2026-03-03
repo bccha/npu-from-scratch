@@ -1,0 +1,35 @@
+=== MNIST Inference Benchmark ===
+Images:   8
+
+Loading Binaries...
+
+[0] Diagnostic: First 8x8 Matrix Result...
+CPU Matrix:
+     0      0      0      0      0      0      0      0 
+     0      0      0      0      0      0      0      0 
+     0      0      0      0      0      0      0      0 
+     0      0      0      0      0      0      0      0 
+     0      0      0      0      0      0      0      0 
+     0      0      0      0      0      0      0      0 
+     0      0      0      0      0      0      0      0 
+     0      0      0      0      0      0      0      0 
+NPU Matrix:
+  6185  11435      0      0      0      0      0      0 
+  3116   4698      0      0      0      0      0      0 
+  3223   8493      0      0      0      0      0      0 
+  -401   2948      0      0      0      0      0      0 
+ -9652  10025      0      0      0      0      0      0 
+  3418   9639      0      0      0      0      0      0 
+ -2350  16934      0      0      0      0      0      0 
+ -6934  24394      0      0      0      0      0      0 
+
+[1] Running S/W (CPU) Inference...
+    CPU Accuracy : 100.00%
+    CPU Time     : 55.68 ms (6.960 ms/img)
+
+[2] Running H/W (NPU) Inference...
+    NPU Accuracy : 100.00%
+    NPU Time     : 13.42 ms (1.678 ms/img)
+
+=== Speedup ===
+    H/W Acceleration: 4.15 x
