@@ -14,7 +14,7 @@
 #define LWHPS2FPGA_SPAN 0x00200000
 
 #define HPS_FPGA_RAM_BASE 0x20000000
-#define HPS_FPGA_RAM_SPAN 0x01000000 // 16MB Window
+#define HPS_FPGA_RAM_SPAN 0x02000000 // 32MB Window
 
 // ==========================================
 // Component Offsets (Extracted from Qsys)

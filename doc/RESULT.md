@@ -144,15 +144,15 @@ Actual C Benchmark comparing 50MHz FPGA NPU throughput versus 800MHz ARM CPU on 
 
     ```text
     [1] Running S/W (CPU) Inference...
-        CPU Accuracy : 88.08%
-        CPU Time     : 69547.07 ms (6.955 ms/img)
+        CPU Accuracy : 88.38%
+        CPU Time     : 5571.47 ms (6.964 ms/img)
 
     [2] Running H/W (NPU) Inference...
-        NPU Accuracy : 88.08%
-        NPU Time     : 18771.54 ms (1.877 ms/img)
+        NPU Accuracy : 88.38%
+        NPU Time     : 1306.75 ms (1.633 ms/img)
 
     === Speedup ===
-        H/W Acceleration: 3.70 x
+        H/W Acceleration: 4.26 x
     ```
 
 ---
@@ -169,3 +169,115 @@ To further eliminate DDR access contention, the FPGA's internal OCM was introduc
    The core issue was identified as the CPU's memory access pattern. Doing calculations directly on `/dev/mem` pointers caused intense bus transactions. By altering the software to `memcpy` the 256-byte NPU results directly into a CPU stack buffer, doing the ReLU/Bias formatting locally, and `memcpy`-ing the block back out, bus transactions became highly efficient bursts.
 
 **Final Result:** With AXI + `memcpy` stack buffering, the OCM pipeline hit **16.33 ms / img (4.26x Acceleration)**, successfully breaking past the DDR limitations entirely!
+
+---
+
+## 7. Standalone HW Accumulator S/W Pipelining
+
+Validated the independent `npu_ocm_accumulator` IP which operates directly on the Avalon-MM OCM memory bus alongside the MSGDMA engines. This verifies the capability for the CPU to overlap memory accumulation tasks with sequential NPU matrix multiplications, enabling software-level pipeline overlapping.
+
+```text
+Starting Standalone OCM Accumulator Pipeline Test...
+Loading Weights...
+  [Loop 0] Dispatching MSGDMA Matmul...
+  [Loop 1] Dispatching MSGDMA Matmul...
+  [Loop 1] Accumulating previous matrix 0...
+  [Loop 2] Dispatching MSGDMA Matmul...
+  [Loop 2] Accumulating previous matrix 1...
+  [Cleanup] Accumulating final matrix 2...
+
+=== Final Accumulated Hardware Matrix ===
+  3   3   3   3   3   3   3   3
+  3   3   3   3   3   3   3   3
+  3   3   3   3   3   3   3   3
+  3   3   3   3   3   3   3   3
+  3   3   3   3   3   3   3   3
+  3   3   3   3   3   3   3   3
+  3   3   3   3   3   3   3   3
+  3   3   3   3   3   3   3   3
+
+Standalone Pipeline Accumulator Test: PASS! All expected values equal 3.
+```
+
+---
+
+## 8. CNN Layer 1 HW vs SW Verifications
+
+Successfully matched the accuracy of the C-based software CPU and NPU hardware execution at 80.00% across the 1000-image `mnist` subset, proving correct Layer 1 (`Conv2D`) execution on the Systolic Array. 
+
+### Key Bug Fixes in Layer 1 Data Mapping
+Due to Endianness requirements of the MSGDMA engines and Avalon-ST interfaces, our previous `temp_x` mapping incorrectly applied a reversed `7-c` sequence to input features. The MSGDMA expects data columns natively, while the weights must be swapped (`c=7->t=0`). 
+Removing the duplicate byte swapping aligned the hardware results exactly to the S/W matrix calculations.
+
+### NPU vs CPU Base Execution (Single Layer Acceleration)
+Currently, only Layer 1 is processed by the NPU, while the larger Layer 2 (Fully Connected) runs locally on the ARM CPU. 
+
+```text
+[1] Running S/W (CPU) Inference...
+    CPU Accuracy : 80.00%
+    CPU Time     : 67.74 ms (6.774 ms/img)
+
+[2] Running H/W (NPU) Inference...
+    NPU Accuracy : 80.00%
+    NPU Time     : 87.03 ms (8.703 ms/img)
+
+=== Speedup ===
+    H/W Acceleration: 0.78 x
+```
+
+> **Note on Performance Bottleneck**: For Layer 1 (`Conv2D K=16`), the NPU processes 169 patches via 22 separate HW dispatches. Because each batch requires extensive CPU memory setup for `im2col` padded transformations and 22 individual MSGDMA descriptors, the constant dispatch overhead significantly exceeds the actual MAC execution time resulting in a slower net time (87ms vs 67ms). The next optimization step requires executing the Fully Connected Layer 2 over HW, which involves a massive 1352 $\times$ 16 matrix. Processing this via single large MSGDMA transfers should aggressively recover the hardware acceleration ratio.
+
+---
+
+## 9. Final Inference Optimization: Amdahl's Law and MSGDMA Architecture Limits
+
+Through rigorous profiling and the total elimination of all C software formatting overheads (e.g., pulling `memset` and `memcpy` of the 21MB `im2col` padded inputs out of the benchmarking loop, and separating memory regions to `0x800000` and `0x1E00000` base offsets to prevent overlapping overwrites), the true hardware latency of the CNN Layer 1 inference was completely isolated.
+
+The benchmarking revealed a fascinating paradigm of Edge AI scaling:
+
+```text
+  [L1 Breakdown]
+  1. HW DMA Core  : 0.480 ms
+  2. SW bswap32   : 0.336 ms
+  3. SW Accum/ReLU: 0.021 ms
+------------------------------------------
+    NPU Accuracy : 80.00%
+    NPU Time     : 0.982 ms/img
+    
+    CPU Time     : 0.178 ms/img (Layer 1 + Layer 2)
+    
+=== Speedup ===
+    H/W Acceleration: 0.18 x
+```
+
+### Analysis: Why is the CPU 5.5x faster than the NPU here?
+The CNN model used is extremely small (`13x13` output, 8 filters $\to$ ~35,000 MACs). The 800MHz Dual-Core Cortex-A9 CPU executes these 35K MACs almost entirely within its 512KB L2 cache in just **~33 microseconds**. 
+
+In contrast, the NPU MSGDMA Architecture has rigid physical overheads dictated by AXI Bus transfers:
+1. **AXI Interface Bottleneck (`0.480 ms`)**: The MSGDMA must fetch 10.8KB of padded inputs and write back 43KB of results (due to the rigid 256-byte output systolic array architecture). Over the HPS-to-FPGA memory map, this transfers data at roughly ~115 MB/s, imposing a flat latency floor.
+2. **Uncached Memory / Endianness Swap (`0.336 ms`)**: The CPU must read the combined 86KB of matrices using an `O_SYNC` pointer mapped via `/dev/mem`, which bypasses the CPU cache completely. Thus, cache misses during the `__builtin_bswap32` data extraction heavily dominate the latency.
+
+**Conclusion:** 
+The NPU logic works perfectly and robustly under continuous DMA saturation. However, for micro-wordloads (< 1M MACs), the AXI memory-transfer time ($O(N^2)$) structurally outweighs the arithmetic computation time ($O(N^3)$). To see powerful `> 1.0x` hardware speedups, the target model must be mathematically scaled up (e.g., ResNet or MobileNet architectures) where the sheer density of parallel MAC computations finally dwarfs the fixed memory transfer overheads between the HPS and FPGA.
+
+---
+
+## 10. Lessons Learned: The Necessity of High Bandwidth Memory (HBM)
+
+The single greatest lesson from this implementation is a direct physical demonstration of the **Von Neumann Bottleneck** in Artificial Intelligence Hardware. 
+
+Our Cyclone V NPU consists of a relatively small 8x8 Systolic Array (64 MACs per cycle). Yet, even with this small array, our benchmarking proved that the core logic was *starving* for data. The continuous MSGDMA streaming could only achieve **~115 MB/s** across the AXI bridge.
+
+When scaling up to a production-grade NPU:
+- An **8x8 array** needs 64 bytes per clock. At 50MHz, it demands **3.2 GB/s** of memory bandwidth just to stay fed (100% utilization).
+- A **16x16 array** (256 MACs) at 500MHz demands **128 GB/s** of bandwidth.
+- Google's **TPUv1 (256x256 array)** at 700MHz requires a staggering **44.8 TB/s** of internal memory bandwidth!
+
+### Why traditional DDR fails for AI:
+A standard DDR3 or DDR4 channel maxes out at roughly 10~25 GB/s. If you attach a massive NPU to standard DDR memory, the NPU will spend 99% of its time idling (waiting for the AXI bus to fetch the next matrix tile) and only 1% of its time actually computing. This renders the massive silicon area of the MAC array effectively useless.
+
+### The HBM Solution:
+This is precisely why modern AI hardware (like NVIDIA H100s, Google TPUs, and AMD MI300s) utilize **High Bandwidth Memory (HBM)**. 
+HBM stacks memory chips vertically directly onto the silicon interposer next to the logic die, providing an immensely wide 1024-bit (or more) data bus natively. Instead of moving data across an external PCB trace via serial AXI, HBM allows the NPU to slurp entire massive matrix tiles (Terabytes per second) instantly into its SRAM buffers.
+
+Our custom NPU perfectly validated this architectural truth: **In AI Hardware design, computing power (MAC count) is cheap, but moving data to feed those MACs is the true engineering bottleneck.**
