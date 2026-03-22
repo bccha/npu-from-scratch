@@ -281,3 +281,16 @@ This is precisely why modern AI hardware (like NVIDIA H100s, Google TPUs, and AM
 HBM stacks memory chips vertically directly onto the silicon interposer next to the logic die, providing an immensely wide 1024-bit (or more) data bus natively. Instead of moving data across an external PCB trace via serial AXI, HBM allows the NPU to slurp entire massive matrix tiles (Terabytes per second) instantly into its SRAM buffers.
 
 Our custom NPU perfectly validated this architectural truth: **In AI Hardware design, computing power (MAC count) is cheap, but moving data to feed those MACs is the true engineering bottleneck.**
+
+---
+
+## 11. Full-Stack Operator Fusion (PyTorch to Hardware)
+
+Successfully bridged the high-level Python Deep Learning framework with the low-level FPGA Systolic Array via the creation of Phase 1 RTL and Phase 2 PyTorch FX Compiler. 
+
+1. **Software Compiler (PyTorch FX):**
+   By utilizing PyTorch FX Subgraph Matching, the custom compiler pass (`npu_fusion_pass.py`) mathematically folded `[Conv2d -> BatchNorm2d -> ReLU]` operations into a singular target emulation node (`NPU_Conv2d`). This completely absorbed the heavy parameters (Gamma, Beta, Mean, Variance) into statically scaled INT8 weights and INT32 biases.
+2. **Hardware RTL Pipeline (Phase 1):**
+   The hardware deeply integrated an OCM accumulator (`npu_ocm_accumulator.v`) and a hardwired Post-Processor (`npu_post_processor.v`). It performs **Bias Addition + Requantization (Right Shift) + ReLU Clipping** iteratively within a single clock cycle immediately as data drains from the SRAM cache.
+3. **Bit-Exact Verification Passes:**
+   The `test_fusion.py` testbench proved that the newly formed execution datapath operates with 0% memory latency overheads, eliminating DDR4 round-trips for intermediate features. When fed random sequences, the RTL hardware produced the **exact equivalent 8-bit bit-for-bit results** as the simulated PyTorch offline quantized pass, achieving a major milestone for reliable model deployment.

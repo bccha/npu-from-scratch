@@ -3,15 +3,48 @@
 DE10-Nano (Cyclone V SoC) FPGA 환경에서 NPU를 밑바닥부터 설계한 프로젝트입니다. 8x8 MAC 어레이 기반의 하드웨어 설계부터, Linux Application 통합, 그리고 실제 MNIST 필기체 인식(Inference)까지 End-to-End 시스템을 구현했습니다.
 
 <p align="center">
-  <img src="doc/assets/image.png" width="400">
+  <img src="doc/assets/npu_architecture_flowchart.png" width="400">
 </p>
+
+## 프로젝트 아키텍처 (Full-Stack Dataflow)
+
+가장 최상단의 딥러닝 리서처 공간(Python)부터, 칩 내부의 실시간 디지털 논리 회로(Verilog)까지 이어지는 전체 파이프라인(Top-Down Processing)은 아래 그림과 같이 동작합니다.
+
+```mermaid
+flowchart TD
+    subgraph Frontend ["1. AI Framework (PyTorch)"]
+        PT["모델 정의 (Model Definition)"]
+        FX["FX Graph Compiler (npu_fusion_pass.py)"]
+        PT -- Symbolic Trace --> FX
+        FX -- Parameter Folding --> Fused["Offline Fusion\n(Conv + BN + ReLU)"]
+    end
+
+    subgraph Backend ["2. Compiler Codegen (BYOC)"]
+        Fused -- Tensor Tiling --> Bin[".bin HW Weights & Biases"]
+        Fused -- Transpile --> EmitC["Auto-Generated C Driver\n(npu_model_runtime.c)"]
+    end
+
+    subgraph OS ["3. Linux Runtime (C/C++)"]
+        Bin -.-> App["Bare-metal / Linux Application"]
+        EmitC -.-> App
+        App -- mmap() / /dev/mem --> Mem["DDR3 Memory Space"]
+    end
+
+    subgraph Hardware ["4. FPGA Hardware (RTL)"]
+        Mem -- AXI Bridge --> DMA["MSGDMA Engine"]
+        DMA -- Avalon-ST Streaming --> MAC["8x8 Systolic Array (MAC)\n+ Post-Processor"]
+    end
+```
+
 
 ## 프로젝트 스코프 (Project Scope)
 이 프로젝트의 최종 목표는 단순한 하드웨어 MAC(Multiply-Accumulate) 연산기 설계에 머물지 않습니다. 
 상용 AI 가속기와 동일한 **풀스택(Full-Stack) AI 엔지니어링 생태계 모델**을 단독으로 구축하는 것을 스코프로 정의합니다.
 
 1. **AI Framework (Frontend):** PyTorch 모델 설계, QAT(Quantization Aware Training) 및 Operator Fusion(Conv+BN 수학적 병합)
-2. **Compiler Codegen (Backend):** 하드웨어 어레이(8x8)를 인지하는 타일링(HW-Aware NAS) 최적화 및 MLIR EmitC 개념을 도입한 NPU 런타임용 C 드라이버 자동 생성(BYOC)
+2. **Compiler Codegen (Backend):** 
+   - 과거 무거운 외부 스택(TVM/MLIR)에 의존하던 전통적 방식에서 탈피하여, 최신 **PyTorch FX 기반의 100% Python 자체 컴파일러(`npu_fusion_pass.py`)**를 구축했습니다. 
+   - 하드웨어 8x8 어레이 구조를 인지하는 타일링(HW-Aware NAS) 패스와 **그래프 기반 순수 C 런타임 드라이버 자동 생성 (Emit C / BYOC)** 기능을 단독으로 수행합니다.
 3. **Hardware (RTL):** Pipeline Post-Processor (Bias/Shift/ReLU) 설계와 Avalon-ST 다이렉트 스트리밍을 통한 Zero-Padding 하드웨어 100% 활용도 달성
 4. **OS Runtime (C/C++):** 컴파일러가 출력한 가중치 바이너리(`.bin`)를 메모리 매핑(`/dev/mem`, `mmap`)으로 적재하여 NPU를 제어하는 리눅스(Linux) HPS Bare-metal 런타임 환경
 
@@ -32,6 +65,7 @@ DE10-Nano (Cyclone V SoC) FPGA 환경에서 NPU를 밑바닥부터 설계한 프
 상세한 개발 스토리와 아키텍처 다이브(Deep-Dive)는 아래 개별 문서를 참조하십시오.
 
 *   [**TUTORIAL.md**](doc/TUTORIAL.md): MAC 설계부터 MNIST 추론과 H/W 최적화 과정까지를 다루는 **단계별 실전 튜토리얼 (가장 추천)**
+*   [**DESIGN_FUSION.md**](doc/DESIGN_FUSION.md): **[NEW]** PyTorch FX 컴파일러부터 내부 하드웨어 파이프라인(SRAM 누적기 및 후처리기)까지 이어지는 Full-Stack Operator Fusion 설계 문서
 *   [**RESULT.md**](doc/RESULT.md): CPU vs NPU 성능 검증 및 상세 벤치마크 결과 시트
 *   [**DESIGN.md**](doc/DESIGN.md) & [**DESIGN_2ND.md**](doc/DESIGN_2ND.md): 핵심 NPU 계층 구조 및 AXI/Avalon 아키텍처 상세 사양서
 *   [**DESIGN_AI.md**](doc/DESIGN_AI.md): NPU 위에서 동작하는 AI 신경망 매핑 및 양자화(Quantization) 구조

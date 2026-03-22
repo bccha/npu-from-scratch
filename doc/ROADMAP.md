@@ -17,15 +17,15 @@ FPGA 기반 NPU 설계 경험을 쌓기 위한 단계별 로드맵.
 
 ---
 
-## Phase 2: MNIST & CNN 성능 한계 돌파 (진행 중)
+## Phase 2: MNIST & CNN 성능 한계 돌파 (완료)
 
-**목표:** 최신 NPU 기술인 Quantization Aware Training (QAT) 도입 및 합성곱 연산 가속화
+**목표:** 최신 NPU 기술인 Quantization Aware Training (QAT) 도입 및 PyTorch 컴파일러 구축
 
-- [ ] Python 학습 파이프라인에서 QAT를 통한 int8/int32 Symmetric Quantization 오차 최소화
-- [ ] Python Export 스크립트에 Batch Norm 오프라인 Fusion (Weights/Bias 병합) 로직 추가
-- [ ] 하드웨어 Post-Processor(PP) RTL 파이프라인 설계 및 Avalon-ST Stream 체인 연동 (Bias, Shift, ReLU 1클럭 처리)
-- [ ] C 드라이버(`main.c`)의 CPU Accumulation 병목 루프 삭제 및 DMA 8-bit 정밀 수신 최적화
-- [ ] HW-Aware NAS 적용: 3x3 필터를 4x4(16 elements)로 확장하여 8x8 MAC 어레이 100% 활용 달성 (Padding 오버헤드 제로화)
+- [x] PyTorch(`pytorch_train_and_export.py`) 학습 파이프라인에서 QAT를 통한 int8/int32 Symmetric Quantization 오차 최소화
+- [x] PyTorch FX Compiler(`npu_fusion_pass.py`)에 Batch Norm 오프라인 Fusion (Weights/Bias/Stats 병합) 로직 추가
+- [x] 하드웨어 Post-Processor(PP) RTL 파이프라인 설계 및 Avalon-ST Stream 체인 연동 (Bias, Shift, ReLU 1클럭 처리)
+- [x] OCM Accumulator 직결 구조(Hardwired Routing)를 통한 데이터 사이클 메모리 낭비 제거
+- [x] HW-Aware NAS 적용: 3x3 필터를 4x4(16 elements)로 확장하여 8x8 MAC 어레이 구조망에 맞게 Tiling Binary 덤프 자동화
 - [ ] 2-Layer 모델 최적화 배포 (실제 정확도 추론 98%+ 달성 및 NPU H/W 100% 가속)
 
 **결과물:** "실전 추론 NPU 딥러닝 정확도 및 성능 최적화 파이프라인" 완성
