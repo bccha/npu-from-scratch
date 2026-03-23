@@ -51,7 +51,15 @@ flowchart TD
 
 ## 핵심 성과 (Key Achievements)
 
-*   **하드웨어 가속 달성:** 순수 ARM CPU 연산 대비 NPU + MSGDMA + Hardware Post-Processor (OCM 연동) 파이프라인을 구축하여 오버헤드를 최소화하고 추론 속도를 대폭 개선했습니다 (16.33 ms / img (4.26x Acceleration))
+*   **하드웨어 가속 달성:** 순수 ARM CPU 연산 대비 NPU + MSGDMA + Hardware Post-Processor 파이프라인을 구축하여 오버헤드를 최소화하고 추론 속도를 대폭 개선했습니다. (CPU 대비 **3.71x Acceleration**, 장당 1.876 ms)
+*   **PyTorch Batch-Norm Offline Fusion (정확도 향상):** 기존 순수 NumPy 정수화 모델(89.58%)에서 벗어나, PyTorch 기반 `Linear + BatchNorm1d` 구성으로 전환 후 오프라인 수학적 퓨전(Mathematical Folding)을 적용했습니다. 하드웨어 로직 레이아웃에 단 1Byte의 변경도 주지 않고 극심한 양자화 손실 편차를 극복, **97.92%의 하드웨어 추론 정확도**를 달성했습니다.
+
+### 📊 성능 비교 (Before vs After)
+| 지표 | Before (Legacy NumPy 정수화) | After (PyTorch + BN Offline Fusion) | 향상폭 |
+| :--- | :--- | :--- | :--- |
+| **추론 정확도 (Accuracy)** | 89.58% | **97.92%** | **+ 8.34%p** |
+| **추론 속도 (1 Image)** | 6.957 ms (CPU 연산) | **1.876 ms (NPU 가속)** | **3.71배 고속화** |
+| **하드웨어 호환성** | 100% 매칭 | **100% 매칭** (스택 구조 변경 없음) | |
 *   **Buffer-less Streaming Pipeline:** Avalon-ST 인터페이스의 `valid/ready` 스트리밍 프로토콜을 구현하여, 중간 버퍼(SRAM) 없이 MSGDMA 데이터를 직접 처리하는 효율적인 아키텍처를 설계했습니다.
 *   **Full-Stack 시스템 통합 설계:** 시스템 버스 통합(Qsys), Avalon-MM/ST 인터페이스 연결 구조, 그리고 Linux User-space ( `/dev/mem`, `mmap` ) C 드라이버 프로그래밍까지 H/W와 S/W 전반을 직접 구현했습니다.
 
