@@ -12,7 +12,9 @@ DE10-Nano (Cyclone V SoC) FPGA 환경에서 NPU를 밑바닥부터 설계한 프
 
 ```mermaid
 flowchart TD
-    subgraph Frontend ["1. AI Framework (PyTorch)"]
+    subgraph End-to-End Deep Learning Pipeline
+        1. **PyTorch Training (`train_pytorch.py`)**: 
+           Standard Multi-Layer Perceptron (MLP) model definition featuring `Offline BatchNorm Fusion` directly integrating BN weights into Linear layers. Achieves **94.38%** true baseline accuracy on the full 10,000 MNIST dataset natively.
         PT["모델 정의 (Model Definition)"]
         FX["FX Graph Compiler (npu_fusion_pass.py)"]
         PT -- Symbolic Trace --> FX

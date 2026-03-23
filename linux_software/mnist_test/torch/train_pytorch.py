@@ -87,56 +87,31 @@ def fuse_linear_bn(linear, bn):
     return w_fused.cpu().numpy().T, b_fused.cpu().numpy()
 
 def export_to_npu(model, testset):
-    print("\nFusing Batch Normalizations and Exporting Base Weights...")
+    print("\n[PyTorch Auto-Compiler] Parsing FX Graph for Hardware Emitting...")
     model.eval()
     
-    # Extract PyTorch weights using BN FUSION!
-    # Transposed automatically by our fuse_linear_bn function
-    W1, b1 = fuse_linear_bn(model.fc1, model.bn1)
-    W2, b2 = fuse_linear_bn(model.fc2, model.bn2)
+    from torch.fx import symbolic_trace
+    import sys
+    sys.path.append(os.path.join(os.path.dirname(__file__), '../../compiler'))
+    from npu_compiler import NPUCompiler
     
-    # 2. Extract Test Dataset
+    fx_graph = symbolic_trace(model)
+    modules = dict(model.named_modules())
+    
+    compiler = NPUCompiler(out_c_file="../npu_auto_runtime.c")
+    
+    layer_idx = 1
+    
+    # 1. Prepare Base Input Vectors global formats
     X_test = testset.data.numpy().reshape(-1, 784)
     Y_test = testset.targets.numpy()
-    
     X_q = (X_test / 255.0 * 127.0).astype(np.int8)
     
-    # Quantize W1
-    w1_max = np.max(np.abs(W1))
-    w1_scale = 127.0 / w1_max
-    W1_q = np.clip(np.round(W1 * w1_scale), -127, 127).astype(np.int8)
-    
-    # Quantize W2
-    w2_max = np.max(np.abs(W2))
-    w2_scale = 127.0 / w2_max
-    W2_q = np.clip(np.round(W2 * w2_scale), -127, 127).astype(np.int8)
-    
-    # Calculate Scaling params mimicking the DRAIN logic
-    target_scale_h = 64.0
-    actual_scale_z1 = 127.0 * w1_scale
-    shift1 = max(1, int(round(actual_scale_z1 / target_scale_h)))
-    target_scale_h = actual_scale_z1 / shift1
-
-    b1_q = np.round(b1 * actual_scale_z1).astype(np.int32)
-    
-    actual_scale_z2 = target_scale_h * w2_scale
-    b2_q = np.round(b2 * actual_scale_z2).astype(np.int32)
-    
-    # Hardware Simulator test inside Python
-    Z1_q_test = np.dot(X_q.astype(np.float64), W1_q.astype(np.float64))
-    H_pre = (Z1_q_test + b1_q.astype(np.float64)) / float(shift1)
-    H_q_test = np.clip(np.round(H_pre), 0, 127).astype(np.float64)
-    Z2_q_test = np.dot(H_q_test, W2_q.astype(np.float64))
-    Y_q_test = Z2_q_test + b2_q.astype(np.float64)
-    pred_q = np.argmax(Y_q_test, axis=1)
-    acc_q = np.mean(pred_q == Y_test)
-    print(f"Quantized NPU-Equivalent Mathematical Accuracy: {acc_q * 100:.2f}%")
-
+    out_dir = "../"
     def write_blob(filename, data):
         with open(filename, 'wb') as f:
             f.write(data.tobytes())
             
-    # Format inputs into MSGDMA stream layout (8x8 blocks)
     batches = X_q.shape[0] // 8
     X_blocks = np.zeros((batches, 98, 8, 8), dtype=np.int8)
     for b in range(batches):
@@ -144,43 +119,85 @@ def export_to_npu(model, testset):
         for i in range(98):
             X_blocks[b, i] = X_batch[:, i*8:(i+1)*8]
             
-    # Output to the original mnist_test folder so legacy execution automatically absorbs it
-    out_dir = "../"
-    
     write_blob(os.path.join(out_dir, 'inputs.bin'), X_blocks)
     write_blob(os.path.join(out_dir, 'labels.bin'), Y_test[:batches*8].astype(np.int32))
     
-    def format_weight_block(w_8x8):
-        w_out = np.zeros((8, 8), dtype=np.int8)
-        # Emulate MSGDMA Avalon-ST Big-Endian to Little-Endian mirror padding mapping
-        for t in range(8):
-            c = 7 - t
-            w_out[t, :] = w_8x8[:, c]
-        return w_out
-        
-    W1_npu = np.zeros((98, 8, 8, 8), dtype=np.int8)
-    for i in range(98):
-        for j in range(8):
-            w_block = W1_q[i*8:(i+1)*8, j*8:(j+1)*8]
-            W1_npu[i, j] = format_weight_block(w_block)
+    target_scale_h = 64.0
+    shift1 = None 
     
-    write_blob(os.path.join(out_dir, 'weights_l1.bin'), W1_npu)
-    write_blob(os.path.join(out_dir, 'bias_l1.bin'), b1_q)
-    
-    W2_padded = np.zeros((64, 16), dtype=np.int8)
-    W2_padded[:, :10] = W2_q
-    W2_npu = np.zeros((8, 2, 8, 8), dtype=np.int8)
-    for i in range(8):
-        for j in range(2):
-            w_block = W2_padded[i*8:(i+1)*8, j*8:(j+1)*8]
-            W2_npu[i, j] = format_weight_block(w_block)
+    # 2. Dynamic AST Traversal
+    for node in fx_graph.graph.nodes:
+        if node.op == 'call_module' and isinstance(modules[node.target], nn.Linear):
+            lin_mod = modules[node.target]
+            in_feat = lin_mod.in_features
+            out_feat = lin_mod.out_features
             
-    write_blob(os.path.join(out_dir, 'weights_l2.bin'), W2_npu)
-    
-    b2_padded = np.zeros(16, dtype=np.int32)
-    b2_padded[:10] = b2_q
-    write_blob(os.path.join(out_dir, 'bias_l2.bin'), b2_padded)
-    print("PyTorch Compile Finished! Binaries injected backward into Linux Framework.")
+            bn_mod = None
+            has_relu = False
+            
+            curr = node.next
+            while curr and curr.op == 'call_module':
+                mod = modules.get(curr.target, None)
+                if mod is None:
+                    curr = curr.next
+                    continue
+                if isinstance(mod, nn.Linear):
+                    break # Stop looking when we hit the next operator hierarchy
+                if isinstance(mod, nn.BatchNorm1d): 
+                    if bn_mod is None: bn_mod = mod # only fetch immediate norm
+                if isinstance(mod, nn.ReLU): 
+                    has_relu = True
+                curr = curr.next
+                
+            if bn_mod:
+                W, b = fuse_linear_bn(lin_mod, bn_mod)
+            else:
+                W = lin_mod.weight.data.cpu().numpy().T
+                b = lin_mod.bias.data.cpu().numpy()
+                
+            w_max = np.max(np.abs(W))
+            w_scale = 127.0 / w_max
+            W_q = np.clip(np.round(W * w_scale), -127, 127).astype(np.int8)
+            
+            if layer_idx == 1:
+                actual_scale_z = 127.0 * w_scale
+                shift1 = max(1, int(round(actual_scale_z / target_scale_h)))
+                target_scale_h = actual_scale_z / shift1
+                b_q = np.round(b * actual_scale_z).astype(np.int32)
+            else:
+                actual_scale_z = target_scale_h * w_scale
+                b_q = np.round(b * actual_scale_z).astype(np.int32)
+            
+            in_tiles = in_feat // 8 + (1 if in_feat % 8 else 0)
+            out_tiles = out_feat // 8 + (1 if out_feat % 8 else 0)
+            
+            W_padded = np.zeros((in_tiles * 8, out_tiles * 8), dtype=np.int8)
+            W_padded[:in_feat, :out_feat] = W_q
+            
+            W_npu = np.zeros((in_tiles, out_tiles, 8, 8), dtype=np.int8)
+            for i in range(in_tiles):
+                for j in range(out_tiles):
+                    w_block = W_padded[i*8:(i+1)*8, j*8:(j+1)*8]
+                    w_out = np.zeros((8, 8), dtype=np.int8)
+                    for t in range(8):
+                        w_out[t, :] = w_block[:, 7 - t]
+                    W_npu[i, j] = w_out
+                    
+            b_padded = np.zeros(out_tiles * 8, dtype=np.int32)
+            b_padded[:out_feat] = b_q
+            
+            w_file = f'weights_l{layer_idx}.bin'
+            b_file = f'bias_l{layer_idx}.bin'
+            write_blob(os.path.join(out_dir, w_file), W_npu)
+            write_blob(os.path.join(out_dir, b_file), b_padded)
+            
+            compiler.register_linear_fused_layer(node.target, in_feat, out_feat, has_relu)
+            print(f"  [+] Discovered Layer: {node.target} ({in_feat}->{out_feat}), ReLU={has_relu}")
+            
+            layer_idx += 1
+            
+    print(f"\n[PyTorch Auto-Compiler] Graph fully parsed! Emitting C Script ({len(compiler.layer_meta)} Layers)...")
+    compiler.generate_c_code()
 
 if __name__ == '__main__':
     model, testset = train()
