@@ -107,7 +107,7 @@ async def avalon_mm_slave(dut):
             except: pass
 
 @cocotb.test()
-async def test_npu_basic_compute(dut):
+async def test_hardware_fusion_pipeline(dut):
     """Test full NPU Fusion Pipeline: Array -> OCM Accumulator -> Post-Processor -> Drain"""
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
     cocotb.start_soon(avalon_mm_slave(dut)) # Start OCM Memory Mock

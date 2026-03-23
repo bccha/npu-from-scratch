@@ -2,8 +2,8 @@
 <sch:Settings xmlns:sch="http://www.altera.com/embeddedsw/bsp/schema">
         <BspType>hal</BspType>
         <BspVersion>default</BspVersion>
-        <BspGeneratedTimeStamp>Mar 2, 2026 7:39:36 PM</BspGeneratedTimeStamp>
-        <BspGeneratedUnixTimeStamp>1772498376695</BspGeneratedUnixTimeStamp>
+        <BspGeneratedTimeStamp>Mar 22, 2026 7:08:28 PM</BspGeneratedTimeStamp>
+        <BspGeneratedUnixTimeStamp>1774220908320</BspGeneratedUnixTimeStamp>
         <BspGeneratedLocation>C:\Workspace\quartus\npu\software\npu_bsp</BspGeneratedLocation>
         <BspSettingsFile>settings.bsp</BspSettingsFile>
         <SopcDesignFile>C:\Workspace\quartus\npu\soc_system.sopcinfo</SopcDesignFile>
@@ -912,8 +912,8 @@
         </MemoryMap>
         <MemoryMap>
                 <slaveDescriptor>npu_ctrl</slaveDescriptor>
-                <addressRange>0x00030000 - 0x000303FF</addressRange>
-                <addressSpan>1024</addressSpan>
+                <addressRange>0x00030000 - 0x00030FFF</addressRange>
+                <addressSpan>4096</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>

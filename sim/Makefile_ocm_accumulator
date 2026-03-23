@@ -1,0 +1,10 @@
+# Makefile for Cocotb simulation of Standalone OCM Accumulator
+SIM ?= icarus
+TOPLEVEL_LANG ?= verilog
+
+VERILOG_SOURCES += $(PWD)/../rtl/npu_ocm_accumulator.v
+
+TOPLEVEL = npu_ocm_accumulator
+MODULE = test_ocm_accumulator
+
+include $(shell cocotb-config --makefiles)/Makefile.sim

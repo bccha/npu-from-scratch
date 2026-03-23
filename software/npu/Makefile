@@ -90,7 +90,6 @@ ELF := npu.elf
 
 # Paths to C, C++, and assembly source files.
 C_SRCS += main.c
-C_SRCS += mem_verify.c
 C_SRCS += common.c
 CXX_SRCS :=
 ASM_SRCS :=

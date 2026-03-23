@@ -8,6 +8,8 @@ VERILOG_SOURCES += $(PWD)/../rtl/npu_ctrl.v
 VERILOG_SOURCES += $(PWD)/../rtl/npu_stream_ctrl.v
 VERILOG_SOURCES += $(PWD)/../rtl/systolic_array.v
 VERILOG_SOURCES += $(PWD)/../rtl/systolic_core.v
+VERILOG_SOURCES += $(PWD)/../rtl/npu_ocm_accumulator.v
+VERILOG_SOURCES += $(PWD)/../rtl/npu_post_processor.v
 VERILOG_SOURCES += $(PWD)/../rtl/npu_unit.v
 
 TOPLEVEL = npu_unit

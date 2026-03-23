@@ -4,7 +4,7 @@
  * Machine generated for CPU 'nios2_gen2_0' in SOPC Builder design 'soc_system'
  * SOPC Builder design path: C:/Workspace/quartus/npu/soc_system.sopcinfo
  *
- * Generated: Mon Mar 02 12:21:03 EST 2026
+ * Generated: Sun Mar 22 19:08:30 EDT 2026
  */
 
 /*
@@ -417,7 +417,7 @@
 #define NPU_CTRL_IRQ -1
 #define NPU_CTRL_IRQ_INTERRUPT_CONTROLLER_ID -1
 #define NPU_CTRL_NAME "/dev/npu_ctrl"
-#define NPU_CTRL_SPAN 1024
+#define NPU_CTRL_SPAN 4096
 #define NPU_CTRL_TYPE "altera_avalon_mm_bridge"
 
 

@@ -161,9 +161,7 @@ void npu_format_weights(volatile uint8_t *dst_addr,
 void npu_parse_output(volatile uint8_t *src_addr, uint32_t dst_matrix[8][8]) {
   for (int r = 0; r < 8; r++) {
     for (int c = 0; c < 8; c++) {
-      int hw_c = c ^ 1;
-      uint32_t raw = IORD_32DIRECT(src_addr, (r * 8 + hw_c) * 4);
-      dst_matrix[r][c] = __builtin_bswap32(raw);
+      dst_matrix[r][c] = src_addr[r * 8 + (7 - c)];
     }
   }
 }
@@ -185,7 +183,6 @@ void npu_load_weights(uint32_t weights_addr, int num_matrices) {
   // Wait for NPU Sequencer Busy Flag (REG_STATUS Bit 0) to be idle.
   while ((IORD(NPU_CTRL_BASE, REG_STATUS) & 0x01) != 0) {
   }
-
   IOWR(NPU_CTRL_BASE, 7, 1);
   IOWR(NPU_CTRL_BASE, 7, 0);
 }
@@ -216,38 +213,33 @@ void npu_wait_execution() {
 // ==========================================
 
 void verify_full_system() {
-  printf("\nStarting Full System Matrix Validation (Fixed 8x8 HW with 4x4 "
-         "submatrix)...\n");
+  printf("\nStarting Full System Matrix Validation (Fusion HW Unit Test)...\n");
 
   msgdma_init(DDR_READ_ST_CSR_BASE);
   msgdma_init(DDR_WRITE_ST_CSR_BASE);
 
   IOWR(NPU_CTRL_BASE, REG_CTRL, 0);
-  IOWR(NPU_CTRL_BASE, REG_CTRL, 0);
 
-  while ((IORD(NPU_CTRL_BASE, REG_STATUS) & 0x01) != 0) {
-  }
-
-  uint32_t physical_base = 0x20000000; // Local window representation of DDR
+  uint32_t dma_ocm_base = 0x40000; 
+  uint32_t physical_base = 0x20000000; 
 
   volatile uint8_t *weights_addr = DDR3_WINDOW_BASE;
   volatile uint8_t *inputs_addr = DDR3_WINDOW_BASE + 0x1000;
-  volatile uint8_t *dst_addr = DDR3_WINDOW_BASE + 0x2000;
+  volatile uint8_t *dst_addr = lw_bridge_map + dma_ocm_base + 0x2000;
 
-  printf("Clearing Memories...\n");
+  printf("Clearing OCM Memories...\n");
   for (int i = 0; i < 64; i++) {
     IOWR_32DIRECT(weights_addr, i * 4, 0);
     IOWR_32DIRECT(inputs_addr, i * 4, 0);
     IOWR_32DIRECT(dst_addr, i * 4, 0);
   }
 
-  printf("Preparing 8x8 Identity Weight Matrix...\n");
-
   signed char test_weights[8][8] = {0};
   signed char test_inputs[8][8] = {0};
+  int32_t test_bias[8] = {1000, -250, 4000, 0, 100, 1000, -500, 2048};
 
   for (int i = 0; i < 8; i++) {
-    test_weights[i][i] = 1;
+    test_weights[i][i] = 32;
   }
 
   int val = 1;
@@ -260,25 +252,47 @@ void verify_full_system() {
   npu_format_weights(weights_addr, test_weights);
   npu_format_inputs(inputs_addr, test_inputs);
 
-  printf("Phase 1: Loading Weights via MSGDMA API...\n");
+  printf("Phase 1: Loading Weights & Bias via MSGDMA API...\n");
+  for (int f = 0; f < 8; f++) {
+    IOWR(NPU_CTRL_BASE, 0x200 + f, test_bias[f]);
+  }
+
   npu_load_weights(physical_base, 1);
   printf("Weights Loaded!\n");
 
-  printf("Phase 2: Execution via MSGDMA API...\n");
-  npu_get_matrix(physical_base + 0x2000, 1);
-  npu_load_matrix(physical_base + 0x1000, 1);
+  printf("Phase 2: Execution (ACCUMULATE)...\n");
+  IOWR(NPU_CTRL_BASE, REG_SEQ_ROWS, 8); 
+  IOWR(NPU_CTRL_BASE, REG_CTRL, 0);
 
+  IOWR(NPU_CTRL_BASE, 0x23, dma_ocm_base + 0x2000); 
+  IOWR(NPU_CTRL_BASE, 0x25, 64);   
+  IOWR(NPU_CTRL_BASE, 0x20, 1); 
+
+  npu_load_matrix(physical_base + 0x1000, 1);
   npu_wait_execution();
+  
+  while ((IORD(NPU_CTRL_BASE, 0x21) & 1) == 0) {}
+
+  printf("Phase 3: Hardware DRAIN (Bias+Shift+ReLU)...\n");
+  IOWR(NPU_CTRL_BASE, REG_CTRL, 4); 
+  
+  IOWR(NPU_CTRL_BASE, 0x23, dma_ocm_base + 0x2000);
+  IOWR(NPU_CTRL_BASE, 0x25, 64);
+  IOWR(NPU_CTRL_BASE, 0x20, 1);
+
+  msgdma_write_stream_push(DDR_WRITE_ST_DESCRIPTOR_SLAVE_BASE, physical_base + 0x2000, 64);
+  
+  while ((IORD_32DIRECT(DDR_WRITE_ST_CSR_BASE, 0) & 0x01) != 0) {}
+  while ((IORD(NPU_CTRL_BASE, 0x21) & 1) == 0) {} 
+
   printf("Execution Finished!\n\n");
 
   int errors = 0;
-
-  printf("Verifying Output (Expecting Y=X for 8x8 matrix)...\n");
-
   uint32_t hw_matrix[8][8];
-  npu_parse_output(dst_addr, hw_matrix);
+  
+  npu_parse_output(DDR3_WINDOW_BASE + 0x2000, hw_matrix);
 
-  printf("\n=== Hardware Output Matrix ===\n");
+  printf("\n=== Hardware Output Matrix (Fused 8-bit) ===\n");
   for (int r = 0; r < 8; r++) {
     for (int c = 0; c < 8; c++) {
       printf("%3d ", (int)hw_matrix[r][c]);
@@ -286,55 +300,54 @@ void verify_full_system() {
     printf("\n");
   }
 
-  printf("\n=== Expected Output Matrix ===\n");
+  printf("\n=== Expected Math ===\n");
   for (int r = 0; r < 8; r++) {
     for (int c = 0; c < 8; c++) {
-      printf("%3d ", (int)(r * 8 + c + 1));
-    }
-    printf("\n");
-  }
-  printf("\n");
-
-  for (int r = 0; r < 8; r++) {
-    for (int c = 0; c < 8; c++) {
-      uint32_t hw_val = hw_matrix[r][c];
-      uint32_t np_val = r * 8 + c + 1;
-
-      if (hw_val != np_val) {
-        printf("Mismatch at [%d, %d]: HW=0x%08x, Expected=0x%08x\n", r, c,
-               (int)hw_val, (int)np_val);
+      int32_t sum = test_inputs[r][c] * 32;
+      sum += test_bias[c];
+      
+      int32_t expected_val = sum >> 8; 
+      if (expected_val < 0) expected_val = 0; 
+      if (expected_val > 127) expected_val = 127; 
+      
+      printf("%3d ", (int)expected_val);
+      
+      if (hw_matrix[r][c] != expected_val) {
+        printf("\nMismatch at [%d, %d]: HW=%d, Expected=%d\n", r, c,
+               (int)hw_matrix[r][c], (int)expected_val);
         errors++;
       }
     }
+    printf("\n");
   }
 
   if (errors == 0) {
-    printf(
-        "\nFull System Validation: PASS! All 64 elements matched correctly.\n");
+    printf("\nFull System Validation: PASS! All 64 fused elements matched flawlessly.\n");
   } else {
     printf("\nFull System Validation: FAIL (%d errors)\n", errors);
   }
 }
 
 void verify_streaming_batch() {
-  printf("\nStarting Streaming Batch Test (10 Matrices)....\n");
+  printf("\nStarting Streaming Batch Test (10 Matrices)...\n");
 
   msgdma_init(DDR_READ_ST_CSR_BASE);
   msgdma_init(DDR_WRITE_ST_CSR_BASE);
 
-  uint32_t physical_base = 0x20000000; // Local window representation of DDR
+  uint32_t physical_base = 0x20000000; 
+  uint32_t dma_ocm_base = 0x40000;
 
   volatile uint8_t *weights_addr = DDR3_WINDOW_BASE;
   volatile uint8_t *inputs_addr = DDR3_WINDOW_BASE + 0x100000;
   volatile uint8_t *outputs_addr = DDR3_WINDOW_BASE + 0x200000;
 
-  signed char weight_matrix[8][8];
-  for (int r = 0; r < 8; r++) {
-    for (int c = 0; c < 8; c++) {
-      weight_matrix[r][c] = (r == c) ? 1 : 0;
-    }
+  signed char weight_matrix[8][8] = {0};
+  for (int i = 0; i < 8; i++) {
+    weight_matrix[i][i] = 16;
   }
   npu_format_weights(weights_addr, weight_matrix);
+
+  int32_t test_bias[8] = {4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000};
 
   for (int i = 0; i < 10; i++) {
     signed char in_mat[8][8];
@@ -347,40 +360,65 @@ void verify_streaming_batch() {
   }
 
   printf("Clearing Memories...\n");
-  for (int i = 0; i < (10 * NPU_OUT_BYTES) / 4; i++) {
+  for (int i = 0; i < (10 * 64) / 4; i++) {
     IOWR_32DIRECT(outputs_addr, i * 4, 0);
   }
 
-  printf("Loading Weights...\n");
+  // CRITICAL FIX: The HW Accumulator is Read-Modify-Write.
+  // We MUST clear the internal 32-bit OCM Accumulator buffer between runs,
+  // otherwise later runs will geometrically add to previous batch's partial sums!
+  volatile uint8_t *ocm_dst_addr = lw_bridge_map + dma_ocm_base + 0x8000;
+  for (int i = 0; i < (10 * 256) / 4; i++) { // 256 bytes per 32-bit output matrix
+    IOWR_32DIRECT(ocm_dst_addr, i * 4, 0);
+  }
+
+  printf("Loading Weights & Biases...\n");
+  for (int f = 0; f < 8; f++) IOWR(NPU_CTRL_BASE, 0x200 + f, test_bias[f]);
   npu_load_weights(physical_base, 1);
 
-  printf("Firing 10-Batch Streaming Pipeline...\n");
-
+  printf("Firing 10-Batch Streaming Pipeline (ACCUMULATE)...\n");
   IOWR(NPU_CTRL_BASE, REG_SEQ_ROWS, 10 * 8);
+  IOWR(NPU_CTRL_BASE, REG_CTRL, 0); 
 
-  npu_get_matrix(physical_base + 0x200000, 10);
+  IOWR(NPU_CTRL_BASE, 0x23, dma_ocm_base + 0x8000); 
+  IOWR(NPU_CTRL_BASE, 0x25, 10 * 64);   
+  IOWR(NPU_CTRL_BASE, 0x20, 1);          
+
   npu_load_matrix(physical_base + 0x100000, 10);
-
   npu_wait_execution();
+  
+  while ((IORD(NPU_CTRL_BASE, 0x21) & 1) == 0) {}
+
+  printf("Firing 10-Batch hardware DRAIN...\n");
+  IOWR(NPU_CTRL_BASE, REG_CTRL, 4); 
+  IOWR(NPU_CTRL_BASE, 0x23, dma_ocm_base + 0x8000); 
+  IOWR(NPU_CTRL_BASE, 0x25, 10 * 64); 
+  IOWR(NPU_CTRL_BASE, 0x20, 1); 
+
+  msgdma_write_stream_push(DDR_WRITE_ST_DESCRIPTOR_SLAVE_BASE, physical_base + 0x200000, 10 * 64);
+  
+  while ((IORD_32DIRECT(DDR_WRITE_ST_CSR_BASE, 0) & 0x01) != 0) {}
+  while ((IORD(NPU_CTRL_BASE, 0x21) & 1) == 0) {}
 
   int total_errors = 0;
   for (int i = 0; i < 10; i++) {
     uint32_t hw_matrix[8][8];
-    npu_parse_output(outputs_addr + i * NPU_OUT_BYTES, hw_matrix);
+    npu_parse_output(outputs_addr + i * 64, hw_matrix);
 
     int errors = 0;
     for (int r = 0; r < 8; r++) {
       for (int c = 0; c < 8; c++) {
         uint32_t hw_val = hw_matrix[r][c];
+        int input_val = (int)((signed char)(((i * 10 + r * 8 + c) % 256) - 128));
+        int32_t sum = input_val * 16 + 4000;
+        int32_t expected_val = sum >> 8;
+        if (expected_val < 0) expected_val = 0;
+        if (expected_val > 127) expected_val = 127;
 
-        int expected_signed =
-            (int)((signed char)(((i * 10 + r * 8 + c) % 256) - 128));
-        uint32_t expected = (uint32_t)expected_signed;
-
-        if (hw_val != expected) {
+        if (hw_val != expected_val) {
           if (errors < 5) {
-            printf("Batch %d Mismatch [%d, %d]: HW=0x%08x, Exp=0x%08x\n", i, r,
-                   c, (unsigned int)hw_val, (unsigned int)expected);
+            printf("Batch %d Mismatch [%d, %d]: HW=%d, Exp=%d\n", i, r,
+                   c, (int)hw_val, (int)expected_val);
           }
           errors++;
         }
@@ -395,8 +433,7 @@ void verify_streaming_batch() {
   }
 
   if (total_errors == 0) {
-    printf("\nStreaming Validation: PASS! All 10 batches successfully fully "
-           "matched.\n");
+    printf("\nStreaming Validation: PASS! All 10 batches successfully matched.\n");
   } else {
     printf("\nStreaming Validation: FAIL (%d total errors)\n", total_errors);
   }

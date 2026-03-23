@@ -214,24 +214,87 @@ def train_cnn(X_train, Y_train, X_test, Y_test, epochs=3, batch_size=64, learnin
         
     return W_conv, b_conv, W_fc, b_fc
 
-def quantize_and_export(W, b, file_prefix, scale=127.0):
-    # Quantize to Int8 (Symmetric, simple magnitude scaling)
-    # The actual scaling mechanism will be improved with QAT later.
-    max_val = max(np.max(np.abs(W)), np.max(np.abs(b)), 1e-5)
-    scale_factor = scale / max_val
+def format_weight_block(w_8x8):
+    w_out = np.zeros((8, 8), dtype=np.int8)
+    for t in range(8):
+        c = 7 - t  # Reverse columns for the Systolic Array Hardware
+        w_out[t, :] = w_8x8[:, c]
+    return w_out
+
+def export_binaries(X_test, Y_test, W_conv, b_conv, W_fc, b_fc, h_out=13, w_out=13):
+    # Quantize inputs (X_test is already -1.0 to 1.0)
+    X_q = (X_test * 127.0).astype(np.int8)
     
-    W_q = np.round(W * scale_factor).astype(np.int8)
-    b_q = np.round(b * scale_factor).astype(np.int8)
+    # Save inputs and labels
+    with open('inputs.bin', 'wb') as f:
+        f.write(X_q[:1000].tobytes())  # Export 1000 images
+    with open('labels.bin', 'wb') as f:
+        f.write(Y_test[:1000].astype(np.int32).tobytes())
+    print("Exported 1000 tests to inputs.bin and labels.bin")
+
+    # Quantize Conv Weights (Kh*Kw*C = 9, F = 8)
+    w_conv_max = max(np.max(np.abs(W_conv)), 1e-5)
+    w_conv_scale = 127.0 / w_conv_max
+    W_conv_q = np.clip(np.round(W_conv * w_conv_scale), -127, 127).astype(np.int8)
     
-    # Export weights
-    with open(f"{file_prefix}_weights.bin", "wb") as f:
-        f.write(W_q.tobytes())
-    with open(f"{file_prefix}_bias.bin", "wb") as f:
-        f.write(b_q.tobytes())
+    # Target scale H
+    target_scale_conv = 32.0 
+    actual_scale_conv = 127.0 * w_conv_scale
+    shift1 = max(1, int(round(actual_scale_conv / target_scale_conv)))
+    
+    target_scale_conv = actual_scale_conv / shift1
+    b_conv_q = np.round(b_conv * actual_scale_conv).astype(np.int32)
+    
+    # Pad Conv Weights from (9, 8) to (16, 8) to fit 8x8 NPU chunks
+    W_conv_padded = np.zeros((16, 8), dtype=np.int8)
+    W_conv_padded[:9, :] = W_conv_q
+    
+    # Format Conv Weights into NPU blocks (2 blocks of 8x8)
+    W_conv_npu = np.zeros((2, 8, 8), dtype=np.int8)
+    for i in range(2):
+        W_conv_npu[i] = format_weight_block(W_conv_padded[i*8:(i+1)*8, :])
         
-    print(f"Exported {file_prefix}_weights.bin : {W_q.shape}")
-    print(f"Exported {file_prefix}_bias.bin    : {b_q.shape}")
-    return scale_factor
+    with open("weights_l1.bin", "wb") as f:
+        f.write(W_conv_npu.tobytes())
+    with open("bias_l1.bin", "wb") as f:
+        f.write(b_conv_q.tobytes())
+    print(f"Exported Conv weights (padded to 16x8): {W_conv_npu.shape}")
+
+    # Quantize FC Weights (1352, 10)
+    w_fc_max = max(np.max(np.abs(W_fc)), 1e-5)
+    w_fc_scale = 127.0 / w_fc_max
+    W_fc_q = np.clip(np.round(W_fc * w_fc_scale), -127, 127).astype(np.int8)
+    
+    actual_scale_fc = target_scale_conv * w_fc_scale
+    b_fc_q = np.round(b_fc * actual_scale_fc).astype(np.int32)
+    shift2 = 1
+    
+    # Pad FC from (1352, 10) to (1352, 16)
+    W_fc_padded = np.zeros((1352, 16), dtype=np.int8)
+    W_fc_padded[:, :10] = W_fc_q
+    
+    # Reshape FC into NPU blocks (169 rows of 8, 2 cols of 8 -> 169x2 blocks of 8x8)
+    W_fc_npu = np.zeros((169, 2, 8, 8), dtype=np.int8)
+    for i in range(169):
+        for j in range(2):
+            w_block = W_fc_padded[i*8:(i+1)*8, j*8:(j+1)*8]
+            W_fc_npu[i, j] = format_weight_block(w_block)
+            
+    with open("weights_l2.bin", "wb") as f:
+        f.write(W_fc_npu.tobytes())
+        
+    b_fc_padded = np.zeros(16, dtype=np.int32)
+    b_fc_padded[:10] = b_fc_q
+    with open("bias_l2.bin", "wb") as f:
+        f.write(b_fc_padded.tobytes())
+        
+    print(f"Exported FC weights (padded to 1352x16): {W_fc_npu.shape}")
+    
+    # Write model_params.h
+    with open('model_params.h', 'w') as f:
+        f.write("#pragma once\n")
+        f.write(f"#define SHIFT1 {shift1}\n")
+        f.write(f"#define SHIFT2 {shift2}\n")
 
 if __name__ == "__main__":
     test_im2col_vs_conv2d()
@@ -246,19 +309,7 @@ if __name__ == "__main__":
         X_test = (X_test.astype(np.float32) - 128.0) / 128.0
         
         W_conv, b_conv, W_fc, b_fc = train_cnn(X_train[:10000], Y_train[:10000], X_test[:1000], Y_test[:1000], epochs=5)
-        
-        print("\n--- Quantizing and Exporting for NPU ---")
-        
-        # Note: Pad W_fc because NPU needs multiples of 8. 
-        # Current logic is 8 filters out of the conv layer, output map size 13x13 -> 13x13x8 = 1352
-        # FC matches (1352, 10). Pad 10 to 16.
-        W_fc_padded = np.zeros((W_fc.shape[0], 16), dtype=np.float32)
-        W_fc_padded[:, :10] = W_fc
-        b_fc_padded = np.zeros(16, dtype=np.float32)
-        b_fc_padded[:10] = b_fc
-        
-        quantize_and_export(W_conv, b_conv, "conv")
-        quantize_and_export(W_fc_padded, b_fc_padded, "fc")
+        export_binaries(X_test, Y_test, W_conv, b_conv, W_fc, b_fc)
         
     except Exception as e:
         print(f"Execution Error: {e}")

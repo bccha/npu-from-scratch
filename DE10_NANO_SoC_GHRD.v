@@ -102,9 +102,7 @@ module DE10_NANO_SoC_GHRD(
   assign LED[7:1] = fpga_led_internal;
   assign fpga_clk_50=FPGA_CLK1_50;
 // npu_unit Avalon-MM wires
-  wire [7:0]  npu_avs_full_address;
-  wire [7:0]  npu_avs_address;
-  assign npu_avs_address = npu_avs_full_address;
+  wire [9:0]  npu_avs_address;
   wire        npu_avs_write;
   wire [31:0] npu_avs_writedata;
   wire        npu_avs_read;
@@ -245,7 +243,7 @@ soc_system u0 (
 		  .npu_ctrl_readdatavalid (npu_unit_readdatavalid), 
 		  .npu_ctrl_burstcount    (),
 		  .npu_ctrl_writedata     (npu_avs_writedata),
-		  .npu_ctrl_address       (npu_avs_full_address), 
+		  .npu_ctrl_address       (npu_avs_address), 
 		  .npu_ctrl_write         (npu_avs_write),
 		  .npu_ctrl_read          (npu_avs_read),
 		  .npu_ctrl_byteenable    (),

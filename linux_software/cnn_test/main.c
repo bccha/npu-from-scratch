@@ -41,6 +41,7 @@ volatile uint8_t *DDR_READ_ST_CSR_BASE;
 volatile uint8_t *DDR_READ_ST_DESCRIPTOR_SLAVE_BASE;
 volatile uint8_t *DDR_WRITE_ST_CSR_BASE;
 volatile uint8_t *DDR_WRITE_ST_DESCRIPTOR_SLAVE_BASE;
+volatile uint8_t *NPU_DDR_CNTL_BASE;
 volatile uint8_t *DDR3_WINDOW_BASE;
 
 // ==========================================
@@ -101,6 +102,7 @@ void npu_load_weights(uint32_t weights_addr, int num_matrices) {
   }
   while ((IORD(NPU_CTRL_BASE, REG_STATUS) & 0x01) != 0) {
   }
+  for(volatile int wait=0; wait<10000; wait++);
   IOWR(NPU_CTRL_BASE, 7, 1);
   IOWR(NPU_CTRL_BASE, 7, 0);
 }
@@ -343,76 +345,82 @@ void run_inference(int num_batches, bool use_npu, double *time_ms,
     if (use_npu) {
       double t_dma_start = get_time_us();
 
-      int32_t Z_chunk[2][169][8];
-
       uint32_t temp_x_ddr_offset_base = inputs_offset + 0x00800000;  // 8MB
       uint32_t npu_out_ddr_offset_base = inputs_offset + 0x01E00000; // 30MB
+
+      // 1. Load Biases ONCE per layer
+      for (int f = 0; f < 8; f++) {
+        IOWR(NPU_CTRL_BASE, 0x200 + f, bias_l1[f]);
+      }
+
+      volatile uint8_t *ocm_dst_addr = virt_ocm_base + dma_ocm_base + scratch_offset;
+      for (int i = 0; i < (169 * 256) / 4; i++) {
+        IOWR_32DIRECT(ocm_dst_addr, i * 4, 0); 
+      }
 
       for (int k_chunk = 0; k_chunk < 2; k_chunk++) {
         uint32_t curr_w_offset = weights_l1_offset + k_chunk * 64;
         uint32_t batch_offset = b * 2 * 169 * 64;
         uint32_t chunk_offset = k_chunk * 169 * 64;
-        uint32_t temp_x_ddr_offset =
-            temp_x_ddr_offset_base + batch_offset + chunk_offset;
-
-        uint32_t current_npu_out =
-            npu_out_ddr_offset_base + k_chunk * 169 * 256;
+        uint32_t temp_x_ddr_offset = temp_x_ddr_offset_base + batch_offset + chunk_offset;
 
         npu_wait_execution();
         npu_load_weights(npu_ddr_base + curr_w_offset, 1);
 
-        // Tell HW we are sending a massive sequence! Crucial for EOP signal.
         IOWR(NPU_CTRL_BASE, 6, 169 * 8);
+        IOWR(NPU_CTRL_BASE, REG_CTRL, 0); // Execute Mode
 
-        npu_get_matrix(npu_ddr_base + current_npu_out, 169);
+        IOWR(NPU_CTRL_BASE, 0x23, dma_ocm_base + scratch_offset); // OCM Base
+        IOWR(NPU_CTRL_BASE, 0x25, 169 * 64);   // 169 matrices * 64 words
+        IOWR(NPU_CTRL_BASE, 0x20, 1);          // accum_start
+
         npu_load_matrix(npu_ddr_base + temp_x_ddr_offset, 169);
         npu_wait_execution();
+
+        // Wait for ACCUM_DONE
+        while ((IORD(NPU_CTRL_BASE, 0x21) & 1) == 0) {}
       }
+
+      // Both chunks accumulated! Now DRAIN.
+      IOWR(NPU_CTRL_BASE, REG_CTRL, 4); // seq_mode=2 (DRAIN)
+      
+      IOWR(NPU_CTRL_BASE, 0x23, dma_ocm_base + scratch_offset);
+      IOWR(NPU_CTRL_BASE, 0x25, 169 * 64);
+      IOWR(NPU_CTRL_BASE, 0x20, 1);
+
+      npu_wait_execution();
+      // DMA 169 * 64 bytes = 10816 bytes
+      msgdma_write_stream_push(DDR_WRITE_ST_DESCRIPTOR_SLAVE_BASE, 
+                               npu_ddr_base + npu_out_ddr_offset_base, 
+                               169 * 64);
+
+      // Wait for Drain to finish
+      while ((IORD_32DIRECT(DDR_WRITE_ST_CSR_BASE, 0) & 0x01) != 0) {}
+      while ((IORD(NPU_CTRL_BASE, 0x21) & 1) == 0) {} // Accumulator (Drain) done
 
       double t_dma_end = get_time_us();
 
-      // Extract the 169 continuous outputs (256 bytes per matrix)
-      for (int k_chunk = 0; k_chunk < 2; k_chunk++) {
-        uint32_t current_npu_out =
-            npu_out_ddr_offset_base + k_chunk * 169 * 256;
-        for (int p = 0; p < 169; p++) {
-          uint8_t *raw_src = (virt_ddr_base + current_npu_out) + p * 256;
-          for (int c = 0; c < 8; c++) {
-            int hw_c = c ^ 1;
-            uint32_t raw_word = *(volatile uint32_t *)(raw_src + hw_c * 4);
-            Z_chunk[k_chunk][p][c] = (int32_t)__builtin_bswap32(raw_word);
-          }
-        }
-      }
-      double t_bswap_end = get_time_us();
-
-      // --- CPU ACCUMULATION (ReLU & Bias) ---
+      // Extract fully processed 8-bit output directly from DMA RAM
+      uint8_t *raw_src = (virt_ddr_base + npu_out_ddr_offset_base);
       for (int p = 0; p < 169; p++) {
-        for (int f = 0; f < 8; f++) {
-          int32_t z_val = Z_chunk[0][p][f] + Z_chunk[1][p][f] + bias_l1[f];
-          int relu_val = z_val / SHIFT1;
-          if (relu_val < 0)
-            relu_val = 0;
-          if (relu_val > 127)
-            relu_val = 127;
-
-          L1_out_local[p * 8 + f] = (int8_t)relu_val;
+        for (int c = 0; c < 8; c++) {
+          // Hardware MSGDMA mapping reversed 7-c
+          L1_out_local[p * 8 + c] = (int8_t)raw_src[p * 64 + (7 - c)]; 
         }
       }
+
       double t_acc_end = get_time_us();
 
       if (b == 0) {
         printf("\n--- NPU Layer 1 Profile (Patch 0) ---\n");
         for (int dc = 0; dc < 8; dc++)
-          printf("%d ", Z_chunk[0][0][dc] + Z_chunk[1][0][dc]);
+          printf("%d ", L1_out_local[dc]); // Just print the processed values
         printf("\n------------------------------------------\n");
         printf("  [L1 Breakdown]\n");
-        printf("  1. HW DMA Core  : %.3f ms\n",
+        printf("  1. HW DMA & Fusion Core : %.3f ms\n",
                (t_dma_end - t_dma_start) / 1000.0);
-        printf("  2. SW bswap32   : %.3f ms\n",
-               (t_bswap_end - t_dma_end) / 1000.0);
-        printf("  3. SW Accum/ReLU: %.3f ms\n",
-               (t_acc_end - t_bswap_end) / 1000.0);
+        printf("  3. Memory extraction    : %.3f ms\n",
+               (t_acc_end - t_dma_end) / 1000.0);
         printf("------------------------------------------\n");
       }
     }
@@ -515,15 +523,48 @@ int main(int argc, char **argv) {
 
   printf("\n[0] Diagnostic: First 8x8 Matrix Result...\n");
   int32_t Z_cpu[8][8] = {0};
-  int32_t Z_npu[8][8] = {0};
+  int8_t Z_npu[8][8] = {0};
   cpu_mac_8x8(virt_ddr_base, weights_l1_offset, virt_ddr_base, inputs_offset,
               Z_cpu);
 
+  for(int r=0; r<8; r++) {
+    for(int c=0; c<8; c++) {
+      Z_cpu[r][c] = (Z_cpu[r][c] + bias_l1[c]) / ((int)pow(2, 8)); // 8-bit Shift
+      if(Z_cpu[r][c] < 0) Z_cpu[r][c] = 0;
+      if(Z_cpu[r][c] > 127) Z_cpu[r][c] = 127;
+    }
+  }
+
+  // Diagnostic Hardware Fusion
+  for (int f = 0; f < 8; f++) IOWR(NPU_CTRL_BASE, 0x200 + f, bias_l1[f]);
   npu_load_weights(npu_ddr_base + weights_l1_offset, 1);
-  npu_get_matrix(dma_ocm_base + npu_out_offset, 1);
+  
+  IOWR(NPU_CTRL_BASE, 6, 8); // 1 matrix
+  IOWR(NPU_CTRL_BASE, REG_CTRL, 0); // Execute Mode
+  IOWR(NPU_CTRL_BASE, 0x23, 0x80000000); 
+  IOWR(NPU_CTRL_BASE, 0x25, 64); 
+  IOWR(NPU_CTRL_BASE, 0x20, 1); 
+  
   npu_load_matrix(npu_ddr_base + inputs_offset, 1);
   npu_wait_execution();
-  npu_parse_output(virt_ocm_base + npu_out_offset, Z_npu);
+  while ((IORD(NPU_CTRL_BASE, 0x21) & 1) == 0) {}
+
+  IOWR(NPU_CTRL_BASE, REG_CTRL, 4); // DRAIN
+  IOWR(NPU_CTRL_BASE, 0x23, 0x80000000); 
+  IOWR(NPU_CTRL_BASE, 0x25, 64); 
+  IOWR(NPU_CTRL_BASE, 0x20, 1); 
+  
+  msgdma_write_stream_push(DDR_WRITE_ST_DESCRIPTOR_SLAVE_BASE, dma_ocm_base + npu_out_offset, 64);
+  while ((IORD_32DIRECT(DDR_WRITE_ST_CSR_BASE, 0) & 0x01) != 0) {}
+  while ((IORD(NPU_CTRL_BASE, 0x21) & 1) == 0) {} 
+
+  // Parse 8-bit output directly
+  uint8_t *raw_src = (virt_ocm_base + npu_out_offset);
+  for (int r = 0; r < 8; r++) {
+    for (int c = 0; c < 8; c++) {
+      Z_npu[r][c] = (int8_t)raw_src[r * 8 + c];
+    }
+  }
 
   printf("CPU Matrix:\n");
   for (int r = 0; r < 8; r++) {

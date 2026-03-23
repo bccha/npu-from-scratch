@@ -175,9 +175,35 @@ while ((*(npu_ctrl_ptr + 1 /* STATUS OFFSET */) & 1) != 0); // Polling (Busy 대
 1. `O_SYNC`: ARM의 Out-of-Order 실행 및 캐시 정책을 하드웨어 I/O(Device Memory) 정책으로 강제 변경해, DMA 전송 버퍼가 DDR 레벨에서 즉각 일관성을 갖게(Cache Coherency) 만듭니다. O_SYNC와 `volatile` 포인터를 조합하면 `dsb` 같은 명시적인 배리어 명령어 없이도 순서가 보장됩니다.
 2. `Polling`: 비순차적으로 어마어마한 속도로 실행되는 ARM CPU 로직을 50MHz FPGA 속도에 동기화시키기 위해, `usleep` 같은 임의의 타이머 대신 Status Register를 지속적으로 읽어(Polling) Busy 신호가 꺼질 때까지 `while` 대기하는 정밀한 핸드셰이킹을 요구합니다.
 
+
 ### 4.3 start + mode 같은 사이클 가능한 이유
 
 RTL에서 `mode_now = ctrl_write ? writedata[3:2] : mode_reg` 로 처리.  
 start/valid_in 게이팅이 mode_reg(이전 값)가 아닌 mode_now(현재 쓰는 값)를 사용하므로,  
 mode와 start를 한 번의 write로 동시에 줄 수 있다.
 
+---
+
+## 5. Endianness 역전과 Verilog 덧셈기 (Carry-Bit) 파괴 현상
+
+메모리에 저장되는 바이트의 순서(Big-Endian vs Little-Endian)를 하드웨어(RTL)에서 강제로 스왑하여 연산할 때 발생하는 치명적인 수학적 결함에 대한 고찰.
+
+### 5.1 증상과 원인
+- **증상**: NPU에서 98번의 `X * W` 블록 타일을 누적(Accumulate)했더니, 나와야 할 작은 양수 정답 대신 `-100,709,433` (`0xF9FF5347`) 같은 비정상적인 음수 쓰레기값이 도출됨.
+- **원인**: OCM 메모리 읽기/쓰기 시 Endian을 맞추겠다고 RTL 내부에 박아둔 **Byte-Swapper 덧셈기**가 범인.
+
+### 5.2 Verilog 덧셈기의 물리적 한계 (Carry 전파)
+Verilog의 `+` 연산자는 내부적으로 **항상 LSB(최하위 비트)에서 MSB(최상위 비트) 방향으로만 올림수(Carry)를 전파**합니다.
+```verilog
+// 문제의 코드
+wire [31:0] unswapped_src = {pe_data[7:0], pe_data[15:8], pe_data[23:16], pe_data[31:24]};
+wire [31:0] sum_unswapped = unswapped_src + ocm_data; // <- 최악의 수학적 재앙 발생
+```
+1. 정수 `256`(`0x00000100`)을 스왑하면 `0x00010000`이 됩니다.
+2. 타일 행렬곱 누적 동안 `0x00010000`끼리 계속 더해져서 바이트 경계(`255`)를 넘게 되면, 그 타겟 바이트 안에서 **올림수(Carry)** 가 발생합니다.
+3. 원래의 정상적인 정수라면 이 Carry는 상위 바이트(논리적으로 더 큰 값)로 올라가야 합니다.
+4. 그러나 **바이트가 뒤집혀 있는 상태**이므로, Verilog 입장에서는 이 Carry를 물리적인 상위 비트(원래 세계에서는 **하위 바이트**)로 쏘아 올립니다!
+5. 즉, 값이 커질수록 **상위 바이트의 올림수가 하위 바이트로 거꾸로 역류**하며 숫자를 완전히 파괴해버립니다.
+
+### 5.3 올바른 설계 원칙 (Native Addition)
+덧셈, 뺄셈 등의 Carry가 발생하는 산술 연산은 **반드시 Native 구조(CPU와 메모리가 규정한 મૂળ Little-Endian 배열)** 상태 그대로 수행해야 합니다. 메모리에서 뽑은 그대로 더하고 빼야만 Verilog의 물리적 가산기 방향과 숫자의 논리적 크기 방향이 일치하여 오염이 발생하지 않습니다. Endian 변환이 필요하다면 **모든 수학적 연산이 끝난 최후의 순간(소프트웨어 리드 타임)** 에 단 한 번만 자리바꿈을 수행해야 합니다.

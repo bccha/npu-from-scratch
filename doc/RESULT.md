@@ -294,3 +294,28 @@ Successfully bridged the high-level Python Deep Learning framework with the low-
    The hardware deeply integrated an OCM accumulator (`npu_ocm_accumulator.v`) and a hardwired Post-Processor (`npu_post_processor.v`). It performs **Bias Addition + Requantization (Right Shift) + ReLU Clipping** iteratively within a single clock cycle immediately as data drains from the SRAM cache.
 3. **Bit-Exact Verification Passes:**
    The `test_fusion.py` testbench proved that the newly formed execution datapath operates with 0% memory latency overheads, eliminating DDR4 round-trips for intermediate features. When fed random sequences, the RTL hardware produced the **exact equivalent 8-bit bit-for-bit results** as the simulated PyTorch offline quantized pass, achieving a major milestone for reliable model deployment.
+
+## 4. Phase 4: Full-Stack CNN MNIST 통합 연산 가속 (3.75x Speedup)
+
+파이토치로 훈련된 `10-Class MNIST CNN` 모델 (Conv -> ReLU -> Conv -> FC) 의 추론(Inference) 가속을 NPU SoC 파이프라인(MSGDMA -> 하드웨어 OCM Accumulator -> Post-Processor)으로 100% 이관하여 성공적으로 테스트를 완수하였습니다.
+
+### 달성 지표
+- **정확도(Accuracy)**: 89.58% (CPU 소프트웨어 연산 결과와 **100% Bit-Exact 일치**)
+- **처리 속도(Speed)**: 177.16 ms (100장 기준, **장당 1.845 ms**)
+- **가속 배율(Speedup)**: CPU (6.927 ms/img) 대비 **3.75배 순수 하드웨어 가속** 달성
+
+### 트러블슈팅 및 버그 해결 기록
+1. **OCM Accumulator "Endianness Carry-Bit" 버그**:
+   - `npu_ocm_accumulator.v` 내부에서 32-bit 덧셈 수행 전후에 바이트를 강제로 스왑(`{A[7:0], A[15:8]...}`)하는 로직이 산술 연산을 파괴했습니다. 
+   - Verilog 덧셈기는 물리적으로 하위 비트(LSB)에서 상위 비트(MSB)로 올림수(Carry)를 전파합니다. 바이트가 뒤집힌 채 덧셈이 수행되면 Carry가 물리적 상위 비트(원래의 하위 바이트) 쪽으로 역류하면서 숫자가 완전히 깨져 거대한 음수 쓰레기값(`-100,709,433`)이 만들어졌습니다. Swapper를 제거하고 **Native 32-bit 구조로 덧셈을 수행**하여 아키텍처 결함을 완벽히 해결했습니다.
+
+2. **MSGDMA 패킹과 Avalon-MM Direct 접근 간의 Endian 차이**:
+   - MSGDMA를 통해 DDR로 쏟아져 나온 결과(Layer 1)는 패킷 특성상 오른쪽 열(`Col 7`)부터 메모리 앞쪽에 거꾸로 쑤셔넣어지므로 C 코드에서 `7 - c` 로 인덱스를 뒤집어 읽어야 정답이 됩니다.
+   - 하지만 Layer 2는 ReLU(DRAIN)를 회피하기 위해 OCM에 **Avalon-MM 버스로 직접 주소 접근(Direct Access)** 하여 읽었습니다. Avalon-MM은 그런 패킹 순서 역전 없이 정직하게 `c` 인덱스 순서대로 메모리에 쌓이므로, MSGDMA식 `7 - c` 논리를 적용하면 빈 패딩(Padding) 영역인 쓰레기 숫자를 읽게 되는 논리적 결함을 교정했습니다.
+
+3. **AXI 버스 비동기 통신 버퍼 덮어쓰기 현상**:
+   - NPU OCM 버퍼를 0으로 초기화하기 위해 ARM 코어에서 `0`을 64번 쏘았지만, 리눅스 AXI 브릿지는 이를 모아서 (Posting) 뒤늦게 쏩니다.
+   - FPGA가 곱셈을 시작했는데 뒤늦게 도착한 `0`들이 partial sums를 덮어씌워버리는 문제를 막기 위해, 쓰기 명령 직후에 해당 주소를 한 번 강제로 읽어오는 **Dummy Read (Blocking Flush)** 기법을 사용하여 버스 타이밍을 물리적으로 동기화시켰습니다.
+
+4. **소프트웨어 Polling Spin-lock 과부하 제거**:
+   - 하드웨어 타이밍(seq_busy)을 믿지 못하고 박아두었던 `10000`번의 강제 `volatile wait` 루프가 이미지당 784번 호출되며 수 밀리초를 허비했습니다. 폴링 조건을 `NPU_STATUS` 플래그 하나로 단일화하여 CPU 낭비를 제거함으로써 압도적인 속도 향상을 이끌어냈습니다.

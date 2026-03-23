@@ -12,7 +12,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-
 #define IOWR_32DIRECT(base, offset, data)                                      \
   (*(volatile uint32_t *)((uint8_t *)(base) + (offset)) = (data))
 #define IORD_32DIRECT(base, offset)                                            \
@@ -23,43 +22,29 @@
 #define IORD(base, reg)                                                        \
   (*(volatile uint32_t *)((uint8_t *)(base) + ((reg) * 4)))
 
-#define HPS2FPGA_AXI_BASE 0xC0000000
-#define HPS2FPGA_AXI_SPAN 0x20000000
 
-// Unified Register Map
+
 #define REG_CTRL 0
 #define REG_STATUS 1
 #define REG_SEQ_ROWS 6
 
 #define NPU_MAT_SIZE 8
 #define NPU_MAT_BYTES (NPU_MAT_SIZE * 8)
-#define NPU_OUT_BYTES (NPU_MAT_SIZE * 32)
+#define NPU_OUT_BYTES 64
 
-// Pointers
 volatile uint8_t *NPU_CTRL_BASE;
 volatile uint8_t *DDR_READ_ST_CSR_BASE;
 volatile uint8_t *DDR_READ_ST_DESCRIPTOR_SLAVE_BASE;
 volatile uint8_t *DDR_WRITE_ST_CSR_BASE;
 volatile uint8_t *DDR_WRITE_ST_DESCRIPTOR_SLAVE_BASE;
-volatile uint8_t *DDR3_WINDOW_BASE;
+volatile uint8_t *NPU_DDR_CNTL_BASE;
+volatile uint8_t *lw_bridge_map;
 
-// ==========================================
-// MSGDMA Helpers
-// ==========================================
 void msgdma_init(volatile uint8_t *csr_base) {
-  // 1. Issue Reset Command (Bit 1 of Control Register)
   IOWR_32DIRECT(csr_base, 0x04, (1 << 1));
-
-  // 2. Wait for Hardware to Finish Resetting (Poll Status Bit 6)
-  while (IORD_32DIRECT(csr_base, 0x00) & (1 << 6)) {
-    // Loop actively while resetting
-  }
-
-  // 3. Clear existing status bits (W1C bits)
+  while (IORD_32DIRECT(csr_base, 0x00) & (1 << 6))
+    ;
   IOWR_32DIRECT(csr_base, 0x00, 0xFFFFFFFF);
-
-  // 4. Enable dispatcher globally
-  // Disable Interrupts, Clear Stop Dispatcher, Clear Reset.
   IOWR_32DIRECT(csr_base, 0x04, 0x00000000);
 }
 
@@ -68,7 +53,7 @@ void msgdma_read_stream_push(volatile uint8_t *descriptor_base,
   IOWR_32DIRECT(descriptor_base, 0x00, src_addr);
   IOWR_32DIRECT(descriptor_base, 0x04, 0x00000000);
   IOWR_32DIRECT(descriptor_base, 0x08, length);
-  IOWR_32DIRECT(descriptor_base, 0x0C, 0x80000300); // GO | GEN_EOP | GEN_SOP
+  IOWR_32DIRECT(descriptor_base, 0x0C, 0x80000300);
 }
 
 void msgdma_write_stream_push(volatile uint8_t *descriptor_base,
@@ -76,29 +61,20 @@ void msgdma_write_stream_push(volatile uint8_t *descriptor_base,
   IOWR_32DIRECT(descriptor_base, 0x00, 0x00000000);
   IOWR_32DIRECT(descriptor_base, 0x04, dst_addr);
   IOWR_32DIRECT(descriptor_base, 0x08, length);
-  IOWR_32DIRECT(descriptor_base, 0x0C,
-                0x80000000); // GO (No END_ON_EOP to prevent early termination)
-}
-
-void npu_parse_output(volatile uint8_t *src_addr, int32_t dst_matrix[8][8]) {
-  uint32_t local_src[64];
-  memcpy(local_src, (const void *)src_addr, 256);
-
-  for (int r = 0; r < 8; r++) {
-    for (int c = 0; c < 8; c++) {
-      int hw_c = c ^ 1;
-      uint32_t raw = local_src[r * 8 + hw_c];
-      dst_matrix[r][c] += (int32_t)__builtin_bswap32(raw);
-    }
-  }
+  IOWR_32DIRECT(descriptor_base, 0x0C, 0x80000000);
 }
 
 void npu_load_weights(uint32_t weights_addr, int num_matrices) {
   IOWR(NPU_CTRL_BASE, REG_CTRL, 0x00000003);
+
   msgdma_read_stream_push(DDR_READ_ST_DESCRIPTOR_SLAVE_BASE, weights_addr,
                           NPU_MAT_BYTES * num_matrices);
+
+  // Wait for MSGDMA Read Status to be Idle (Bit 0 != 1)
   while ((IORD_32DIRECT(DDR_READ_ST_CSR_BASE, 0) & 0x01) != 0) {
   }
+
+  // Wait for NPU Sequencer Busy Flag (REG_STATUS Bit 0) to be idle.
   while ((IORD(NPU_CTRL_BASE, REG_STATUS) & 0x01) != 0) {
   }
   IOWR(NPU_CTRL_BASE, 7, 1);
@@ -117,8 +93,11 @@ void npu_load_matrix(uint32_t inputs_addr, int num_matrices) {
 }
 
 void npu_wait_execution() {
+  // Wait for MSGDMA Write Status to be Idle
   while ((IORD_32DIRECT(DDR_WRITE_ST_CSR_BASE, 0) & 0x01) != 0) {
   }
+
+  // Wait for NPU Sequencer Busy Flag
   while ((IORD(NPU_CTRL_BASE, REG_STATUS) & 0x01) != 0) {
   }
 }
@@ -132,36 +111,58 @@ int load_binary_file(const char *filename, uint8_t *dest, size_t max_size) {
   return bytes;
 }
 
+void npu_format_inputs(volatile uint8_t *dst_addr, signed char src_matrix[8][8]) {
+  for (int r = 0; r < 8; r++) {
+    uint32_t low_32 = 0;
+    uint32_t high_32 = 0;
+    for (int c = 0; c < 4; c++) {
+      low_32 |= (((uint32_t)(unsigned char)src_matrix[r][c]) << (c * 8));
+      high_32 |= (((uint32_t)(unsigned char)src_matrix[r][c + 4]) << (c * 8));
+    }
+    IOWR_32DIRECT(dst_addr, r * 8 + 0, low_32);
+    IOWR_32DIRECT(dst_addr, r * 8 + 4, high_32);
+  }
+}
+
+void npu_format_weights(volatile uint8_t *dst_addr, signed char src_matrix[8][8]) {
+  for (int t = 0; t < 8; t++) {
+    int c = 7 - t;
+    uint32_t low_32 = 0;
+    uint32_t high_32 = 0;
+    for (int r = 0; r < 4; r++) {
+      low_32 |= (((uint32_t)(unsigned char)src_matrix[r][c]) << (r * 8));
+      high_32 |= (((uint32_t)(unsigned char)src_matrix[r + 4][c]) << (r * 8));
+    }
+    IOWR_32DIRECT(dst_addr, t * 8 + 0, low_32);
+    IOWR_32DIRECT(dst_addr, t * 8 + 4, high_32);
+  }
+}
+
 double get_time_us() {
   struct timeval tv;
   gettimeofday(&tv, NULL);
   return (double)tv.tv_sec * 1000000.0 + (double)tv.tv_usec;
 }
 
+// Memory mapping configurations
 uint32_t phys_ddr_base;
 uint8_t *virt_ddr_base;
-
+// OCM is rigorously locked to the Lightweight Bridge at offset 0x40000
 uint32_t phys_ocm_base;
-uint8_t *virt_ocm_base;
-
-// NPU Memory mapped offsets
+volatile uint8_t *virt_ocm_base;
 uint32_t npu_ddr_base = 0x20000000;
 uint32_t dma_ocm_base = 0x00040000;
 
-// Offsets within DDR (Base: HPS_FPGA_RAM_BASE)
+// Base Offsets within DDR
 uint32_t inputs_offset = 0x000000;
 uint32_t weights_l1_offset = 0x800000;
 uint32_t weights_l2_offset = 0x840000;
-
-// Offsets within OCM (Base: LWHPS2FPGA_BASE + NPU_OCM_OFFSET)
-uint32_t scratch_offset = 0x000000;
-uint32_t npu_out_offset = 0x001000;
+uint32_t npu_out_ddr_offset = 0x900000;
 
 int32_t bias_l1[64];
 int32_t bias_l2[16];
 int32_t labels[10000];
 
-// CPU MAC accumulation simulation
 void cpu_mac_8x8(uint8_t *w_base, uint32_t w_offset, uint8_t *x_base,
                  uint32_t x_offset, int32_t Z[8][8]) {
   int8_t *W = (int8_t *)(w_base + w_offset);
@@ -170,8 +171,7 @@ void cpu_mac_8x8(uint8_t *w_base, uint32_t w_offset, uint8_t *x_base,
     for (int c = 0; c < 8; c++) {
       int32_t sum = 0;
       for (int k = 0; k < 8; k++) {
-        // Hardware expects: w_out[t, r] = w_8x8[r, c] where t = 7-c.
-        // So to get w_8x8[k, c]:  we read W[(7-c)*8 + k]
+        // CPU emulates exactly the array alignment
         int8_t w_val = W[(7 - c) * 8 + k];
         int8_t x_val = X[r * 8 + k];
         sum += x_val * w_val;
@@ -186,85 +186,235 @@ void run_inference(int num_batches, bool use_npu, double *time_ms,
   int correct_predictions = 0;
   double start_time = get_time_us();
 
+  // HW OCM Local pointers (H2F AXI Master mapped directly)
+  volatile uint8_t *ocm_dst_addr = virt_ocm_base + dma_ocm_base + 0x8000;
+  uint8_t *l1_drain_buf = virt_ddr_base + npu_out_ddr_offset;
+
   for (int b = 0; b < num_batches; b++) {
-    // ---------------- Layer 1 ----------------
+    int8_t H[8][64]; // Layer 1 Hidden outputs
+    memset(H, 0, sizeof(H));
+
+    if (b % 100 == 0) {
+      if (use_npu)
+        printf("    [INFO] Processing Batch %d (HW)...\n", b);
+      else
+        printf("    [INFO] Processing Batch %d (SW)...\n", b);
+    }
+
+    // ---------------- Layer 1: MAC + Bias + Shift + ReLU ----------------
     for (int j = 0; j < 8; j++) {
-      int32_t Z[8][8] = {0};
+      if (use_npu) {
+        if (b == 0 && j == 0) {
+          printf("\n[DEBUG] === NPU Hardware Pipeline Diagnostics ===\n");
+          printf("[DEBUG] [1] DDR Fetch Check. Input[0]=%d, Weight_L1[0]=%d\n", 
+                 (int8_t)*(virt_ddr_base + inputs_offset),
+                 (int8_t)*(virt_ddr_base + weights_l1_offset));
+        }
 
-      for (int t = 0; t < 98; t++) {
-        uint32_t curr_w1_offset = weights_l1_offset + (t * 8 + j) * 64;
-        uint32_t curr_x_offset = inputs_offset + (b * 98 + t) * 64;
+        // HW ACCUMULATOR: Zero out 32-bit partial sums container (256 bytes per
+        // matrix)
+        for (int i = 0; i < 256 / 4; i++) {
+          IOWR_32DIRECT(ocm_dst_addr, i * 4, 0);
+        }
+        // ARCHITECTURAL FIX: Force a blocking dummy read to flush the
+        // Heavyweight AXI posting buffers. Without this, the 64 zero-writes
+        // linger in the AXI bridge and eventually overwrite the NPU's
+        // mathematically accumulated values asynchronously!
+        volatile uint32_t dummy = IORD_32DIRECT(ocm_dst_addr, 0);
+        (void)dummy;
 
-        if (use_npu) {
+        if (b == 0 && j == 0) {
+          printf("[DEBUG] [2] OCM Zero Check (Should be 0): %d\n", 
+                 (int32_t)IORD_32DIRECT(ocm_dst_addr, 0));
+        }
+
+        IOWR(NPU_CTRL_BASE, REG_SEQ_ROWS, 8);
+
+        // Accumulate exactly 98 matrix patches
+        for (int t = 0; t < 98; t++) {
+          uint32_t curr_w1_offset = weights_l1_offset + (t * 8 + j) * 64;
+          uint32_t curr_x_offset = inputs_offset + (b * 98 + t) * 64;
+
           npu_load_weights(npu_ddr_base + curr_w1_offset, 1);
-          npu_get_matrix(dma_ocm_base + npu_out_offset, 1);
+
+          IOWR(NPU_CTRL_BASE, 0x23, dma_ocm_base + 0x8000);
+          IOWR(NPU_CTRL_BASE, 0x25, 64);
+          IOWR(NPU_CTRL_BASE, 0x20, 1); // accum_start
+
           npu_load_matrix(npu_ddr_base + curr_x_offset, 1);
           npu_wait_execution();
-          npu_parse_output(virt_ocm_base + npu_out_offset, Z);
-        } else {
+          while ((IORD(NPU_CTRL_BASE, 0x21) & 1) == 0)
+            ; // Wait accum_done
+        }
+
+        if (b == 0 && j == 0) {
+            printf("[DEBUG] [4] Pre-DRAIN Sequence OCM Check (Fully accumulated 98 tiles):\n");
+            printf("[DEBUG] [Row 0] ");
+            for(int i=0; i<8; i++) {
+                printf("%d ", (int32_t)IORD_32DIRECT(ocm_dst_addr, i*4));
+            }
+            printf("\n");
+        }
+
+        // LOAD BIAS for these 8 output nodes (Neuron chunk)
+        for (int f = 0; f < 8; f++) {
+          IOWR(NPU_CTRL_BASE, 0x200 + f, bias_l1[j * 8 + f]);
+        }
+
+        // HW DRAIN PORTION (Triggers Bias+, Shr>>, ReLU and writes 8-bit
+        // Output)
+        IOWR(NPU_CTRL_BASE, REG_CTRL, 4); // seq_mode=2
+        IOWR(NPU_CTRL_BASE, 0x23, dma_ocm_base + 0x8000);
+        IOWR(NPU_CTRL_BASE, 0x25, 64);
+        IOWR(NPU_CTRL_BASE, 0x20, 1); // accum_start
+
+        msgdma_write_stream_push(DDR_WRITE_ST_DESCRIPTOR_SLAVE_BASE,
+                                 npu_ddr_base + npu_out_ddr_offset, 64);
+        while ((IORD_32DIRECT(DDR_WRITE_ST_CSR_BASE, 0) & 0x01) != 0)
+          ;
+        while ((IORD(NPU_CTRL_BASE, 0x21) & 1) == 0)
+          ;
+
+        if (b == 0 && j == 0) {
+            printf("[DEBUG] [5] Post-DRAIN DDR Buffer Check (l1_drain_buf via CPU):\n");
+            printf("[DEBUG] %d %d %d %d\n", 
+              (int8_t)l1_drain_buf[0], (int8_t)l1_drain_buf[1], (int8_t)l1_drain_buf[2], (int8_t)l1_drain_buf[3]);
+        }
+
+        // Fetch DRAIN 8-bit stream from DDR, compensating for Big-Endian HW
+        // Mapping
+        for (int r = 0; r < 8; r++) {
+          for (int c = 0; c < 8; c++) {
+            H[r][j * 8 + c] = (int8_t)l1_drain_buf[r * 8 + (7 - c)];
+          }
+        }
+      } else {
+        // CPU S/W Layer 1 Target
+        int32_t Z[8][8] = {0};
+        for (int t = 0; t < 98; t++) {
+          uint32_t curr_w1_offset = weights_l1_offset + (t * 8 + j) * 64;
+          uint32_t curr_x_offset = inputs_offset + (b * 98 + t) * 64;
           cpu_mac_8x8(virt_ddr_base, curr_w1_offset, virt_ddr_base,
                       curr_x_offset, Z);
         }
-      }
-
-      // Post-process Layer 1 Output + Format for Layer 2
-      volatile uint8_t *H_dest = virt_ocm_base + scratch_offset + j * 64;
-      uint32_t local_H[16];
-      for (int r = 0; r < 8; r++) {
-        uint32_t low_32 = 0, high_32 = 0;
-        for (int c = 0; c < 4; c++) {
-          int32_t raw_l = Z[r][c] + bias_l1[j * 8 + c];
-          int32_t raw_h = Z[r][c + 4] + bias_l1[j * 8 + c + 4];
-
-          int h_val_l = raw_l / SHIFT1;
-          int h_val_h = raw_h / SHIFT1;
-
-          if (h_val_l < 0)
-            h_val_l = 0;
-          else if (h_val_l > 127)
-            h_val_l = 127;
-          if (h_val_h < 0)
-            h_val_h = 0;
-          else if (h_val_h > 127)
-            h_val_h = 127;
-
-          low_32 |= (((uint32_t)(uint8_t)h_val_l) << (c * 8));
-          high_32 |= (((uint32_t)(uint8_t)h_val_h) << (c * 8));
+        for (int r = 0; r < 8; r++) {
+          for (int c = 0; c < 8; c++) {
+            int32_t val = (Z[r][c] + bias_l1[j * 8 + c]) / 256;
+            if (val < 0)
+              val = 0;
+            if (val > 127)
+              val = 127;
+            H[r][j * 8 + c] = (int8_t)val;
+          }
         }
-        local_H[r * 2 + 0] = low_32;
-        local_H[r * 2 + 1] = high_32;
       }
-      memcpy((void *)H_dest, local_H, 64);
+
+      if (b == 0 && j == 0) {
+        if (use_npu)
+          printf("\n--- NPU Layer 1 (j=0) Output ---\n");
+        else
+          printf("\n--- CPU Layer 1 (j=0) Output ---\n");
+        for (int r = 0; r < 8; r++) {
+          for (int c = 0; c < 8; c++) {
+            printf("%4d ", H[r][c]);
+          }
+          printf("\n");
+        }
+      }
     }
 
-    // ---------------- Layer 2 ----------------
+    // ---------------- Layer 2: Final Inference (No ReLU) ----------------
     int32_t Y_final[8][16] = {0};
+    uint32_t h_ddr_offset = npu_out_ddr_offset + 0x1000;
+    uint8_t *h_ddr_ptr = virt_ddr_base + h_ddr_offset;
+
     for (int j = 0; j < 2; j++) {
-      int32_t Z2[8][8] = {0};
-
-      for (int t = 0; t < 8; t++) {
-        uint32_t curr_w2_offset = weights_l2_offset + (t * 2 + j) * 64;
-        uint32_t curr_h_offset = scratch_offset + t * 64;
-
-        if (use_npu) {
-          npu_load_weights(npu_ddr_base + curr_w2_offset, 1);
-          npu_get_matrix(dma_ocm_base + npu_out_offset, 1);
-          npu_load_matrix(dma_ocm_base + curr_h_offset, 1);
-          npu_wait_execution();
-          npu_parse_output(virt_ocm_base + npu_out_offset, Z2);
-        } else {
-          cpu_mac_8x8(virt_ddr_base, curr_w2_offset, virt_ocm_base,
-                      curr_h_offset, Z2);
+      if (use_npu) {
+        // HW ACCUMULATOR: Zero out buffer
+        for (int i = 0; i < 256 / 4; i++) {
+          IOWR_32DIRECT(ocm_dst_addr, i * 4, 0);
         }
-      }
+        // ARCHITECTURAL FIX: Force a blocking dummy read to flush the AXI posting buffers.
+        volatile uint32_t dummy = IORD_32DIRECT(ocm_dst_addr, 0);
+        (void)dummy;
 
-      for (int r = 0; r < 8; r++) {
-        for (int c = 0; c < 8; c++)
-          Y_final[r][j * 8 + c] = Z2[r][c] + bias_l2[j * 8 + c];
+        // Reformat Intermediate Output into natively blocked HW sequence
+        for (int t = 0; t < 8; t++) {
+          for (int r = 0; r < 8; r++) {
+            uint32_t low = 0, high = 0;
+            for (int c = 0; c < 4; c++) {
+              low |= (((uint32_t)(uint8_t)H[r][t * 8 + c]) << (c * 8));
+              high |= (((uint32_t)(uint8_t)H[r][t * 8 + c + 4]) << (c * 8));
+            }
+            IOWR_32DIRECT(h_ddr_ptr, r * 8 + 0, low);
+            IOWR_32DIRECT(h_ddr_ptr, r * 8 + 4, high);
+          }
+          // Enforce SDRAM write buffer flushing before firing MSGDMA Read
+          volatile uint32_t ddr_dummy = IORD_32DIRECT(h_ddr_ptr, 0);
+          (void)ddr_dummy;
+
+          uint32_t curr_w2_offset = weights_l2_offset + (t * 2 + j) * 64;
+
+          npu_load_weights(npu_ddr_base + curr_w2_offset, 1);
+          IOWR(NPU_CTRL_BASE, REG_SEQ_ROWS, 8);
+          IOWR(NPU_CTRL_BASE, 0x23, dma_ocm_base + 0x8000);
+          IOWR(NPU_CTRL_BASE, 0x25, 64);
+          IOWR(NPU_CTRL_BASE, 0x20, 1);
+
+          npu_load_matrix(npu_ddr_base + h_ddr_offset, 1);
+          npu_wait_execution();
+          while ((IORD(NPU_CTRL_BASE, 0x21) & 1) == 0)
+            ;
+        }
+
+        // INTELLIGENT BYPASS:
+        // Do NOT trigger DRAIN `seq_mode=2` since Logits (Layer 2 Output)
+        // should NOT be ReLUClipped! ArgMax heavily relies on preserving
+        // negative states. Instead, pull raw 32-bit Integer sums directly out
+        // of HW memory via Linux HPS Bridge!
+        for (int r = 0; r < 8; r++) {
+          for (int c = 0; c < 8; c++) {
+            uint32_t raw_Z2 =
+                IORD_32DIRECT(ocm_dst_addr, (r * 8 + c) * 4);
+            Y_final[r][j * 8 + c] =
+                (int32_t)raw_Z2 + bias_l2[j * 8 + c];
+          }
+        }
+      } else {
+        // CPU S/W Layer 2
+        int32_t Z2[8][8] = {0};
+        for (int t = 0; t < 8; t++) {
+          // Flatten SW matrix locally
+          uint8_t sw_h_buf[64];
+          for (int r = 0; r < 8; r++) {
+            for (int c = 0; c < 8; c++) {
+              sw_h_buf[r * 8 + c] = H[r][t * 8 + c];
+            }
+          }
+          uint32_t curr_w2_offset = weights_l2_offset + (t * 2 + j) * 64;
+          cpu_mac_8x8(virt_ddr_base, curr_w2_offset, sw_h_buf, 0, Z2);
+        }
+        for (int r = 0; r < 8; r++) {
+          for (int c = 0; c < 8; c++)
+            Y_final[r][j * 8 + c] = Z2[r][c] + bias_l2[j * 8 + c];
+        }
       }
     }
 
-    // ArgMax
+    if (b == 0) {
+      if (use_npu)
+        printf("\n--- NPU Layer 2 (10-Class Logits) ---\n");
+      else
+        printf("\n--- CPU Layer 2 (10-Class Logits) ---\n");
+      for (int r = 0; r < 8; r++) {
+        for (int c = 0; c < 10; c++) {
+          printf("%6d ", Y_final[r][c]);
+        }
+        printf("\n");
+      }
+    }
+
+    // ArgMax Classification Output
     for (int r = 0; r < 8; r++) {
       int best_class = 0;
       int32_t max_val = Y_final[r][0];
@@ -285,9 +435,9 @@ void run_inference(int num_batches, bool use_npu, double *time_ms,
 }
 
 int main(int argc, char **argv) {
-  int num_test_batches = 1250;
+  int num_test_batches = 125; // Default 1000 images (8 images / batch)
   if (argc > 1) {
-    num_test_batches = atoi(argv[1]);
+    num_test_batches = atoi(argv[1]) / 8;
   }
 
   printf("=== MNIST Inference Benchmark ===\n");
@@ -298,7 +448,6 @@ int main(int argc, char **argv) {
     perror("open /dev/mem");
     return EXIT_FAILURE;
   }
-
   uint8_t *lw_bridge_map =
       (uint8_t *)mmap(NULL, LWHPS2FPGA_SPAN, PROT_READ | PROT_WRITE, MAP_SHARED,
                       fd, LWHPS2FPGA_BASE);
@@ -306,12 +455,7 @@ int main(int argc, char **argv) {
       (uint8_t *)mmap(NULL, HPS_FPGA_RAM_SPAN, PROT_READ | PROT_WRITE,
                       MAP_SHARED, fd, HPS_FPGA_RAM_BASE);
 
-  uint8_t *h2f_bridge_map =
-      (uint8_t *)mmap(NULL, HPS2FPGA_AXI_SPAN, PROT_READ | PROT_WRITE,
-                      MAP_SHARED, fd, HPS2FPGA_AXI_BASE);
-
-  if (lw_bridge_map == MAP_FAILED || ddr_map == MAP_FAILED ||
-      h2f_bridge_map == MAP_FAILED) {
+  if (lw_bridge_map == MAP_FAILED || ddr_map == MAP_FAILED) {
     perror("mmap failed");
     return EXIT_FAILURE;
   }
@@ -328,8 +472,8 @@ int main(int argc, char **argv) {
   phys_ddr_base = HPS_FPGA_RAM_BASE;
   virt_ddr_base = ddr_map;
 
-  phys_ocm_base = HPS2FPGA_AXI_BASE + 0x00000000;
-  virt_ocm_base = h2f_bridge_map + 0x00000000;
+  phys_ocm_base = LWHPS2FPGA_BASE;
+  virt_ocm_base = lw_bridge_map;
 
   printf("\nLoading Binaries...\n");
   load_binary_file("inputs.bin", virt_ddr_base + inputs_offset, 8000000);
@@ -342,34 +486,6 @@ int main(int argc, char **argv) {
   IOWR(NPU_CTRL_BASE, REG_SEQ_ROWS, 8);
   double cpu_time_ms = 0, cpu_acc = 0;
   double npu_time_ms = 0, npu_acc = 0;
-
-  printf("\n[0] Diagnostic: First 8x8 Matrix Result...\n");
-  int32_t Z_cpu[8][8] = {0};
-  int32_t Z_npu[8][8] = {0};
-  cpu_mac_8x8(virt_ddr_base, weights_l1_offset, virt_ddr_base, inputs_offset,
-              Z_cpu);
-
-  npu_load_weights(npu_ddr_base + weights_l1_offset, 1);
-  npu_get_matrix(dma_ocm_base + npu_out_offset, 1);
-  npu_load_matrix(npu_ddr_base + inputs_offset, 1);
-  npu_wait_execution();
-  npu_parse_output(virt_ocm_base + npu_out_offset, Z_npu);
-
-  printf("CPU Matrix:\n");
-  for (int r = 0; r < 8; r++) {
-    for (int c = 0; c < 8; c++) {
-      printf("%6d ", Z_cpu[r][c]);
-    }
-    printf("\n");
-  }
-
-  printf("NPU Matrix:\n");
-  for (int r = 0; r < 8; r++) {
-    for (int c = 0; c < 8; c++) {
-      printf("%6d ", Z_npu[r][c]);
-    }
-    printf("\n");
-  }
 
   printf("\n[1] Running S/W (CPU) Inference...\n");
   run_inference(num_test_batches, false, &cpu_time_ms, &cpu_acc);
@@ -388,7 +504,6 @@ int main(int argc, char **argv) {
     printf("    H/W Acceleration: %.2f x\n", cpu_time_ms / npu_time_ms);
   }
 
-  munmap((void *)h2f_bridge_map, HPS2FPGA_AXI_SPAN);
   munmap((void *)ddr_map, HPS_FPGA_RAM_SPAN);
   munmap((void *)lw_bridge_map, LWHPS2FPGA_SPAN);
   close(fd);

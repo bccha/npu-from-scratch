@@ -16,7 +16,7 @@ async def reset_dut(dut):
     dut.pe_x_out.value = 0
     dut.pe_y_out.value = 0
     dut.pe_valid_out.value = 0
-    dut.pp_done.value = 0
+    dut.accum_done.value = 0
     
     await ClockCycles(dut.clk, 5)
     dut.rst_n.value = 1
@@ -45,55 +45,49 @@ async def avalon_read(dut, address):
         await RisingEdge(dut.clk)
 
 @cocotb.test()
-async def test_npu_ctrl_pp_registers(dut):
-    """Test NPU Post Processor CSR read/write via Avalon-MM"""
+async def test_npu_ctrl_acc_registers(dut):
+    """Test NPU Accumulator CSR read/write via Avalon-MM"""
     
     clock = Clock(dut.clk, 20, units="ns")  # 50 MHz
     cocotb.start_soon(clock.start())
     
     await reset_dut(dut)
     
-    # Test PP Registers (Select PP logic: address[7:4] == 4'h1)
+    # Test Accumulator Registers (Select ACC logic: address[7:4] == 4'h2)
     # The register mapping based on address[3:0]:
-    # 0 = pp_start
-    # 2 = pp_src_addr
-    # 3 = pp_dst_addr
-    # 4 = pp_bias_addr
-    # 5 = pp_num_elements
-    # 6 = pp_shift_val
+    # 0 = accum_start
+    # 1 = accum_done (read-only)
+    # 2 = accum_src_addr
+    # 3 = accum_dst_addr
+    # 5 = accum_num_elements
     
-    dut._log.info("Testing PP Source Address (Reg 18 = 0x12)")
-    # Wrtiting to offset 18 -> we pass byte index? No, in C `IOWR(base, 18, data)`
-    # writes to byte address 18 * 4 = 72 = 0x48.
-    # But Qsys translates this back to word address `0x12` for the 8-bit Avalon-MM.
-    # So `address` port on the RTL receives `0x12` (18 in decimal).
-    # Let's write `0x12` and see what happens inside RTL.
-    
-    await avalon_write(dut, 0x12, 0x00040000)
+    dut._log.info("Testing ACC SRC Address (Reg 34 = 0x22)")
+    # Qsys translates to 0x22
+    await avalon_write(dut, 0x22, 0x00080000)
     
     # Check internal RTL register state
     await ReadOnly()
-    dut._log.info(f"Internal pp_src_addr: {hex(dut.pp_src_addr.value.integer)}")
+    dut._log.info(f"Internal accum_src_addr: {hex(dut.accum_src_addr.value.integer)}")
     
     # Return to write phase
     await RisingEdge(dut.clk)
     
     # Now try to read it back via Avalon-MM
-    read_val = await avalon_read(dut, 0x12)
-    dut._log.info(f"Avalon Readback 0x12: {hex(read_val)}")
-    assert read_val == 0x00040000, f"Expected 0x40000, got {hex(read_val)}"
+    read_val = await avalon_read(dut, 0x22)
+    dut._log.info(f"Avalon Readback 0x22: {hex(read_val)}")
+    assert read_val == 0x00080000, f"Expected 0x80000, got {hex(read_val)}"
     
-    dut._log.info("Testing PP Shift Val (Reg 22 = 0x16)")
-    await avalon_write(dut, 0x16, 8)
+    dut._log.info("Testing ACC NUM ELEMENTS (Reg 37 = 0x25)")
+    await avalon_write(dut, 0x25, 64)
     
     await ReadOnly()
-    dut._log.info(f"Internal pp_shift_val: {dut.pp_shift_val.value.integer}")
+    dut._log.info(f"Internal accum_num_elements: {dut.accum_num_elements.value.integer}")
     
     await RisingEdge(dut.clk)
     
-    read_val = await avalon_read(dut, 0x16)
-    dut._log.info(f"Avalon Readback 0x16: {read_val}")
-    assert read_val == 8, f"Expected 8, got {read_val}"
+    read_val = await avalon_read(dut, 0x25)
+    dut._log.info(f"Avalon Readback 0x25: {read_val}")
+    assert read_val == 64, f"Expected 64, got {read_val}"
 
     # Also test MAC PE Registers
     dut._log.info("Testing MAC PE Registers (Select PE logic: address[7:4] == 4'h0 and address[3]==1)")
