@@ -221,19 +221,66 @@ NPU의 스트림 데이터는 MSGDMA가 잘 처리해주고 있었지만, NPU �
     *   **⚡ 성능 비교:** `IORD/IOWR` 시절의 초라한 속도에서 벗어나, `memcpy` 단 한 줄의 도입만으로 **순식간에 4배 이상(Over 4x) 가속된 16.3ms**의 벽을 뚫어냅니다!
 *   [관련 코드: `linux_software/mnist_test/main.c`]
 
-### 6장. 극한의 쥐어짜기: Hardware Post-Processor (PP)
-가속은 성공했지만, CPU가 여전히 발목을 잡습니다. NPU가 쏟아낸 32비트 결과물을 다시 OCM(On-Chip Memory)에서 가져와서 Bias를 더하고(Add), 8비트로 양자화(Shift/ReLU)하는 후처리(Post-processing) 과정을 소프트웨어로 하고 있었기 때문입니다.
-*   **6.1 Post-Processor RTL 설계:** CPU의 간섭 없이(Zero-Intervention), 1클럭당 1픽셀씩 후처리를 수행하는 전용 하드웨어 파이프라인(`npu_post_processor.v`)을 작성합니다.
-*   **6.2 Avalon-MM Master:** PP가 직접 주인이 되어 OCM 메모리 주소를 요리조리 넘나들며(Random Access) 읽고 씁니다.
-*   **6.3 End-to-End 가속 (최종 결전):** 소프트웨어 오버헤드가 완전히 제거된 Full Hardware 가속기의 무서운 성능을 두 눈으로 확인합니다.
-    *   **⚡ 최종 성능:** ARM 단독 연산(약 120ms~150ms) 대비, NPU + DMA + H/W PP의 조합으로 **단 1~2ms 대의 압도적인 속도 (약 100배 가속)**를 달성합니다!
-*   [관련 코드: `npu_post_processor.v`, OCM 핑퐁 구조]
+### 6장. 벼랑 끝의 사투와 현실적 타협: Hardware Post-Processor (PP)
+가속은 성공했지만, CPU가 여전히 발목을 잡습니다. NPU가 쏟아낸 32비트 결과물을 다시 OCM(On-Chip Memory)에서 가져와서 Bias를 더하고(Add), 8비트로 양자화(Shift/ReLU)하는 후처리 연산을 피하기 위해, 당초 우리는 메모리에 직접 접근하는 독자적인 거대 **Avalon-MM Master 후처리기(`npu_post_processor.v`)**를 야심 차게 설계했습니다. 
 
-*   **6.4 Avalon-MM 마스터의 검증, Cocotb 메모리 모델링:**
-    복잡한 메모리 읽기/쓰기 권한을 가지는 H/W를 검증하는 것은 까다롭습니다. 이를 위해 Cocotb에서 **가상의 Avalon-MM Slave 메모리 모델**을 Python 100줄 남짓으로 직접 구현했습니다.
-    3. H/W가 연산을 마치고 패킹된 32비트 데이터를 다시 쓸 때, Python은 이 데이터를 낚아채서 자기가 Python 수식(Shift/Clamp)으로 짠 정답지와 대조합니다.
-    4. "SUCCESS: All post-processed values correctly packed and written to memory." 라는 로그와 함께, 랜덤 딜레이 속에서도 상태 머신이 완벽히 견고함을 증명합니다!
-    *   [관련 코드: `sim/test_npu_post_processor.py`]
+하지만 실리콘 회로의 세계는 냉혹했습니다.
+*   **6.1 이상과 현실의 충돌 (6% Accuracy Drop):** 야심 차게 달아놓은 Avalon-MM Master 구조는 예상치 못한 AXI 버스 데드락(Deadlock)과 누적기(Accumulator) 간의 침범 버그를 일으켰습니다. 98%였던 파이토치 정확도를 하드웨어에서 무려 **6%로 폭락**시키는 대참사를 낳고 말았습니다.
+*   **6.2 "The Great Pivot" - Tightly-Coupled OCM Pipeline:** 
+    보드 위에서 메모리 주솟값을 덤프(Dump)하며 며칠 밤을 새워 버그를 추적한 끝에, 거대하고 불안정한 외부 Master를 전면 폐기하고 **MAC Array 엉덩이에 찰싹 달라붙어 물 흐르듯 직결된 `npu_ocm_accumulator.v` 인라인 파이프라인 구조**로 설계를 전면 개편(Pivot)했습니다. 
+    Array가 22클럭 연산을 마치고 곧장 32비트를 토해낼 때마다(Drain 과정), 별도의 복잡한 메모리 버스 요청 없이 **그 자리에서 즉시 Bias 덧셈, 하드웨어 Shift(>>8), ReLU 함수를 1클럭 단위 논리 회로로 스치듯 통과**시킨 후, 깨끗하게 정제된 8-bit 결과만을 DDR로 방출하는 가볍고 날렵한 모듈을 완성했습니다.
+*   **6.3 하이브리드(Co-design) 가속의 최종 완성:**
+    결함이 발생했을 때 고집스럽게 실리콘 수정(Verilog)으로만 풀려 하지 않고 소프트웨어(C언어 런타임) 드라이버와 그 역할을 가장 영리하게 타협(Trade-off)한 결과, 정확도는 원본(97.09%) 대비 **96.40%**로 완벽히 복구되면서도 인퍼런스 타임은 **단 1.8ms 대의 압도적인 속도 (순수 CPU 대비 약 3.75배 가속)**를 온전히 거머쥐는 최적의 시스템 밸런스를 이룩했습니다.
+    *   [관련 코드: `npu_ocm_accumulator.v`, C-드라이버 하이브리드 로직]
+
+---
+
+### ⏸️ 중간 점검: 연산의 거대한 분업 (Hardware vs Software Responsibilities)
+지금까지 우리는 가장 밑바닥의 곱셈기부터 시작해 하나의 완전한 인퍼런스(Inference) 시스템을 조립해 냈습니다. 7장의 본격적인 컴파일러 자동화(SDK) 파트로 넘어가기 전에, 과연 파이토치의 복잡한 수학 공식들이 도대체 **어느 물리적 계층에서, 어떻게 분담되어 처리되고 있는지** 명확히 짚고 넘어가겠습니다.
+
+1. **MatMul (행렬 곱 연산) $\rightarrow$ 순수 하드웨어 (Systolic Array)**
+   * 파이토치의 `nn.Linear`나 `nn.Conv2d`가 유발하는 천문학적인 횟수의 곱셈-누산(MAC)은 100% FPGA 내부의 $8 \times 8$ Systolic Array가 전담합니다. CPU는 데이터를 DMA로 넘겨줄 뿐, 단 한 번의 곱셈 연산 로직에도 관여하지 않습니다.
+   
+2. **Batch Normalization (정규화) $\rightarrow$ 소프트웨어 오프라인 병합 (Offline Fusion)**
+   * 분산과 표준편차를 구하고 나누는 이 무거운 $\gamma, \beta$ 정규화 연산은 놀랍게도 런타임 상의 **어느 칩에서도 실행되지 않습니다.** 보드에 실리기도 전인 런타임 이전(Offline)에, 파이썬 컴파일러 코어(`cyclone_npu_sdk.py`)가 앞단 레이어의 가중치(Weight) 매트릭스 수식 자체에 정규화 수식을 영구적으로 융합(Folding)해 버렸기 때문입니다. 즉, 연산 자체가 통째로 증발(Zero-Cost)했습니다.
+
+3. **8-bit 양자화 (Quantization & Scaling) $\rightarrow$ 파이썬(전처리) + 하드웨어 Post-Processor(후처리)**
+   * 모델의 소수점(Float32) 파라미터들을 -128 ~ 127 사이의 Int8 정수로 스케일링하여 압축하는 역할 자체는 파이썬(SDK)이 담당합니다. 하지만 반대로, Array에서 연산을 거친 뒤 32비트로 거대하게 부풀어 오른 결과물들을 다시 다음 레이어 병렬 연산을 위해 8비트로 물리적으로 끌어내리는(Shift) 치열한 포맷팅은 **전적으로 FPGA 하드웨어의 Post-Processor가 1클럭 내역**으로 전담하여 깎아냅니다.
+   
+4. **ReLU (비선형 활성화) $\rightarrow$ 순수 하드웨어 (Post-Processor 온칩 처리)**
+   * `if (val < 0) val = 0;` 이 단순한 분기문조차 ARM CPU가 커널 루프를 돌며 소프트웨어로 순회하면 무시무시한 지연 지표를 초래합니다. 우리는 이를 하드웨어 설계 레벨에서 Post-Processor가 결과물을 DDR 메모리로 내뿜어낼(Drain) 때, 0보다 작으면 곧바로 `0`으로 그라운드 차단시켜버리는(Clipping) 하드웨어 로직 다이오드로 박아 넣었습니다.
+
+이 완벽하고도 냉혹한 책임의 분산(Co-design) 설계 덕분에, ARM Host CPU의 오버헤드는 0(Zero)으로 수렴했고 CPU는 오직 메모리 전송(`memcpy`)만 무념무상으로 수행하는 궁극의 병렬 시스템이 탄생했습니다. 
+
+자, 그럼 이제 이 복잡천만한 하프-하드웨어 분업을 **"인간이 신경 쓰지 않도록 완전히 은닉하고 자동화해 버리는" 7장의 컴파일러 이야기**로 넘어가 보겠습니다.
+
+---
+
+### 7장. 궁극의 추상화: PyTorch FX 기반 컴파일러 생태계 구축 (BYOC)
+하드웨어 파이프라인(Systolic Array + Post-Processor)이 완성되고 C 언어 레벨의 드라이버까지 제어권을 얻었지만, 한 가지 거대한 불만족이 남았습니다. **"새로운 AI 모델 구조가 바뀔 때마다, 데이터 사이언티스트가 C 코드를 열어 배열 크기(`im2col` 파라미터 등)와 가중치 추출 스크립트를 수동으로 고쳐야 하는가?"** 
+
+진정한 글로벌 AI 가속기(TPU, NPU) 기업들은 모두 하드웨어를 숨기고 **가장 대중적인 머신러닝 프레임워크인 파이토치(PyTorch) 단 한 줄의 코드로 배포**를 끝내는 독자적인 소프트웨어 컴파일 스택(SDK)을 가지고 있습니다. 우리 여정의 진정한 대미를 장식하기 위해, 100% Python으로 빚어낸 **독자적인 NPU Compiler SDK (`cyclone_npu_sdk.py`)** 를 설계합니다.
+
+*   **7.1 해부학의 정수, PyTorch FX AST 파싱:**
+    모델의 내부를 뜯어보기 위해 무겁고 복잡한 외부 컴파일러 프레임워크(TVM, MLIR 등)에 의존하는 대신, 우리는 파이토치 네이티브 코어 추적 도구인 `torch.fx.symbolic_trace`를 등판시켰습니다. 파이썬 스크립트가 능동적으로 AI 모델의 추상 구문 트리(AST Graph) 노드를 순회하며, 자신이 NPU 하드웨어로 직접 가속할 수 있는 노드(`nn.Linear`, `nn.Conv2d`, `nn.ReLU`, `nn.MaxPool2d`)들을 스스로 스캔하고 맵핑합니다.
+
+*   **7.2 영리한 수학, Operator Fusion (Conv + BN + ReLU):**
+    실제 엣지(Edge) 인퍼런스 환경에서 Batch Normalization 계층은 막대한 리소스 낭비를 유발합니다. 우리는 NPU 컴파일 파싱 타임에 이 비효율을 **오프라인 연산자 융합(Offline Fusion)**으로 제거합니다. BN의 스케일 지표인 $\gamma, \beta$ 값들과 이동 평균/분산을, 앞단 Convolution 레이어의 가중치(Weight)와 편향(Bias)에 수학적으로 완벽히 섞어 굳혀서(Folding), 보드 런타임 시의 정규화 연산 사이클 자체를 물리적으로 지워버렸습니다.
+
+*   **7.3 엣지를 위한 극단적 선택: Memory vs Compute Trade-off:**
+    합성곱(CNN) 처리를 위해 `im2col`(슬라이딩 윈도우) 기법이 필요할 때, 데스크톱 파이썬 쪽에서 이미지 패치를 전부 정렬해서 주면 타일 데이터가 13배 이상 뻥튀기(`Memory Explosion`)되어 10,000장 기준 100MB를 넘나드는 대용량이 됩니다. 우리의 SDK 런타임은 **과감하게 데스크톱 전처리를 포기하고, 원본 초경량(`28x28`) 이미지를 버스로 던져 보낸 뒤, NPU 호스트인 800MHz ARM CPU의 초고속 L2 캐시 위에서 C 언어가 런타임에 동적으로 패치 창문을 잘라내며 미끄러지도록(Dynamic Sliding)** 책임과 역할을 분담하여 I/O 버스 병목을 박살 냈습니다.
+
+*   **7.4 "동적 C 코드 자동 생성 (Dynamic EmitC)":**
+    파싱된 노드 메타데이터(텐서 형상, 채널 크기, 합성곱 패딩 및 스트라이드, ReLU 은닉 여부 등)를 기반으로, 방대하고 복잡한 **NPU 제어용 C 언어 런타임 코드를 사람이 직접 코딩하는 대신 파이썬 SDK가 스스로 타이핑하여 뱉어내는(`npu_auto_runtime.c`) 경이로운 경지**에 도달했습니다.
+    
+    딥러닝 엔지니어는 자신이 익숙한 파이토치로 자유롭게 망을 설계한 뒤, 스크립트 최하단에 단 한 줄의 함수만 호출하면 됩니다:
+    ```python
+    # 딥러닝 연구자의 시점: 하드웨어 베릴로그나 C 코드를 단 1줄도 몰라도 됩니다.
+    export_model_to_fpga(model, test_dataset, out_dir="./", out_c_file="./npu_auto_runtime.c")
+    ```
+    이 단방향 메서드 호출 한 방이 거대한 매트릭스 타일링(Tiling), 8-bit 심리스 양자화(Int8 Quantization), 그리고 C 런타임 드라이버 소스코드 주조까지 단 0.1초 만에 논스톱으로 관통합니다. 단순 퍼셉트론(MLP) 아키텍처는 물론, 복잡한 2D 공간 구조의 **합성곱 신경망(Convolutional Network, CNN) 아키텍처까지 96.00%~96.40% 의 무결점급 정확성으로 DE10-Nano 실리콘 구역에 영구 안착시켰습니다.** 
+    
+    진정한 의미의 **풀스택 자작 컴파일러 생태계(Bring-Your-Own-Compiler)**가 마침내 이곳 튜토리얼에서 완성되었습니다.
 
 ---
 
