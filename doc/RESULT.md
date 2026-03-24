@@ -309,3 +309,34 @@ Successfully deployed a PyTorch-native Convolutional Neural Network (CNN) onto t
 - **Inference Time**: `65.4 ms` / image 
 - **Throughput**: ~`15` images / sec
 - Hardware acceleration proves physically operational; structural logic pipelines securely emulate theoretical matrix transforms.
+
+---
+
+## 14. Hardware Post-Processor Integration
+
+Successfully transitioned the Bias Addition, 8-bit Quantization (Shift), and ReLU activation functions from the host ARM CPU (`npu_extract_32bit_ocm` + software post-processing) directly into the FPGA's Hardware Post-Processor unit.
+
+### Implementation Details:
+1. **Dynamic Shift Allocation**: Integrated `npu_set_shift()` calls into the automated compiler and manual reference C code.
+2. **Direct Hardware Drain**: Replaced 32-bit MMIO extractions (`npu_extract_32bit_ocm`) with streaming 8-bit DMA push mechanisms (`npu_drain_to_ddr`). The hardware natively latches the weights, computes the accumulation, applies the bias (`npu_load_bias`), right-shifts the results, and strictly clamps output boundaries based on ReLU conditions.
+3. **Compiler Emission Pass Updates**: Updated `npu_compiler.py` polymorphic architecture to natively emit full hardware post-processor datapath code for intermediate convolutional and dense linear layers. The final logit output layer (which demands full 32-bit resolution) intentionally retains the `npu_extract_32bit_ocm` software fallback logic.
+
+By completely pushing intermediate tensor quantization down to the Avalon-ST architecture, CPU caching and branching overheads on intermediate feature maps are further decoupled.
+
+### Record Execution Benchmark (Hardware Post-Processor Enabled)
+After applying dynamic `shift_val` control and fixing the `7 - c` Systolic Array weight-column MSGDMA mapping alignment in the Auto-Emit Python Compiler, the pure NPU hardware pipeline achieved unparalleled performance outperforming manual CPU post-processing and offline parsing.
+
+* **Target Model**: PyTorch Auto-Generated Native 8x8 Block EmitC `npu_auto_runtime.c` (MNIST MLP)
+* **Dataset Size**: 10,000 Validation Images
+* **Hardware Accuracy**: `97.14%` (Identical matching to 8-bit QAT Offline Target)
+* **Execution Time (End-to-End per Image)**: `1.865 ms` 
+* **Effective Throughput**: `~536 FPS`
+
+### Record Execution Benchmark (Hardware Post-Processor Enabled - CNN)
+* **Target Model**: PyTorch Auto-Generated `NPUConv2DLayer` EmitC (MNIST CNN)
+* **Dataset Size**: 10,000 Validation Images
+* **Hardware Accuracy**: `97.00%` (Lossless scaling mapping achieved matching PyTorch Float)
+* **Execution Time (End-to-End per Image)**: `64.49 ms` 
+* **Effective Throughput**: `~15 FPS`
+
+The Hardware Post-Processor successfully eliminates cross-channel bias overflow and performs zero-cost DRAIN-Time (`seq_mode=2`) Bias addition, right-shift quantization, and ReLU activation clipping entirely inside the FPGA fabric across both Dense and Convolutional spatial map layouts.

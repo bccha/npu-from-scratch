@@ -213,6 +213,7 @@ void verify_full_system() {
   while ((IORD(NPU_CTRL_BASE, 0x21) & 1) == 0) {} // Wait ACCUM_DONE
 
   printf("Phase 3: Hardware DRAIN (Bias+Shift+ReLU)...\n");
+  IOWR(NPU_CTRL_BASE, 2, 8); // Explicitly set shift_val=8 for Quantization
   IOWR(NPU_CTRL_BASE, REG_CTRL, 4); // seq_mode=2 (DRAIN)
   
   IOWR(NPU_CTRL_BASE, 0x23, dma_dst_addr);
@@ -342,6 +343,7 @@ void verify_streaming_batch() {
   while ((IORD(NPU_CTRL_BASE, 0x21) & 1) == 0) {}
 
   printf("Firing 10-Batch hardware DRAIN...\n");
+  IOWR(NPU_CTRL_BASE, 2, 8); // Explicitly set shift_val=8 for Quantization
   IOWR(NPU_CTRL_BASE, REG_CTRL, 4); // DRAIN
   IOWR(NPU_CTRL_BASE, 0x23, dma_outputs_addr); 
   IOWR(NPU_CTRL_BASE, 0x25, 10 * 64); 
@@ -392,6 +394,118 @@ void verify_streaming_batch() {
   }
 }
 
+void verify_post_processor_pipeline() {
+  printf("\n=== Post Processor Step-by-Step Diagnostics (Nios II Native) ===\n");
+  
+  alt_u32 cpu_base = (NPU_OCM_BASE | CACHE_BYPASS_MASK);
+  alt_u32 dma_base = NPU_OCM_BASE;
+  
+  // 1. Bias RAM Save/Load Test
+  printf("\n[Step 1] Testing Bias RAM Save/Load...\n");
+  int bias_errors = 0;
+  alt_32 test_biases[8] = {1000, -500, 255, -128, 0, 9999, -9999, 12};
+  for (int i = 0; i < 8; i++) {
+    IOWR(NPU_CTRL_BASE, 0x200 + i, test_biases[i]);
+  }
+  for (int i = 0; i < 8; i++) {
+    alt_32 read_back = (alt_32)IORD(NPU_CTRL_BASE, 0x200 + i);
+    if (read_back != test_biases[i]) {
+      printf("  ERROR at Bias[%d]! Wrote %d, Read %d\n", i, (int)test_biases[i], (int)read_back);
+      bias_errors++;
+    } else {
+      printf("  Bias[%d] OK: %d\n", i, (int)read_back);
+    }
+  }
+  if (bias_errors == 0) printf("[Step 1] PASS: Bias RAM Read/Write works perfectly natively.\n");
+  else printf("[Step 1] FAIL: Bias RAM is corrupted.\n");
+
+  // 2. Setup OCM Data for DRAIN Test
+  printf("\n[Step 2] Formatting OCM for DRAIN Test (Int8 & ReLU)...\n");
+  for (int r = 0; r < 8; r++) {
+    for (int c = 0; c < 8; c++) {
+      alt_32 z_val = 0;
+      if (c == 0) z_val = 1000;
+      if (c == 1) z_val = -500;
+      if (c == 2) z_val = 30000;
+      if (c == 3) z_val = -30000;
+      if (c >= 4) z_val = 50 * (c + 1);
+
+      IOWR_32DIRECT(cpu_base + 0x2000, (r * 8 + c) * 4, (alt_u32)z_val);
+      if (r == 0) {
+        printf("  OCM[0, %d] initialized to %d\n", c, (int)z_val);
+      }
+    }
+  }
+  alt_dcache_flush_all();
+
+  // 3. Set Shift Value (Int8 Scale Test)
+  printf("\n[Step 3] Configuring Shift Register = 4\n");
+  IOWR(NPU_CTRL_BASE, 2, 4); // shift_val = 4
+  alt_u32 shift_readback = IORD(NPU_CTRL_BASE, 2);
+  printf("  Shift Register Readback: %d\n", (int)shift_readback);
+
+  // 4. Execute Hardware DRAIN Mode
+  printf("\n[Step 4] Executing Hardware DRAIN (OCM -> PP -> MSGDMA DDR)\n");
+  msgdma_init(DDR_WRITE_ST_CSR_BASE);
+  
+  alt_u32 dma_outputs_addr = dma_base + 0x8000;
+  alt_u32 cpu_outputs_addr = cpu_base + 0x8000;
+  
+  for(int i=0; i<16; i++) IOWR_32DIRECT(cpu_outputs_addr, i*4, 0);
+  alt_dcache_flush_all();
+
+  IOWR(NPU_CTRL_BASE, REG_CTRL, 4); // seq_mode=2 (DRAIN)
+  IOWR(NPU_CTRL_BASE, 0x23, dma_base + 0x2000); 
+  IOWR(NPU_CTRL_BASE, 0x25, 64);
+  IOWR(NPU_CTRL_BASE, 0x20, 1);
+  
+  msgdma_write_stream_push(DDR_WRITE_ST_DESCRIPTOR_SLAVE_BASE, dma_outputs_addr, 64);
+  
+  printf("  Waiting for DRAIN sequence to complete...\n");
+  while ((IORD_32DIRECT(DDR_WRITE_ST_CSR_BASE, 0) & 0x01) != 0) {}
+  while ((IORD(NPU_CTRL_BASE, 0x21) & 1) == 0) {}
+
+  // 5. Verify Results
+  printf("\n[Step 5] Parsing Output & Mathematical Verification\n");
+  int logic_errors = 0;
+  
+  printf("  Verification of Row 0 (Shift=4, Div=16):\n");
+  for (int c = 0; c < 8; c++) {
+    alt_32 z_val = 0;
+    if (c == 0) z_val = 1000;
+    if (c == 1) z_val = -500;
+    if (c == 2) z_val = 30000;
+    if (c == 3) z_val = -30000;
+    if (c >= 4) z_val = 50 * (c + 1);
+    
+    alt_32 b_val = test_biases[c];
+    alt_32 sum = z_val + b_val;
+    alt_32 shifted = sum >> 4;
+    
+    if (shifted < 0) shifted = 0;
+    if (shifted > 127) shifted = 127;
+    
+    // In Nios, MSGDMA Avalon-ST Big-Endian Swap still applies.
+    alt_u8 hw_val = IORD_8DIRECT(cpu_outputs_addr, 0 * 8 + (7 - c));
+    
+    printf("    Ch %d | OCM: %6d + Bias: %5d = Sum: %6d | >> 4 = %4d | ReLU = %3d | HW = %3d ", 
+           c, (int)z_val, (int)b_val, (int)sum, (int)(sum>>4), (int)shifted, (int)hw_val);
+           
+    if (hw_val == (alt_u8)shifted) {
+        printf("[OK]\n");
+    } else {
+        printf("[FAIL]\n");
+        logic_errors++;
+    }
+  }
+
+  if (logic_errors == 0) {
+    printf("\n=== Post Processor Test: SUCCESS! ===\n");
+  } else {
+    printf("\n=== Post Processor Test: FAILED (%d errors) ===\n", logic_errors);
+  }
+}
+
 void verify_mac_pe() {
   printf("\nStarting MAC PE Verification...\n");
 
@@ -428,6 +542,7 @@ int main() {
     printf("1. Verify MAC PE\n");
     printf("2. Verify Full System Data path\n");
     printf("3. Verify 10-Batch Streaming Pipeline\n");
+    printf("4. Verify Post Processor (Bias/OCM/Shift/ReLU)\n");
     printf("q. Quit\n");
     printf("Choose: ");
 
@@ -440,6 +555,8 @@ int main() {
       verify_full_system();
     } else if (c == '3') {
       verify_streaming_batch();
+    } else if (c == '4') {
+      verify_post_processor_pipeline();
     } else if (c == 'q') {
       printf("Exiting...\n");
       break;

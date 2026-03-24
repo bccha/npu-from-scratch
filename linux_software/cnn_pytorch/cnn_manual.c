@@ -119,8 +119,8 @@ int main() {
             npu_clear_ocm(); 
             npu_set_seq_rows(8);
             
-            // MANUAL OVERRIDE: TRYING SHIFT = 3
-            npu_set_shift(3); 
+            // MANUAL OVERRIDE: TRYING SHIFT = 8
+            npu_set_shift(8); 
             
             for (int t = 0; t < in_tiles_l1; t++) {
                 npu_load_weights(W1_BASE + (t * out_tiles_l1 + j) * 64);
@@ -138,7 +138,7 @@ int main() {
                 for(int c=0; c<8; c++) {
                     int absolute_channel = j * 8 + c; if (absolute_channel >= OUT_C) continue;
                     // Natively extracted spatial map
-                    Y_img_out[absolute_channel * PATCHES + absolute_patch] = ((int8_t*)(virt_ddr_base + 0x910000))[r * 8 + c];
+                    Y_img_out[absolute_channel * PATCHES + absolute_patch] = ((int8_t*)(virt_ddr_base + 0x910000))[r * 8 + (7 - c)];
                 }
             }
         }
@@ -199,9 +199,10 @@ int main() {
             npu_load_inputs(NPU_SCRATCH_IN + t * 64);
             npu_wait_accum();
         }
+        npu_set_shift(8);
         npu_load_bias(&bias_l2[j * 8]); npu_drain_to_ddr(0x900000);
         for(int r=0; r<8; r++) { for(int c_i=0; c_i<8; c_i++) {
-            if (r==0) H_flat_next[j*8+c_i] = ((int8_t*)(virt_ddr_base + 0x900000))[r*8+c_i];
+            if (r==0) H_flat_next[j*8+c_i] = ((int8_t*)(virt_ddr_base + 0x900000))[r*8+(7-c_i)];
         } }
     }
     

@@ -63,6 +63,7 @@ module npu_unit #(
     wire        seq_busy;
     wire        seq_done;
     wire        weight_latch_en;
+    wire [4:0]  shift_val;
 
     wire        csr_pe_load_weight;
     wire        csr_pe_valid_in;
@@ -97,6 +98,7 @@ module npu_unit #(
         .seq_busy       (seq_busy),
         .seq_done       (seq_done),
         .weight_latch_en(weight_latch_en),
+        .shift_val      (shift_val),
         
         .pe_load_weight (csr_pe_load_weight),
         .pe_valid_in    (csr_pe_valid_in),
@@ -234,9 +236,7 @@ module npu_unit #(
     // ------------------------------------------------------------------
     // 6. Post-Processor (Bias, Scale, ReLU)
     // ------------------------------------------------------------------
-    npu_post_processor #(
-        .SHIFT_VAL(8) // Default 8-bit right shift equivalent to typical quantization
-    ) u_npu_post_processor (
+    npu_post_processor u_npu_post_processor (
         .clk             (clk),
         .rst_n           (rst_n),
 
@@ -251,7 +251,9 @@ module npu_unit #(
 
         .out_data        (pp_out_data),
         .out_valid       (pp_out_valid),
-        .out_ready       (pp_out_ready)
+        .out_ready       (pp_out_ready),
+
+        .shift_val       (shift_val)
     );
 
     // ------------------------------------------------------------------

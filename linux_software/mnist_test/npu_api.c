@@ -96,6 +96,10 @@ void npu_set_seq_rows(int rows) {
     IOWR(NPU_CTRL_BASE, REG_SEQ_ROWS, rows);
 }
 
+void npu_set_shift(int shift_val) {
+    IOWR(NPU_CTRL_BASE, 2, shift_val);
+}
+
 void npu_clear_ocm() {
     volatile uint8_t *ocm_dst_addr = virt_ocm_base + dma_ocm_base + 0x8000;
     for (int i = 0; i < 256 / 4; i++) IOWR_32DIRECT(ocm_dst_addr, i * 4, 0);

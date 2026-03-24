@@ -46,6 +46,8 @@ def export_model_to_fpga(model, testset=None, out_dir="./", out_c_file="./npu_au
     modules = dict(model.named_modules())
     compiler = NPUCompiler(out_c_file=out_c_file)
     
+    # --- PTQ Legacy Backend ---
+    
     target_scale_h = 64.0
     layer_idx = 1
     
@@ -106,8 +108,6 @@ def export_model_to_fpga(model, testset=None, out_dir="./", out_c_file="./npu_au
                 else:
                     actual_scale_z = target_scale_h * w_scale
                 
-                # OVERRIDE: Hardware RTL natively enforces a hardcoded `sum >>> 8` (divide by 256) Shift unconditionally.
-                # All mathematical scalar tracking MUST identically respect this physical clipping ratio invariant!
                 target_scale_h = actual_scale_z / 256.0
                 b_q = np.round(b * actual_scale_z).astype(np.int32)
                     
@@ -150,7 +150,8 @@ def export_model_to_fpga(model, testset=None, out_dir="./", out_c_file="./npu_au
                     in_h=input_shape[2],
                     in_w=input_shape[3],
                     has_relu=has_relu,
-                    pool_size=(2 if node.target == 'conv1' else (pool_mod.kernel_size if pool_mod else 1))
+                    pool_size=(2 if node.target == 'conv1' else (pool_mod.kernel_size if pool_mod else 1)),
+                    shift_val=8
                 )
                 
                 layer_idx += 1
@@ -194,7 +195,6 @@ def export_model_to_fpga(model, testset=None, out_dir="./", out_c_file="./npu_au
                 else:
                     actual_scale_z = target_scale_h * w_scale
                 
-                # Fixed scale division syncing against RTL physical divisor parameter space
                 target_scale_h = actual_scale_z / 256.0
                 b_q = np.round(b * actual_scale_z).astype(np.int32)
                     
@@ -226,7 +226,7 @@ def export_model_to_fpga(model, testset=None, out_dir="./", out_c_file="./npu_au
                 with open(os.path.join(out_dir, b_file), 'wb') as f:
                     f.write(b_padded.tobytes())
                     
-                compiler.register_linear_fused_layer(node.target, in_feat, out_feat, has_relu)
+                compiler.register_linear_fused_layer(node.target, in_feat, out_feat, has_relu, shift_val=8)
                 layer_idx += 1
 
     # Dump the Base Images (Shape: [10000, 28, 28]) directly for the Target Hardware Im2Col routines

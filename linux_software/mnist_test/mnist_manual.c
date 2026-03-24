@@ -53,6 +53,7 @@ void run_inference(int num_batches, double *time_ms, double *accuracy) {
             npu_wait_accum();
         }
 
+        npu_set_shift(8);
         npu_load_bias(&bias_l1[j * 8]);
         npu_drain_to_ddr(npu_out_ddr_offset);
 

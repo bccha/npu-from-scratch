@@ -64,14 +64,14 @@ void npu_auto_inference(int num_batches, double *time_ms, double *accuracy) {
                     npu_load_inputs(0x900000 + (p_t * 2 + t) * 64);
                     npu_wait_accum();
                 }
-                int32_t z_b_c[64] = {0};
-                npu_extract_32bit_ocm(z_b_c, &bias_l1[j * 8]);
+                npu_set_shift(8);
+                npu_load_bias(&bias_l1[j * 8]);
+                npu_drain_to_ddr(0x910000);
                 for(int r=0; r<8; r++) {
                     int absolute_patch = p_t * 8 + r; if (absolute_patch >= 676) continue;
                     for(int c=0; c<8; c++) {
                         int absolute_channel = j * 8 + c; if (absolute_channel >= 8) continue;
-                        int32_t val = z_b_c[r*8+c] >> 8;
-                        int8_t clamped = (val < 0) ? 0 : (val > 127) ? 127 : val;
+                        int8_t clamped = ((int8_t*)(virt_ddr_base + 0x910000))[r * 8 + (7 - c)];
                         Y_img_out[absolute_channel * 676 + absolute_patch] = clamped;
                     }
                 }
@@ -117,11 +117,11 @@ void npu_auto_inference(int num_batches, double *time_ms, double *accuracy) {
                 npu_load_inputs(curr_x_off);
                 npu_wait_accum();
             }
-            int32_t z_b_l[64] = {0};
-            npu_extract_32bit_ocm(z_b_l, &bias_l2[j * 8]);
+            npu_set_shift(8);
+            npu_load_bias(&bias_l2[j * 8]);
+            npu_drain_to_ddr(0x910000);
             for(int r=0; r<8; r++) { for(int c_i=0; c_i<8; c_i++) {
-                int32_t val = z_b_l[r*8+c_i] >> 8;
-                int8_t clamped = (val < 0) ? 0 : (val > 127) ? 127 : val;
+                int8_t clamped = ((int8_t*)(virt_ddr_base + 0x910000))[r * 8 + (7 - c_i)];
                 if (r==0) ((int8_t*)(virt_ddr_base + 0x930000))[j*8+c_i] = clamped;
             } }
         }

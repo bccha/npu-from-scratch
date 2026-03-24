@@ -5,7 +5,7 @@ d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-el
 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(_bswapsi2.o)
                               obj/default/main.o (__bswapsi2)
 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(lib2-mul.o)
-                              d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(_muldi3.o) (__mulsi3)
+                              obj/default/main.o (__mulsi3)
 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-memset.o)
                               obj/default/main.o (memset)
 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-printf.o)
@@ -204,7 +204,7 @@ LOAD d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nio
                 0x0000000000080224                PROVIDE (__ram_exceptions_end = ABSOLUTE (.))
                 0x0000000000080020                PROVIDE (__flash_exceptions_start = LOADADDR (.exceptions))
 
-.text           0x0000000000080224     0x5e54
+.text           0x0000000000080224     0x6428
                 [!provide]                        PROVIDE (stext = ABSOLUTE (.))
  *(.interp)
  *(.hash)
@@ -258,7 +258,7 @@ LOAD d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nio
                 0x00000000000803d4                msgdma_init
                 0x000000000008043c                msgdma_read_stream_push
                 0x00000000000804b0                msgdma_write_stream_push
- .text          0x0000000000080524     0x1378 obj/default/main.o
+ .text          0x0000000000080524     0x194c obj/default/main.o
                 0x0000000000080524                npu_format_inputs
                 0x0000000000080650                npu_format_weights
                 0x000000000008078c                npu_parse_output
@@ -267,190 +267,191 @@ LOAD d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nio
                 0x0000000000080938                npu_load_matrix
                 0x0000000000080990                npu_wait_execution
                 0x00000000000809dc                verify_full_system
-                0x0000000000081104                verify_streaming_batch
-                0x00000000000816c4                verify_mac_pe
-                0x00000000000817ac                main
- .text          0x000000000008189c      0x104 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(_muldi3.o)
-                0x000000000008189c                __muldi3
- .text          0x00000000000819a0       0x28 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(_bswapsi2.o)
-                0x00000000000819a0                __bswapsi2
- .text          0x00000000000819c8       0x28 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(lib2-mul.o)
-                0x00000000000819c8                __mulsi3
- .text          0x00000000000819f0        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-memset.o)
- .text.memset   0x00000000000819f0       0x20 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-memset.o)
-                0x00000000000819f0                memset
- .text          0x0000000000081a10        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-printf.o)
+                0x0000000000081110                verify_streaming_batch
+                0x00000000000816dc                verify_post_processor_pipeline
+                0x0000000000081c78                verify_mac_pe
+                0x0000000000081d60                main
+ .text          0x0000000000081e70      0x104 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(_muldi3.o)
+                0x0000000000081e70                __muldi3
+ .text          0x0000000000081f74       0x28 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(_bswapsi2.o)
+                0x0000000000081f74                __bswapsi2
+ .text          0x0000000000081f9c       0x28 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(lib2-mul.o)
+                0x0000000000081f9c                __mulsi3
+ .text          0x0000000000081fc4        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-memset.o)
+ .text.memset   0x0000000000081fc4       0x20 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-memset.o)
+                0x0000000000081fc4                memset
+ .text          0x0000000000081fe4        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-printf.o)
  .text._printf_r
-                0x0000000000081a10       0x3c d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-printf.o)
-                0x0000000000081a10                _printf_r
- .text.printf   0x0000000000081a4c       0x48 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-printf.o)
-                0x0000000000081a4c                printf
- .text          0x0000000000081a94        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-putchar.o)
+                0x0000000000081fe4       0x3c d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-printf.o)
+                0x0000000000081fe4                _printf_r
+ .text.printf   0x0000000000082020       0x48 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-printf.o)
+                0x0000000000082020                printf
+ .text          0x0000000000082068        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-putchar.o)
  .text._putchar_r
-                0x0000000000081a94        0x8 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-putchar.o)
-                0x0000000000081a94                _putchar_r
- .text.putchar  0x0000000000081a9c       0x18 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-putchar.o)
-                0x0000000000081a9c                putchar
- .text          0x0000000000081ab4        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-puts.o)
- .text._puts_r  0x0000000000081ab4       0x80 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-puts.o)
-                0x0000000000081ab4                _puts_r
- .text.puts     0x0000000000081b34       0x10 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-puts.o)
-                0x0000000000081b34                puts
- .text          0x0000000000081b44        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-strlen.o)
- .text.strlen   0x0000000000081b44       0x1c d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-strlen.o)
-                0x0000000000081b44                strlen
- .text          0x0000000000081b60        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-vfprintf.o)
+                0x0000000000082068        0x8 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-putchar.o)
+                0x0000000000082068                _putchar_r
+ .text.putchar  0x0000000000082070       0x18 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-putchar.o)
+                0x0000000000082070                putchar
+ .text          0x0000000000082088        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-puts.o)
+ .text._puts_r  0x0000000000082088       0x80 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-puts.o)
+                0x0000000000082088                _puts_r
+ .text.puts     0x0000000000082108       0x10 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-puts.o)
+                0x0000000000082108                puts
+ .text          0x0000000000082118        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-strlen.o)
+ .text.strlen   0x0000000000082118       0x1c d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-strlen.o)
+                0x0000000000082118                strlen
+ .text          0x0000000000082134        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-vfprintf.o)
  .text.print_repeat
-                0x0000000000081b60       0x6c d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-vfprintf.o)
+                0x0000000000082134       0x6c d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-vfprintf.o)
  .text.___vfprintf_internal_r
-                0x0000000000081bcc      0x50c d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-vfprintf.o)
-                0x0000000000081bcc                ___vfprintf_internal_r
+                0x00000000000821a0      0x50c d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-vfprintf.o)
+                0x00000000000821a0                ___vfprintf_internal_r
  .text.__vfprintf_internal
-                0x00000000000820d8       0x18 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-vfprintf.o)
-                0x00000000000820d8                __vfprintf_internal
- .text          0x00000000000820f0        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-fvwrite_small_dev.o)
+                0x00000000000826ac       0x18 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-vfprintf.o)
+                0x00000000000826ac                __vfprintf_internal
+ .text          0x00000000000826c4        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-fvwrite_small_dev.o)
  .text.__sfvwrite_small_dev
-                0x00000000000820f0       0xa8 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-fvwrite_small_dev.o)
-                0x00000000000820f0                __sfvwrite_small_dev
- .text          0x0000000000082198        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-impure.o)
- .text          0x0000000000082198        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-putc.o)
- .text.putc     0x0000000000082198       0x50 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-putc.o)
-                0x0000000000082198                putc
- .text._putc_r  0x00000000000821e8       0x54 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-putc.o)
-                0x00000000000821e8                _putc_r
- .text          0x000000000008223c        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-writer.o)
+                0x00000000000826c4       0xa8 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-fvwrite_small_dev.o)
+                0x00000000000826c4                __sfvwrite_small_dev
+ .text          0x000000000008276c        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-impure.o)
+ .text          0x000000000008276c        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-putc.o)
+ .text.putc     0x000000000008276c       0x50 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-putc.o)
+                0x000000000008276c                putc
+ .text._putc_r  0x00000000000827bc       0x54 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-putc.o)
+                0x00000000000827bc                _putc_r
+ .text          0x0000000000082810        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-writer.o)
  .text._write_r
-                0x000000000008223c       0x50 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-writer.o)
-                0x000000000008223c                _write_r
- .text          0x000000000008228c        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-int_errno.o)
- .text          0x000000000008228c      0x1b4 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(lib2-divmod.o)
-                0x000000000008228c                __divsi3
-                0x000000000008230c                __modsi3
-                0x0000000000082380                __udivsi3
-                0x00000000000823e4                __umodsi3
- .text          0x0000000000082440       0x20 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dcache_flush_all.o)
-                0x0000000000082440                alt_dcache_flush_all
- .text          0x0000000000082460       0xec c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_load.o)
-                0x00000000000824c8                alt_load
- .text          0x000000000008254c       0x7c c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_main.o)
-                0x000000000008254c                alt_main
- .text          0x00000000000825c8      0x1ac c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_tick.o)
-                0x00000000000825c8                alt_alarm_stop
-                0x000000000008266c                alt_tick
- .text          0x0000000000082774      0x140 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_write.o)
-                0x00000000000827b0                write
- .text          0x00000000000828b4      0x100 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_sys_init.o)
-                0x00000000000828e8                alt_irq_init
-                0x0000000000082924                alt_sys_init
- .text          0x00000000000829b4       0xc0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_fd.o)
-                0x00000000000829b4                altera_avalon_jtag_uart_read_fd
-                0x0000000000082a14                altera_avalon_jtag_uart_write_fd
- .text          0x0000000000082a74       0xec c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_read.o)
-                0x0000000000082a74                altera_avalon_jtag_uart_read
- .text          0x0000000000082b60       0x94 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_write.o)
-                0x0000000000082b60                altera_avalon_jtag_uart_write
- .text          0x0000000000082bf4      0x100 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_timer_sc.o)
-                0x0000000000082c70                alt_avalon_timer_sc_init
- .text          0x0000000000082cf4     0x1fd8 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_msgdma.o)
-                0x00000000000838bc                alt_msgdma_construct_standard_st_to_mm_descriptor
-                0x0000000000083914                alt_msgdma_construct_standard_mm_to_st_descriptor
-                0x000000000008396c                alt_msgdma_construct_standard_mm_to_mm_descriptor
-                0x00000000000839c4                alt_msgdma_construct_extended_st_to_mm_descriptor
-                0x0000000000083a54                alt_msgdma_construct_extended_mm_to_st_descriptor
-                0x0000000000083ae4                alt_msgdma_construct_extended_mm_to_mm_descriptor
-                0x0000000000083dc4                alt_msgdma_construct_prefetcher_standard_mm_to_mm_descriptor
-                0x0000000000083e1c                alt_msgdma_construct_prefetcher_standard_st_to_mm_descriptor
-                0x0000000000083e74                alt_msgdma_construct_prefetcher_standard_mm_to_st_descriptor
-                0x0000000000083ecc                alt_msgdma_construct_prefetcher_extended_st_to_mm_descriptor
-                0x0000000000083f6c                alt_msgdma_construct_prefetcher_extended_mm_to_st_descriptor
-                0x0000000000084004                alt_msgdma_construct_prefetcher_extended_mm_to_mm_descriptor
-                0x00000000000840bc                alt_msgdma_prefetcher_add_standard_desc_to_list
-                0x00000000000841ac                alt_msgdma_prefetcher_add_extended_desc_to_list
-                0x0000000000084344                alt_msgdma_prefetcher_set_std_list_own_by_hw_bits
-                0x0000000000084454                alt_msgdma_prefetcher_set_extd_list_own_by_hw_bits
-                0x00000000000845a0                alt_msgdma_start_prefetcher_with_list_addr
-                0x0000000000084868                alt_msgdma_start_prefetcher_with_std_desc_list
-                0x0000000000084918                alt_msgdma_start_prefetcher_with_extd_desc_list
-                0x00000000000849c8                alt_msgdma_open
-                0x0000000000084a20                alt_msgdma_init
-                0x0000000000084b88                alt_msgdma_register_callback
-                0x0000000000084bdc                alt_msgdma_standard_descriptor_async_transfer
-                0x0000000000084c18                alt_msgdma_extended_descriptor_async_transfer
-                0x0000000000084c54                alt_msgdma_standard_descriptor_sync_transfer
-                0x0000000000084c90                alt_msgdma_extended_descriptor_sync_transfer
- .text          0x0000000000084ccc      0x158 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_busy_sleep.o)
-                0x0000000000084ccc                alt_busy_sleep
- .text          0x0000000000084e24      0x118 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_close.o)
-                0x0000000000084e60                close
- .text          0x0000000000084f3c       0x28 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dcache_flush.o)
-                0x0000000000084f3c                alt_dcache_flush
- .text          0x0000000000084f64       0x2c c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dev.o)
- .text          0x0000000000084f90       0xe4 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dev_llist_insert.o)
-                0x0000000000084fcc                alt_dev_llist_insert
- .text          0x0000000000085074       0x64 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_do_ctors.o)
-                0x0000000000085074                _do_ctors
- .text          0x00000000000850d8       0x64 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_do_dtors.o)
-                0x00000000000850d8                _do_dtors
- .text          0x000000000008513c        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_errno.o)
- .text          0x000000000008513c       0x90 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_find_dev.o)
-                0x000000000008513c                alt_find_dev
- .text          0x00000000000851cc       0x20 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_icache_flush_all.o)
-                0x00000000000851cc                alt_icache_flush_all
- .text          0x00000000000851ec      0x1b0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_iic.o)
-                0x00000000000851ec                alt_ic_isr_register
-                0x000000000008523c                alt_ic_irq_enable
-                0x00000000000852c4                alt_ic_irq_disable
-                0x0000000000085350                alt_ic_irq_enabled
- .text          0x000000000008539c       0xe8 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_iic_isr_register.o)
-                0x000000000008539c                alt_iic_isr_register
- .text          0x0000000000085484      0x150 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_io_redirect.o)
-                0x0000000000085558                alt_io_redirect
- .text          0x00000000000855d4        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_entry.o)
- .text          0x00000000000855d4        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_handler.o)
- .text          0x00000000000855d4        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_vars.o)
- .text          0x00000000000855d4      0x278 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_open.o)
-                0x00000000000856ec                open
- .text          0x000000000008584c      0x22c c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_printf.o)
-                0x000000000008584c                alt_printf
- .text          0x0000000000085a78       0x30 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_putchar.o)
-                0x0000000000085a78                alt_putchar
- .text          0x0000000000085aa8       0x70 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_release_fd.o)
-                0x0000000000085aa8                alt_release_fd
- .text          0x0000000000085b18       0x24 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_nios2_gen2_irq.o)
-                0x0000000000085b18                altera_nios2_gen2_irq_init
- .text          0x0000000000085b3c        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_exception_entry.o)
- .text          0x0000000000085b3c      0x108 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_find_file.o)
-                0x0000000000085b3c                alt_find_file
- .text          0x0000000000085c44       0xb8 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_get_fd.o)
-                0x0000000000085c44                alt_get_fd
- .text          0x0000000000085cfc       0x98 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_instruction_exception_entry.o)
-                0x0000000000085cfc                alt_exception_cause_generated_bad_addr
- .text          0x0000000000085d94        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-atexit.o)
- .text.atexit   0x0000000000085d94       0x14 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-atexit.o)
-                0x0000000000085d94                atexit
- .text          0x0000000000085da8        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-exit.o)
- .text.exit     0x0000000000085da8       0x20 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-exit.o)
-                0x0000000000085da8                exit
- .text          0x0000000000085dc8        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-memcmp.o)
- .text.memcmp   0x0000000000085dc8       0x30 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-memcmp.o)
-                0x0000000000085dc8                memcmp
- .text          0x0000000000085df8        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-__atexit.o)
+                0x0000000000082810       0x50 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-writer.o)
+                0x0000000000082810                _write_r
+ .text          0x0000000000082860        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-int_errno.o)
+ .text          0x0000000000082860      0x1b4 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(lib2-divmod.o)
+                0x0000000000082860                __divsi3
+                0x00000000000828e0                __modsi3
+                0x0000000000082954                __udivsi3
+                0x00000000000829b8                __umodsi3
+ .text          0x0000000000082a14       0x20 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dcache_flush_all.o)
+                0x0000000000082a14                alt_dcache_flush_all
+ .text          0x0000000000082a34       0xec c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_load.o)
+                0x0000000000082a9c                alt_load
+ .text          0x0000000000082b20       0x7c c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_main.o)
+                0x0000000000082b20                alt_main
+ .text          0x0000000000082b9c      0x1ac c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_tick.o)
+                0x0000000000082b9c                alt_alarm_stop
+                0x0000000000082c40                alt_tick
+ .text          0x0000000000082d48      0x140 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_write.o)
+                0x0000000000082d84                write
+ .text          0x0000000000082e88      0x100 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_sys_init.o)
+                0x0000000000082ebc                alt_irq_init
+                0x0000000000082ef8                alt_sys_init
+ .text          0x0000000000082f88       0xc0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_fd.o)
+                0x0000000000082f88                altera_avalon_jtag_uart_read_fd
+                0x0000000000082fe8                altera_avalon_jtag_uart_write_fd
+ .text          0x0000000000083048       0xec c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_read.o)
+                0x0000000000083048                altera_avalon_jtag_uart_read
+ .text          0x0000000000083134       0x94 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_write.o)
+                0x0000000000083134                altera_avalon_jtag_uart_write
+ .text          0x00000000000831c8      0x100 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_timer_sc.o)
+                0x0000000000083244                alt_avalon_timer_sc_init
+ .text          0x00000000000832c8     0x1fd8 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_msgdma.o)
+                0x0000000000083e90                alt_msgdma_construct_standard_st_to_mm_descriptor
+                0x0000000000083ee8                alt_msgdma_construct_standard_mm_to_st_descriptor
+                0x0000000000083f40                alt_msgdma_construct_standard_mm_to_mm_descriptor
+                0x0000000000083f98                alt_msgdma_construct_extended_st_to_mm_descriptor
+                0x0000000000084028                alt_msgdma_construct_extended_mm_to_st_descriptor
+                0x00000000000840b8                alt_msgdma_construct_extended_mm_to_mm_descriptor
+                0x0000000000084398                alt_msgdma_construct_prefetcher_standard_mm_to_mm_descriptor
+                0x00000000000843f0                alt_msgdma_construct_prefetcher_standard_st_to_mm_descriptor
+                0x0000000000084448                alt_msgdma_construct_prefetcher_standard_mm_to_st_descriptor
+                0x00000000000844a0                alt_msgdma_construct_prefetcher_extended_st_to_mm_descriptor
+                0x0000000000084540                alt_msgdma_construct_prefetcher_extended_mm_to_st_descriptor
+                0x00000000000845d8                alt_msgdma_construct_prefetcher_extended_mm_to_mm_descriptor
+                0x0000000000084690                alt_msgdma_prefetcher_add_standard_desc_to_list
+                0x0000000000084780                alt_msgdma_prefetcher_add_extended_desc_to_list
+                0x0000000000084918                alt_msgdma_prefetcher_set_std_list_own_by_hw_bits
+                0x0000000000084a28                alt_msgdma_prefetcher_set_extd_list_own_by_hw_bits
+                0x0000000000084b74                alt_msgdma_start_prefetcher_with_list_addr
+                0x0000000000084e3c                alt_msgdma_start_prefetcher_with_std_desc_list
+                0x0000000000084eec                alt_msgdma_start_prefetcher_with_extd_desc_list
+                0x0000000000084f9c                alt_msgdma_open
+                0x0000000000084ff4                alt_msgdma_init
+                0x000000000008515c                alt_msgdma_register_callback
+                0x00000000000851b0                alt_msgdma_standard_descriptor_async_transfer
+                0x00000000000851ec                alt_msgdma_extended_descriptor_async_transfer
+                0x0000000000085228                alt_msgdma_standard_descriptor_sync_transfer
+                0x0000000000085264                alt_msgdma_extended_descriptor_sync_transfer
+ .text          0x00000000000852a0      0x158 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_busy_sleep.o)
+                0x00000000000852a0                alt_busy_sleep
+ .text          0x00000000000853f8      0x118 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_close.o)
+                0x0000000000085434                close
+ .text          0x0000000000085510       0x28 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dcache_flush.o)
+                0x0000000000085510                alt_dcache_flush
+ .text          0x0000000000085538       0x2c c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dev.o)
+ .text          0x0000000000085564       0xe4 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dev_llist_insert.o)
+                0x00000000000855a0                alt_dev_llist_insert
+ .text          0x0000000000085648       0x64 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_do_ctors.o)
+                0x0000000000085648                _do_ctors
+ .text          0x00000000000856ac       0x64 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_do_dtors.o)
+                0x00000000000856ac                _do_dtors
+ .text          0x0000000000085710        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_errno.o)
+ .text          0x0000000000085710       0x90 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_find_dev.o)
+                0x0000000000085710                alt_find_dev
+ .text          0x00000000000857a0       0x20 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_icache_flush_all.o)
+                0x00000000000857a0                alt_icache_flush_all
+ .text          0x00000000000857c0      0x1b0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_iic.o)
+                0x00000000000857c0                alt_ic_isr_register
+                0x0000000000085810                alt_ic_irq_enable
+                0x0000000000085898                alt_ic_irq_disable
+                0x0000000000085924                alt_ic_irq_enabled
+ .text          0x0000000000085970       0xe8 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_iic_isr_register.o)
+                0x0000000000085970                alt_iic_isr_register
+ .text          0x0000000000085a58      0x150 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_io_redirect.o)
+                0x0000000000085b2c                alt_io_redirect
+ .text          0x0000000000085ba8        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_entry.o)
+ .text          0x0000000000085ba8        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_handler.o)
+ .text          0x0000000000085ba8        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_vars.o)
+ .text          0x0000000000085ba8      0x278 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_open.o)
+                0x0000000000085cc0                open
+ .text          0x0000000000085e20      0x22c c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_printf.o)
+                0x0000000000085e20                alt_printf
+ .text          0x000000000008604c       0x30 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_putchar.o)
+                0x000000000008604c                alt_putchar
+ .text          0x000000000008607c       0x70 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_release_fd.o)
+                0x000000000008607c                alt_release_fd
+ .text          0x00000000000860ec       0x24 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_nios2_gen2_irq.o)
+                0x00000000000860ec                altera_nios2_gen2_irq_init
+ .text          0x0000000000086110        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_exception_entry.o)
+ .text          0x0000000000086110      0x108 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_find_file.o)
+                0x0000000000086110                alt_find_file
+ .text          0x0000000000086218       0xb8 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_get_fd.o)
+                0x0000000000086218                alt_get_fd
+ .text          0x00000000000862d0       0x98 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_instruction_exception_entry.o)
+                0x00000000000862d0                alt_exception_cause_generated_bad_addr
+ .text          0x0000000000086368        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-atexit.o)
+ .text.atexit   0x0000000000086368       0x14 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-atexit.o)
+                0x0000000000086368                atexit
+ .text          0x000000000008637c        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-exit.o)
+ .text.exit     0x000000000008637c       0x20 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-exit.o)
+                0x000000000008637c                exit
+ .text          0x000000000008639c        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-memcmp.o)
+ .text.memcmp   0x000000000008639c       0x30 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-memcmp.o)
+                0x000000000008639c                memcmp
+ .text          0x00000000000863cc        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-__atexit.o)
  .text.__register_exitproc
-                0x0000000000085df8      0x11c d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-__atexit.o)
-                0x0000000000085df8                __register_exitproc
- .text          0x0000000000085f14        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-__call_atexit.o)
+                0x00000000000863cc      0x11c d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-__atexit.o)
+                0x00000000000863cc                __register_exitproc
+ .text          0x00000000000864e8        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-__call_atexit.o)
  .text.__call_exitprocs
-                0x0000000000085f14      0x12c d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-__call_atexit.o)
-                0x0000000000085f14                __call_exitprocs
- .text          0x0000000000086040       0x38 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_exit.o)
-                0x0000000000086040                _exit
+                0x00000000000864e8      0x12c d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-__call_atexit.o)
+                0x00000000000864e8                __call_exitprocs
+ .text          0x0000000000086614       0x38 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_exit.o)
+                0x0000000000086614                _exit
  *(.gnu.warning.*)
  *(.fini)
                 [!provide]                        PROVIDE (__etext = ABSOLUTE (.))
                 [!provide]                        PROVIDE (_etext = ABSOLUTE (.))
                 [!provide]                        PROVIDE (etext = ABSOLUTE (.))
  *(.eh_frame_hdr)
-                0x0000000000086078                . = ALIGN (0x4)
+                0x000000000008664c                . = ALIGN (0x4)
                 [!provide]                        PROVIDE (__preinit_array_start = ABSOLUTE (.))
  *(.preinit_array)
                 [!provide]                        PROVIDE (__preinit_array_end = ABSOLUTE (.))
@@ -463,230 +464,231 @@ LOAD d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nio
  *(.eh_frame)
  *(.gcc_except_table .gcc_except_table.*)
  *(.dynamic)
-                0x0000000000086078                PROVIDE (__CTOR_LIST__ = ABSOLUTE (.))
+                0x000000000008664c                PROVIDE (__CTOR_LIST__ = ABSOLUTE (.))
  *(.ctors)
  *(SORT_BY_NAME(.ctors.*))
-                0x0000000000086078                PROVIDE (__CTOR_END__ = ABSOLUTE (.))
-                0x0000000000086078                PROVIDE (__DTOR_LIST__ = ABSOLUTE (.))
+                0x000000000008664c                PROVIDE (__CTOR_END__ = ABSOLUTE (.))
+                0x000000000008664c                PROVIDE (__DTOR_LIST__ = ABSOLUTE (.))
  *(.dtors)
  *(SORT_BY_NAME(.dtors.*))
-                0x0000000000086078                PROVIDE (__DTOR_END__ = ABSOLUTE (.))
+                0x000000000008664c                PROVIDE (__DTOR_END__ = ABSOLUTE (.))
  *(.jcr)
-                0x0000000000086078                . = ALIGN (0x4)
+                0x000000000008664c                . = ALIGN (0x4)
 
-.rodata         0x0000000000086078      0x844
-                0x0000000000086078                PROVIDE (__ram_rodata_start = ABSOLUTE (.))
-                0x0000000000086078                . = ALIGN (0x4)
+.rodata         0x000000000008664c      0xbac
+                0x000000000008664c                PROVIDE (__ram_rodata_start = ABSOLUTE (.))
+                0x000000000008664c                . = ALIGN (0x4)
  *(.rodata .rodata.* .gnu.linkonce.r.*)
- .rodata        0x0000000000086078      0x5df obj/default/main.o
- *fill*         0x0000000000086657        0x1 
+ .rodata        0x000000000008664c      0x947 obj/default/main.o
+ *fill*         0x0000000000086f93        0x1 
  .rodata._puts_r.str1.4
-                0x0000000000086658        0x2 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-puts.o)
- *fill*         0x000000000008665a        0x2 
- .rodata        0x000000000008665c        0xf c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_main.o)
- *fill*         0x000000000008666b        0x1 
- .rodata        0x000000000008666c       0x52 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_sys_init.o)
- *fill*         0x00000000000866be        0x2 
- .rodata        0x00000000000866c0      0x1ed c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_msgdma.o)
- *fill*         0x00000000000868ad        0x3 
- .rodata        0x00000000000868b0        0xa c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dev.o)
+                0x0000000000086f94        0x2 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-puts.o)
+ *fill*         0x0000000000086f96        0x2 
+ .rodata        0x0000000000086f98        0xf c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_main.o)
+ *fill*         0x0000000000086fa7        0x1 
+ .rodata        0x0000000000086fa8       0x52 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_sys_init.o)
+ *fill*         0x0000000000086ffa        0x2 
+ .rodata        0x0000000000086ffc      0x1ed c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_msgdma.o)
+ *fill*         0x00000000000871e9        0x3 
+ .rodata        0x00000000000871ec        0xa c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dev.o)
  *(.rodata1)
-                0x00000000000868bc                . = ALIGN (0x4)
- *fill*         0x00000000000868ba        0x2 
-                0x00000000000868bc                PROVIDE (__ram_rodata_end = ABSOLUTE (.))
-                0x0000000000086078                PROVIDE (__flash_rodata_start = LOADADDR (.rodata))
+                0x00000000000871f8                . = ALIGN (0x4)
+ *fill*         0x00000000000871f6        0x2 
+                0x00000000000871f8                PROVIDE (__ram_rodata_end = ABSOLUTE (.))
+                0x000000000008664c                PROVIDE (__flash_rodata_start = LOADADDR (.rodata))
 
-.rwdata         0x00000000000868bc      0x3b0 load address 0x0000000000086c6c
-                0x00000000000868bc                PROVIDE (__ram_rwdata_start = ABSOLUTE (.))
-                0x00000000000868bc                . = ALIGN (0x4)
+.rwdata         0x00000000000871f8      0x3b4 load address 0x00000000000875ac
+                0x00000000000871f8                PROVIDE (__ram_rwdata_start = ABSOLUTE (.))
+                0x00000000000871f8                . = ALIGN (0x4)
  *(.got.plt)
  *(.got)
  *(.data1)
  *(.data .data.* .gnu.linkonce.d.*)
- .data          0x00000000000868bc        0x0 c:/Workspace/quartus/npu/software/npu_bsp//obj/HAL/src/crt0.o
- .data          0x00000000000868bc        0x0 obj/default/common.o
- .data          0x00000000000868bc        0x0 obj/default/main.o
- .data          0x00000000000868bc        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(_muldi3.o)
- .data          0x00000000000868bc        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(_bswapsi2.o)
- .data          0x00000000000868bc        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(lib2-mul.o)
- .data          0x00000000000868bc        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-memset.o)
- .data          0x00000000000868bc        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-printf.o)
- .data          0x00000000000868bc        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-putchar.o)
- .data          0x00000000000868bc        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-puts.o)
- .data          0x00000000000868bc        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-strlen.o)
- .data          0x00000000000868bc        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-vfprintf.o)
- .data          0x00000000000868bc        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-fvwrite_small_dev.o)
- .data          0x00000000000868bc        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-impure.o)
+ .data          0x00000000000871f8        0x0 c:/Workspace/quartus/npu/software/npu_bsp//obj/HAL/src/crt0.o
+ .data          0x00000000000871f8        0x0 obj/default/common.o
+ .data          0x00000000000871f8        0x0 obj/default/main.o
+ .data          0x00000000000871f8        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(_muldi3.o)
+ .data          0x00000000000871f8        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(_bswapsi2.o)
+ .data          0x00000000000871f8        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(lib2-mul.o)
+ .data          0x00000000000871f8        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-memset.o)
+ .data          0x00000000000871f8        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-printf.o)
+ .data          0x00000000000871f8        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-putchar.o)
+ .data          0x00000000000871f8        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-puts.o)
+ .data          0x00000000000871f8        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-strlen.o)
+ .data          0x00000000000871f8        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-vfprintf.o)
+ .data          0x00000000000871f8        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-fvwrite_small_dev.o)
+ .data          0x00000000000871f8        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-impure.o)
  .data.impure_data
-                0x00000000000868bc       0xe4 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-impure.o)
- .data          0x00000000000869a0        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-putc.o)
- .data          0x00000000000869a0        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-writer.o)
- .data          0x00000000000869a0        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-int_errno.o)
- .data          0x00000000000869a0        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(lib2-divmod.o)
- .data          0x00000000000869a0        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dcache_flush_all.o)
- .data          0x00000000000869a0        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_load.o)
- .data          0x00000000000869a0        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_main.o)
- .data          0x00000000000869a0        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_tick.o)
- .data          0x00000000000869a0        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_write.o)
- .data          0x00000000000869a0       0xf0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_sys_init.o)
- .data          0x0000000000086a90        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_fd.o)
- .data          0x0000000000086a90        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_read.o)
- .data          0x0000000000086a90        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_write.o)
- .data          0x0000000000086a90        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_timer_sc.o)
- .data          0x0000000000086a90        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_msgdma.o)
- .data          0x0000000000086a90        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_busy_sleep.o)
- .data          0x0000000000086a90        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_close.o)
- .data          0x0000000000086a90        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dcache_flush.o)
- .data          0x0000000000086a90      0x1a8 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dev.o)
-                0x0000000000086a90                alt_dev_null
-                0x0000000000086ab8                alt_fd_list
- .data          0x0000000000086c38        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dev_llist_insert.o)
- .data          0x0000000000086c38        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_do_ctors.o)
- .data          0x0000000000086c38        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_do_dtors.o)
- .data          0x0000000000086c38        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_errno.o)
- .data          0x0000000000086c38        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_find_dev.o)
- .data          0x0000000000086c38        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_icache_flush_all.o)
- .data          0x0000000000086c38        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_iic.o)
- .data          0x0000000000086c38        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_iic_isr_register.o)
- .data          0x0000000000086c38        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_io_redirect.o)
- .data          0x0000000000086c38        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_entry.o)
- .data          0x0000000000086c38        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_handler.o)
- .data          0x0000000000086c38        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_vars.o)
- .data          0x0000000000086c38        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_open.o)
- .data          0x0000000000086c38        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_printf.o)
- .data          0x0000000000086c38        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_putchar.o)
- .data          0x0000000000086c38        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_release_fd.o)
- .data          0x0000000000086c38        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_nios2_gen2_irq.o)
- .data          0x0000000000086c38        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_exception_entry.o)
- .data          0x0000000000086c38        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_find_file.o)
- .data          0x0000000000086c38        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_get_fd.o)
- .data          0x0000000000086c38        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_instruction_exception_entry.o)
- .data          0x0000000000086c38        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-atexit.o)
- .data          0x0000000000086c38        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-exit.o)
- .data          0x0000000000086c38        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-memcmp.o)
- .data          0x0000000000086c38        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-__atexit.o)
- .data          0x0000000000086c38        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-__call_atexit.o)
- .data          0x0000000000086c38        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_exit.o)
-                0x000000000008ec38                _gp = ABSOLUTE ((. + 0x8000))
+                0x00000000000871f8       0xe4 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-impure.o)
+ .data          0x00000000000872dc        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-putc.o)
+ .data          0x00000000000872dc        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-writer.o)
+ .data          0x00000000000872dc        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-int_errno.o)
+ .data          0x00000000000872dc        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(lib2-divmod.o)
+ .data          0x00000000000872dc        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dcache_flush_all.o)
+ .data          0x00000000000872dc        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_load.o)
+ .data          0x00000000000872dc        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_main.o)
+ .data          0x00000000000872dc        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_tick.o)
+ .data          0x00000000000872dc        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_write.o)
+ *fill*         0x00000000000872dc        0x4 
+ .data          0x00000000000872e0       0xf0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_sys_init.o)
+ .data          0x00000000000873d0        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_fd.o)
+ .data          0x00000000000873d0        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_read.o)
+ .data          0x00000000000873d0        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_write.o)
+ .data          0x00000000000873d0        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_timer_sc.o)
+ .data          0x00000000000873d0        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_msgdma.o)
+ .data          0x00000000000873d0        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_busy_sleep.o)
+ .data          0x00000000000873d0        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_close.o)
+ .data          0x00000000000873d0        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dcache_flush.o)
+ .data          0x00000000000873d0      0x1a8 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dev.o)
+                0x00000000000873d0                alt_dev_null
+                0x00000000000873f8                alt_fd_list
+ .data          0x0000000000087578        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dev_llist_insert.o)
+ .data          0x0000000000087578        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_do_ctors.o)
+ .data          0x0000000000087578        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_do_dtors.o)
+ .data          0x0000000000087578        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_errno.o)
+ .data          0x0000000000087578        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_find_dev.o)
+ .data          0x0000000000087578        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_icache_flush_all.o)
+ .data          0x0000000000087578        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_iic.o)
+ .data          0x0000000000087578        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_iic_isr_register.o)
+ .data          0x0000000000087578        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_io_redirect.o)
+ .data          0x0000000000087578        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_entry.o)
+ .data          0x0000000000087578        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_handler.o)
+ .data          0x0000000000087578        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_vars.o)
+ .data          0x0000000000087578        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_open.o)
+ .data          0x0000000000087578        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_printf.o)
+ .data          0x0000000000087578        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_putchar.o)
+ .data          0x0000000000087578        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_release_fd.o)
+ .data          0x0000000000087578        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_nios2_gen2_irq.o)
+ .data          0x0000000000087578        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_exception_entry.o)
+ .data          0x0000000000087578        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_find_file.o)
+ .data          0x0000000000087578        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_get_fd.o)
+ .data          0x0000000000087578        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_instruction_exception_entry.o)
+ .data          0x0000000000087578        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-atexit.o)
+ .data          0x0000000000087578        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-exit.o)
+ .data          0x0000000000087578        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-memcmp.o)
+ .data          0x0000000000087578        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-__atexit.o)
+ .data          0x0000000000087578        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-__call_atexit.o)
+ .data          0x0000000000087578        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_exit.o)
+                0x000000000008f578                _gp = ABSOLUTE ((. + 0x8000))
                 [!provide]                        PROVIDE (gp = _gp)
  *(.rwdata .rwdata.*)
  *(.sdata .sdata.* .gnu.linkonce.s.*)
  .sdata._global_impure_ptr
-                0x0000000000086c38        0x4 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-impure.o)
-                0x0000000000086c38                _global_impure_ptr
+                0x0000000000087578        0x4 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-impure.o)
+                0x0000000000087578                _global_impure_ptr
  .sdata._impure_ptr
-                0x0000000000086c3c        0x4 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-impure.o)
-                0x0000000000086c3c                _impure_ptr
- .sdata         0x0000000000086c40        0x8 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_tick.o)
-                0x0000000000086c40                alt_alarm_list
- .sdata         0x0000000000086c48        0x8 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_msgdma.o)
-                0x0000000000086c48                alt_msgdma_list
- .sdata         0x0000000000086c50       0x14 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dev.o)
-                0x0000000000086c50                alt_fs_list
-                0x0000000000086c58                alt_dev_list
-                0x0000000000086c60                alt_max_fd
- .sdata         0x0000000000086c64        0x4 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_errno.o)
-                0x0000000000086c64                alt_errno
- .sdata         0x0000000000086c68        0x4 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_vars.o)
-                0x0000000000086c68                alt_priority_mask
+                0x000000000008757c        0x4 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-impure.o)
+                0x000000000008757c                _impure_ptr
+ .sdata         0x0000000000087580        0x8 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_tick.o)
+                0x0000000000087580                alt_alarm_list
+ .sdata         0x0000000000087588        0x8 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_msgdma.o)
+                0x0000000000087588                alt_msgdma_list
+ .sdata         0x0000000000087590       0x14 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dev.o)
+                0x0000000000087590                alt_fs_list
+                0x0000000000087598                alt_dev_list
+                0x00000000000875a0                alt_max_fd
+ .sdata         0x00000000000875a4        0x4 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_errno.o)
+                0x00000000000875a4                alt_errno
+ .sdata         0x00000000000875a8        0x4 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_vars.o)
+                0x00000000000875a8                alt_priority_mask
  *(.sdata2 .sdata2.* .gnu.linkonce.s2.*)
-                0x0000000000086c6c                . = ALIGN (0x4)
-                0x0000000000086c6c                _edata = ABSOLUTE (.)
+                0x00000000000875ac                . = ALIGN (0x4)
+                0x00000000000875ac                _edata = ABSOLUTE (.)
                 [!provide]                        PROVIDE (edata = ABSOLUTE (.))
-                0x0000000000086c6c                PROVIDE (__ram_rwdata_end = ABSOLUTE (.))
-                0x0000000000086c6c                PROVIDE (__flash_rwdata_start = LOADADDR (.rwdata))
+                0x00000000000875ac                PROVIDE (__ram_rwdata_end = ABSOLUTE (.))
+                0x00000000000875ac                PROVIDE (__flash_rwdata_start = LOADADDR (.rwdata))
 
-.bss            0x000000000008701c      0x120
-                0x000000000008701c                __bss_start = ABSOLUTE (.)
+.bss            0x0000000000087960      0x120
+                0x0000000000087960                __bss_start = ABSOLUTE (.)
                 [!provide]                        PROVIDE (__sbss_start = ABSOLUTE (.))
                 [!provide]                        PROVIDE (___sbss_start = ABSOLUTE (.))
  *(.dynsbss)
  *(.sbss .sbss.* .gnu.linkonce.sb.*)
- .sbss.errno    0x000000000008701c        0x4 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-int_errno.o)
-                0x000000000008701c                errno
- .sbss          0x0000000000087020        0xc c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_main.o)
-                0x0000000000087020                alt_argc
-                0x0000000000087024                alt_argv
-                0x0000000000087028                alt_envp
- .sbss          0x000000000008702c        0x8 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_tick.o)
-                0x000000000008702c                _alt_tick_rate
-                0x0000000000087030                _alt_nticks
- .sbss          0x0000000000087034        0x4 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_vars.o)
-                0x0000000000087034                alt_irq_active
- .sbss          0x0000000000087038        0x4 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_instruction_exception_entry.o)
-                0x0000000000087038                alt_instruction_exception_handler
+ .sbss.errno    0x0000000000087960        0x4 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-int_errno.o)
+                0x0000000000087960                errno
+ .sbss          0x0000000000087964        0xc c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_main.o)
+                0x0000000000087964                alt_argc
+                0x0000000000087968                alt_argv
+                0x000000000008796c                alt_envp
+ .sbss          0x0000000000087970        0x8 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_tick.o)
+                0x0000000000087970                _alt_tick_rate
+                0x0000000000087974                _alt_nticks
+ .sbss          0x0000000000087978        0x4 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_vars.o)
+                0x0000000000087978                alt_irq_active
+ .sbss          0x000000000008797c        0x4 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_instruction_exception_entry.o)
+                0x000000000008797c                alt_instruction_exception_handler
  *(.sbss2 .sbss2.* .gnu.linkonce.sb2.*)
  *(.scommon)
                 [!provide]                        PROVIDE (__sbss_end = ABSOLUTE (.))
                 [!provide]                        PROVIDE (___sbss_end = ABSOLUTE (.))
  *(.dynbss)
  *(.bss .bss.* .gnu.linkonce.b.*)
- .bss           0x000000000008703c        0x0 c:/Workspace/quartus/npu/software/npu_bsp//obj/HAL/src/crt0.o
- .bss           0x000000000008703c        0x0 obj/default/common.o
- .bss           0x000000000008703c        0x0 obj/default/main.o
- .bss           0x000000000008703c        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(_muldi3.o)
- .bss           0x000000000008703c        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(_bswapsi2.o)
- .bss           0x000000000008703c        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(lib2-mul.o)
- .bss           0x000000000008703c        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-memset.o)
- .bss           0x000000000008703c        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-printf.o)
- .bss           0x000000000008703c        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-putchar.o)
- .bss           0x000000000008703c        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-puts.o)
- .bss           0x000000000008703c        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-strlen.o)
- .bss           0x000000000008703c        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-vfprintf.o)
- .bss           0x000000000008703c        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-fvwrite_small_dev.o)
- .bss           0x000000000008703c        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-impure.o)
- .bss           0x000000000008703c        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-putc.o)
- .bss           0x000000000008703c        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-writer.o)
- .bss           0x000000000008703c        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-int_errno.o)
- .bss           0x000000000008703c        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(lib2-divmod.o)
- .bss           0x000000000008703c        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dcache_flush_all.o)
- .bss           0x000000000008703c        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_load.o)
- .bss           0x000000000008703c        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_main.o)
- .bss           0x000000000008703c        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_tick.o)
- .bss           0x000000000008703c        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_write.o)
- .bss           0x000000000008703c        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_sys_init.o)
- .bss           0x000000000008703c        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_fd.o)
- .bss           0x000000000008703c        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_read.o)
- .bss           0x000000000008703c        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_write.o)
- .bss           0x000000000008703c        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_timer_sc.o)
- .bss           0x000000000008703c        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_msgdma.o)
- .bss           0x000000000008703c        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_busy_sleep.o)
- .bss           0x000000000008703c        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_close.o)
- .bss           0x000000000008703c        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dcache_flush.o)
- .bss           0x000000000008703c        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dev.o)
- .bss           0x000000000008703c        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dev_llist_insert.o)
- .bss           0x000000000008703c        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_do_ctors.o)
- .bss           0x000000000008703c        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_do_dtors.o)
- .bss           0x000000000008703c        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_errno.o)
- .bss           0x000000000008703c        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_find_dev.o)
- .bss           0x000000000008703c        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_icache_flush_all.o)
- .bss           0x000000000008703c        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_iic.o)
- .bss           0x000000000008703c        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_iic_isr_register.o)
- .bss           0x000000000008703c        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_io_redirect.o)
- .bss           0x000000000008703c        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_entry.o)
- .bss           0x000000000008703c      0x100 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_handler.o)
-                0x000000000008703c                alt_irq
- .bss           0x000000000008713c        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_vars.o)
- .bss           0x000000000008713c        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_open.o)
- .bss           0x000000000008713c        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_printf.o)
- .bss           0x000000000008713c        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_putchar.o)
- .bss           0x000000000008713c        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_release_fd.o)
- .bss           0x000000000008713c        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_nios2_gen2_irq.o)
- .bss           0x000000000008713c        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_exception_entry.o)
- .bss           0x000000000008713c        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_find_file.o)
- .bss           0x000000000008713c        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_get_fd.o)
- .bss           0x000000000008713c        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_instruction_exception_entry.o)
- .bss           0x000000000008713c        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-atexit.o)
- .bss           0x000000000008713c        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-exit.o)
- .bss           0x000000000008713c        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-memcmp.o)
- .bss           0x000000000008713c        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-__atexit.o)
- .bss           0x000000000008713c        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-__call_atexit.o)
- .bss           0x000000000008713c        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_exit.o)
+ .bss           0x0000000000087980        0x0 c:/Workspace/quartus/npu/software/npu_bsp//obj/HAL/src/crt0.o
+ .bss           0x0000000000087980        0x0 obj/default/common.o
+ .bss           0x0000000000087980        0x0 obj/default/main.o
+ .bss           0x0000000000087980        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(_muldi3.o)
+ .bss           0x0000000000087980        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(_bswapsi2.o)
+ .bss           0x0000000000087980        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(lib2-mul.o)
+ .bss           0x0000000000087980        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-memset.o)
+ .bss           0x0000000000087980        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-printf.o)
+ .bss           0x0000000000087980        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-putchar.o)
+ .bss           0x0000000000087980        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-puts.o)
+ .bss           0x0000000000087980        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-strlen.o)
+ .bss           0x0000000000087980        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-vfprintf.o)
+ .bss           0x0000000000087980        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-fvwrite_small_dev.o)
+ .bss           0x0000000000087980        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-impure.o)
+ .bss           0x0000000000087980        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-putc.o)
+ .bss           0x0000000000087980        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-writer.o)
+ .bss           0x0000000000087980        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-int_errno.o)
+ .bss           0x0000000000087980        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(lib2-divmod.o)
+ .bss           0x0000000000087980        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dcache_flush_all.o)
+ .bss           0x0000000000087980        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_load.o)
+ .bss           0x0000000000087980        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_main.o)
+ .bss           0x0000000000087980        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_tick.o)
+ .bss           0x0000000000087980        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_write.o)
+ .bss           0x0000000000087980        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_sys_init.o)
+ .bss           0x0000000000087980        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_fd.o)
+ .bss           0x0000000000087980        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_read.o)
+ .bss           0x0000000000087980        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_write.o)
+ .bss           0x0000000000087980        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_timer_sc.o)
+ .bss           0x0000000000087980        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_msgdma.o)
+ .bss           0x0000000000087980        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_busy_sleep.o)
+ .bss           0x0000000000087980        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_close.o)
+ .bss           0x0000000000087980        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dcache_flush.o)
+ .bss           0x0000000000087980        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dev.o)
+ .bss           0x0000000000087980        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dev_llist_insert.o)
+ .bss           0x0000000000087980        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_do_ctors.o)
+ .bss           0x0000000000087980        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_do_dtors.o)
+ .bss           0x0000000000087980        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_errno.o)
+ .bss           0x0000000000087980        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_find_dev.o)
+ .bss           0x0000000000087980        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_icache_flush_all.o)
+ .bss           0x0000000000087980        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_iic.o)
+ .bss           0x0000000000087980        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_iic_isr_register.o)
+ .bss           0x0000000000087980        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_io_redirect.o)
+ .bss           0x0000000000087980        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_entry.o)
+ .bss           0x0000000000087980      0x100 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_handler.o)
+                0x0000000000087980                alt_irq
+ .bss           0x0000000000087a80        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_vars.o)
+ .bss           0x0000000000087a80        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_open.o)
+ .bss           0x0000000000087a80        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_printf.o)
+ .bss           0x0000000000087a80        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_putchar.o)
+ .bss           0x0000000000087a80        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_release_fd.o)
+ .bss           0x0000000000087a80        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_nios2_gen2_irq.o)
+ .bss           0x0000000000087a80        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_exception_entry.o)
+ .bss           0x0000000000087a80        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_find_file.o)
+ .bss           0x0000000000087a80        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_get_fd.o)
+ .bss           0x0000000000087a80        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_instruction_exception_entry.o)
+ .bss           0x0000000000087a80        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-atexit.o)
+ .bss           0x0000000000087a80        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-exit.o)
+ .bss           0x0000000000087a80        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-memcmp.o)
+ .bss           0x0000000000087a80        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-__atexit.o)
+ .bss           0x0000000000087a80        0x0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-__call_atexit.o)
+ .bss           0x0000000000087a80        0x0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_exit.o)
  *(COMMON)
-                0x000000000008713c                . = ALIGN (0x4)
-                0x000000000008713c                __bss_end = ABSOLUTE (.)
+                0x0000000000087a80                . = ALIGN (0x4)
+                0x0000000000087a80                __bss_end = ABSOLUTE (.)
 
-.npu_ocm        0x0000000000040000        0x0 load address 0x000000000008713c
+.npu_ocm        0x0000000000040000        0x0 load address 0x0000000000087a80
                 [!provide]                        PROVIDE (_alt_partition_npu_ocm_start = ABSOLUTE (.))
  *(.npu_ocm .npu_ocm. npu_ocm.*)
                 0x0000000000040000                . = ALIGN (0x4)
@@ -694,14 +696,14 @@ LOAD d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nio
                 [!provide]                        PROVIDE (_alt_partition_npu_ocm_load_addr = LOADADDR (.npu_ocm))
 
 .onchip_memory2_0
-                0x000000000008713c        0x0
+                0x0000000000087a80        0x0
                 [!provide]                        PROVIDE (_alt_partition_onchip_memory2_0_start = ABSOLUTE (.))
  *(.onchip_memory2_0 .onchip_memory2_0. onchip_memory2_0.*)
-                0x000000000008713c                . = ALIGN (0x4)
+                0x0000000000087a80                . = ALIGN (0x4)
                 [!provide]                        PROVIDE (_alt_partition_onchip_memory2_0_end = ABSOLUTE (.))
-                0x000000000008713c                _end = ABSOLUTE (.)
-                0x000000000008713c                end = ABSOLUTE (.)
-                0x000000000008713c                __alt_stack_base = ABSOLUTE (.)
+                0x0000000000087a80                _end = ABSOLUTE (.)
+                0x0000000000087a80                end = ABSOLUTE (.)
+                0x0000000000087a80                __alt_stack_base = ABSOLUTE (.)
                 [!provide]                        PROVIDE (_alt_partition_onchip_memory2_0_load_addr = LOADADDR (.onchip_memory2_0))
 
 .stab
@@ -921,68 +923,68 @@ LOAD d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nio
 .debug_pubnames
  *(.debug_pubnames)
 
-.debug_info     0x0000000000000000     0xc4a2
+.debug_info     0x0000000000000000     0xc670
  *(.debug_info .gnu.linkonce.wi.*)
  .debug_info    0x0000000000000000       0x22 c:/Workspace/quartus/npu/software/npu_bsp//obj/HAL/src/crt0.o
  .debug_info    0x0000000000000022      0x24f obj/default/common.o
- .debug_info    0x0000000000000271      0x870 obj/default/main.o
- .debug_info    0x0000000000000ae1      0x274 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(_muldi3.o)
- .debug_info    0x0000000000000d55       0xbf d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(_bswapsi2.o)
- .debug_info    0x0000000000000e14       0xcb d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(lib2-mul.o)
- .debug_info    0x0000000000000edf       0xe7 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-memset.o)
- .debug_info    0x0000000000000fc6      0x72b d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-printf.o)
- .debug_info    0x00000000000016f1      0x6a5 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-putchar.o)
- .debug_info    0x0000000000001d96      0x6ea d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-puts.o)
- .debug_info    0x0000000000002480       0xd0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-strlen.o)
- .debug_info    0x0000000000002550      0xeb5 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-vfprintf.o)
- .debug_info    0x0000000000003405      0x6b3 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-fvwrite_small_dev.o)
- .debug_info    0x0000000000003ab8      0x61e d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-impure.o)
- .debug_info    0x00000000000040d6      0x6f5 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-putc.o)
- .debug_info    0x00000000000047cb      0x6b3 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-writer.o)
- .debug_info    0x0000000000004e7e       0x84 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-int_errno.o)
- .debug_info    0x0000000000004f02      0x368 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(lib2-divmod.o)
- .debug_info    0x000000000000526a       0x8c c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dcache_flush_all.o)
- .debug_info    0x00000000000052f6      0x14d c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_load.o)
- .debug_info    0x0000000000005443       0xef c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_main.o)
- .debug_info    0x0000000000005532      0x2bd c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_tick.o)
- .debug_info    0x00000000000057ef      0x55c c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_write.o)
- .debug_info    0x0000000000005d4b      0x587 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_sys_init.o)
- .debug_info    0x00000000000062d2      0x398 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_fd.o)
- .debug_info    0x000000000000666a      0x151 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_read.o)
- .debug_info    0x00000000000067bb      0x132 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_write.o)
- .debug_info    0x00000000000068ed      0x1d5 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_timer_sc.o)
- .debug_info    0x0000000000006ac2     0x19c7 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_msgdma.o)
- .debug_info    0x0000000000008489       0xd6 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_busy_sleep.o)
- .debug_info    0x000000000000855f      0x32c c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_close.o)
- .debug_info    0x000000000000888b       0xb9 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dcache_flush.o)
- .debug_info    0x0000000000008944      0x57d c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dev.o)
- .debug_info    0x0000000000008ec1      0x1b0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dev_llist_insert.o)
- .debug_info    0x0000000000009071       0x88 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_do_ctors.o)
- .debug_info    0x00000000000090f9       0x88 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_do_dtors.o)
- .debug_info    0x0000000000009181       0x9d c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_errno.o)
- .debug_info    0x000000000000921e      0x2ee c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_find_dev.o)
- .debug_info    0x000000000000950c       0x8c c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_icache_flush_all.o)
- .debug_info    0x0000000000009598      0x32c c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_iic.o)
- .debug_info    0x00000000000098c4      0x1f0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_iic_isr_register.o)
- .debug_info    0x0000000000009ab4      0x546 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_io_redirect.o)
- .debug_info    0x0000000000009ffa       0x22 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_entry.o)
- .debug_info    0x000000000000a01c      0x175 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_handler.o)
- .debug_info    0x000000000000a191       0x8b c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_vars.o)
- .debug_info    0x000000000000a21c      0x3dd c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_open.o)
- .debug_info    0x000000000000a5f9      0x125 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_printf.o)
- .debug_info    0x000000000000a71e       0x9e c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_putchar.o)
- .debug_info    0x000000000000a7bc      0x2b9 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_release_fd.o)
- .debug_info    0x000000000000aa75       0x8c c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_nios2_gen2_irq.o)
- .debug_info    0x000000000000ab01       0x22 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_exception_entry.o)
- .debug_info    0x000000000000ab23      0x2eb c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_find_file.o)
- .debug_info    0x000000000000ae0e      0x31c c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_get_fd.o)
- .debug_info    0x000000000000b12a      0x1f1 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_instruction_exception_entry.o)
- .debug_info    0x000000000000b31b      0x100 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-atexit.o)
- .debug_info    0x000000000000b41b       0xe6 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-exit.o)
- .debug_info    0x000000000000b501      0x100 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-memcmp.o)
- .debug_info    0x000000000000b601      0x6e0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-__atexit.o)
- .debug_info    0x000000000000bce1      0x6e0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-__call_atexit.o)
- .debug_info    0x000000000000c3c1       0xe1 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_exit.o)
+ .debug_info    0x0000000000000271      0xa3e obj/default/main.o
+ .debug_info    0x0000000000000caf      0x274 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(_muldi3.o)
+ .debug_info    0x0000000000000f23       0xbf d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(_bswapsi2.o)
+ .debug_info    0x0000000000000fe2       0xcb d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(lib2-mul.o)
+ .debug_info    0x00000000000010ad       0xe7 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-memset.o)
+ .debug_info    0x0000000000001194      0x72b d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-printf.o)
+ .debug_info    0x00000000000018bf      0x6a5 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-putchar.o)
+ .debug_info    0x0000000000001f64      0x6ea d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-puts.o)
+ .debug_info    0x000000000000264e       0xd0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-strlen.o)
+ .debug_info    0x000000000000271e      0xeb5 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-vfprintf.o)
+ .debug_info    0x00000000000035d3      0x6b3 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-fvwrite_small_dev.o)
+ .debug_info    0x0000000000003c86      0x61e d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-impure.o)
+ .debug_info    0x00000000000042a4      0x6f5 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-putc.o)
+ .debug_info    0x0000000000004999      0x6b3 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-writer.o)
+ .debug_info    0x000000000000504c       0x84 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-int_errno.o)
+ .debug_info    0x00000000000050d0      0x368 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(lib2-divmod.o)
+ .debug_info    0x0000000000005438       0x8c c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dcache_flush_all.o)
+ .debug_info    0x00000000000054c4      0x14d c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_load.o)
+ .debug_info    0x0000000000005611       0xef c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_main.o)
+ .debug_info    0x0000000000005700      0x2bd c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_tick.o)
+ .debug_info    0x00000000000059bd      0x55c c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_write.o)
+ .debug_info    0x0000000000005f19      0x587 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_sys_init.o)
+ .debug_info    0x00000000000064a0      0x398 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_fd.o)
+ .debug_info    0x0000000000006838      0x151 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_read.o)
+ .debug_info    0x0000000000006989      0x132 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_write.o)
+ .debug_info    0x0000000000006abb      0x1d5 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_timer_sc.o)
+ .debug_info    0x0000000000006c90     0x19c7 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_msgdma.o)
+ .debug_info    0x0000000000008657       0xd6 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_busy_sleep.o)
+ .debug_info    0x000000000000872d      0x32c c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_close.o)
+ .debug_info    0x0000000000008a59       0xb9 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dcache_flush.o)
+ .debug_info    0x0000000000008b12      0x57d c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dev.o)
+ .debug_info    0x000000000000908f      0x1b0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dev_llist_insert.o)
+ .debug_info    0x000000000000923f       0x88 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_do_ctors.o)
+ .debug_info    0x00000000000092c7       0x88 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_do_dtors.o)
+ .debug_info    0x000000000000934f       0x9d c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_errno.o)
+ .debug_info    0x00000000000093ec      0x2ee c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_find_dev.o)
+ .debug_info    0x00000000000096da       0x8c c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_icache_flush_all.o)
+ .debug_info    0x0000000000009766      0x32c c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_iic.o)
+ .debug_info    0x0000000000009a92      0x1f0 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_iic_isr_register.o)
+ .debug_info    0x0000000000009c82      0x546 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_io_redirect.o)
+ .debug_info    0x000000000000a1c8       0x22 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_entry.o)
+ .debug_info    0x000000000000a1ea      0x175 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_handler.o)
+ .debug_info    0x000000000000a35f       0x8b c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_vars.o)
+ .debug_info    0x000000000000a3ea      0x3dd c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_open.o)
+ .debug_info    0x000000000000a7c7      0x125 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_printf.o)
+ .debug_info    0x000000000000a8ec       0x9e c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_putchar.o)
+ .debug_info    0x000000000000a98a      0x2b9 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_release_fd.o)
+ .debug_info    0x000000000000ac43       0x8c c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_nios2_gen2_irq.o)
+ .debug_info    0x000000000000accf       0x22 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_exception_entry.o)
+ .debug_info    0x000000000000acf1      0x2eb c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_find_file.o)
+ .debug_info    0x000000000000afdc      0x31c c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_get_fd.o)
+ .debug_info    0x000000000000b2f8      0x1f1 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_instruction_exception_entry.o)
+ .debug_info    0x000000000000b4e9      0x100 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-atexit.o)
+ .debug_info    0x000000000000b5e9       0xe6 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-exit.o)
+ .debug_info    0x000000000000b6cf      0x100 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-memcmp.o)
+ .debug_info    0x000000000000b7cf      0x6e0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-__atexit.o)
+ .debug_info    0x000000000000beaf      0x6e0 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-__call_atexit.o)
+ .debug_info    0x000000000000c58f       0xe1 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_exit.o)
 
 .debug_abbrev   0x0000000000000000     0x3ec2
  *(.debug_abbrev)
@@ -1047,245 +1049,245 @@ LOAD d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nio
  .debug_abbrev  0x0000000000003c0c      0x20a d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-__call_atexit.o)
  .debug_abbrev  0x0000000000003e16       0xac c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_exit.o)
 
-.debug_line     0x0000000000000000     0x5d0d
+.debug_line     0x0000000000000000     0x5f03
  *(.debug_line)
  .debug_line    0x0000000000000000       0x66 c:/Workspace/quartus/npu/software/npu_bsp//obj/HAL/src/crt0.o
  .debug_line    0x0000000000000066      0x1ee obj/default/common.o
- .debug_line    0x0000000000000254      0x765 obj/default/main.o
- .debug_line    0x00000000000009b9      0x135 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(_muldi3.o)
- .debug_line    0x0000000000000aee       0x88 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(_bswapsi2.o)
- .debug_line    0x0000000000000b76       0xb7 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(lib2-mul.o)
- .debug_line    0x0000000000000c2d      0x188 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-memset.o)
- .debug_line    0x0000000000000db5      0x24c d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-printf.o)
- .debug_line    0x0000000000001001      0x216 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-putchar.o)
- .debug_line    0x0000000000001217      0x240 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-puts.o)
- .debug_line    0x0000000000001457      0x17d d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-strlen.o)
- .debug_line    0x00000000000015d4      0x73c d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-vfprintf.o)
- .debug_line    0x0000000000001d10      0x253 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-fvwrite_small_dev.o)
- .debug_line    0x0000000000001f63      0x15d d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-impure.o)
- .debug_line    0x00000000000020c0      0x25c d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-putc.o)
- .debug_line    0x000000000000231c      0x226 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-writer.o)
- .debug_line    0x0000000000002542       0x61 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-int_errno.o)
- .debug_line    0x00000000000025a3      0x306 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(lib2-divmod.o)
- .debug_line    0x00000000000028a9       0x53 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dcache_flush_all.o)
- .debug_line    0x00000000000028fc       0xa6 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_load.o)
- .debug_line    0x00000000000029a2       0x85 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_main.o)
- .debug_line    0x0000000000002a27      0x160 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_tick.o)
- .debug_line    0x0000000000002b87      0x2af c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_write.o)
- .debug_line    0x0000000000002e36      0x141 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_sys_init.o)
- .debug_line    0x0000000000002f77      0x102 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_fd.o)
- .debug_line    0x0000000000003079       0xe8 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_read.o)
- .debug_line    0x0000000000003161       0xc6 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_write.o)
- .debug_line    0x0000000000003227       0xfd c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_timer_sc.o)
- .debug_line    0x0000000000003324      0xadd c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_msgdma.o)
- .debug_line    0x0000000000003e01       0xe1 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_busy_sleep.o)
- .debug_line    0x0000000000003ee2      0x1ad c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_close.o)
- .debug_line    0x000000000000408f       0x69 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dcache_flush.o)
- .debug_line    0x00000000000040f8      0x19f c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dev.o)
- .debug_line    0x0000000000004297      0x106 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dev_llist_insert.o)
- .debug_line    0x000000000000439d       0x66 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_do_ctors.o)
- .debug_line    0x0000000000004403       0x66 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_do_dtors.o)
- .debug_line    0x0000000000004469       0x51 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_errno.o)
- .debug_line    0x00000000000044ba       0xb8 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_find_dev.o)
- .debug_line    0x0000000000004572       0x51 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_icache_flush_all.o)
- .debug_line    0x00000000000045c3      0x123 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_iic.o)
- .debug_line    0x00000000000046e6       0xfc c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_iic_isr_register.o)
- .debug_line    0x00000000000047e2      0x1d2 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_io_redirect.o)
- .debug_line    0x00000000000049b4       0x6b c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_entry.o)
- .debug_line    0x0000000000004a1f       0xd4 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_handler.o)
- .debug_line    0x0000000000004af3       0x50 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_vars.o)
- .debug_line    0x0000000000004b43      0x1a1 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_open.o)
- .debug_line    0x0000000000004ce4      0x152 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_printf.o)
- .debug_line    0x0000000000004e36       0x50 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_putchar.o)
- .debug_line    0x0000000000004e86       0xb6 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_release_fd.o)
- .debug_line    0x0000000000004f3c       0x57 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_nios2_gen2_irq.o)
- .debug_line    0x0000000000004f93       0xb3 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_exception_entry.o)
- .debug_line    0x0000000000005046      0x103 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_find_file.o)
- .debug_line    0x0000000000005149       0xfb c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_get_fd.o)
- .debug_line    0x0000000000005244       0xd3 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_instruction_exception_entry.o)
- .debug_line    0x0000000000005317       0xf7 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-atexit.o)
- .debug_line    0x000000000000540e      0x175 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-exit.o)
- .debug_line    0x0000000000005583      0x192 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-memcmp.o)
- .debug_line    0x0000000000005715      0x2e2 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-__atexit.o)
- .debug_line    0x00000000000059f7      0x291 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-__call_atexit.o)
- .debug_line    0x0000000000005c88       0x85 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_exit.o)
+ .debug_line    0x0000000000000254      0x95b obj/default/main.o
+ .debug_line    0x0000000000000baf      0x135 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(_muldi3.o)
+ .debug_line    0x0000000000000ce4       0x88 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(_bswapsi2.o)
+ .debug_line    0x0000000000000d6c       0xb7 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(lib2-mul.o)
+ .debug_line    0x0000000000000e23      0x188 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-memset.o)
+ .debug_line    0x0000000000000fab      0x24c d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-printf.o)
+ .debug_line    0x00000000000011f7      0x216 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-putchar.o)
+ .debug_line    0x000000000000140d      0x240 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-puts.o)
+ .debug_line    0x000000000000164d      0x17d d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-strlen.o)
+ .debug_line    0x00000000000017ca      0x73c d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-vfprintf.o)
+ .debug_line    0x0000000000001f06      0x253 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-fvwrite_small_dev.o)
+ .debug_line    0x0000000000002159      0x15d d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-impure.o)
+ .debug_line    0x00000000000022b6      0x25c d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-putc.o)
+ .debug_line    0x0000000000002512      0x226 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-writer.o)
+ .debug_line    0x0000000000002738       0x61 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-int_errno.o)
+ .debug_line    0x0000000000002799      0x306 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(lib2-divmod.o)
+ .debug_line    0x0000000000002a9f       0x53 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dcache_flush_all.o)
+ .debug_line    0x0000000000002af2       0xa6 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_load.o)
+ .debug_line    0x0000000000002b98       0x85 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_main.o)
+ .debug_line    0x0000000000002c1d      0x160 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_tick.o)
+ .debug_line    0x0000000000002d7d      0x2af c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_write.o)
+ .debug_line    0x000000000000302c      0x141 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_sys_init.o)
+ .debug_line    0x000000000000316d      0x102 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_fd.o)
+ .debug_line    0x000000000000326f       0xe8 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_read.o)
+ .debug_line    0x0000000000003357       0xc6 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_write.o)
+ .debug_line    0x000000000000341d       0xfd c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_timer_sc.o)
+ .debug_line    0x000000000000351a      0xadd c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_msgdma.o)
+ .debug_line    0x0000000000003ff7       0xe1 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_busy_sleep.o)
+ .debug_line    0x00000000000040d8      0x1ad c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_close.o)
+ .debug_line    0x0000000000004285       0x69 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dcache_flush.o)
+ .debug_line    0x00000000000042ee      0x19f c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dev.o)
+ .debug_line    0x000000000000448d      0x106 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dev_llist_insert.o)
+ .debug_line    0x0000000000004593       0x66 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_do_ctors.o)
+ .debug_line    0x00000000000045f9       0x66 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_do_dtors.o)
+ .debug_line    0x000000000000465f       0x51 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_errno.o)
+ .debug_line    0x00000000000046b0       0xb8 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_find_dev.o)
+ .debug_line    0x0000000000004768       0x51 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_icache_flush_all.o)
+ .debug_line    0x00000000000047b9      0x123 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_iic.o)
+ .debug_line    0x00000000000048dc       0xfc c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_iic_isr_register.o)
+ .debug_line    0x00000000000049d8      0x1d2 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_io_redirect.o)
+ .debug_line    0x0000000000004baa       0x6b c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_entry.o)
+ .debug_line    0x0000000000004c15       0xd4 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_handler.o)
+ .debug_line    0x0000000000004ce9       0x50 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_vars.o)
+ .debug_line    0x0000000000004d39      0x1a1 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_open.o)
+ .debug_line    0x0000000000004eda      0x152 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_printf.o)
+ .debug_line    0x000000000000502c       0x50 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_putchar.o)
+ .debug_line    0x000000000000507c       0xb6 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_release_fd.o)
+ .debug_line    0x0000000000005132       0x57 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_nios2_gen2_irq.o)
+ .debug_line    0x0000000000005189       0xb3 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_exception_entry.o)
+ .debug_line    0x000000000000523c      0x103 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_find_file.o)
+ .debug_line    0x000000000000533f       0xfb c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_get_fd.o)
+ .debug_line    0x000000000000543a       0xd3 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_instruction_exception_entry.o)
+ .debug_line    0x000000000000550d       0xf7 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-atexit.o)
+ .debug_line    0x0000000000005604      0x175 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-exit.o)
+ .debug_line    0x0000000000005779      0x192 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-memcmp.o)
+ .debug_line    0x000000000000590b      0x2e2 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-__atexit.o)
+ .debug_line    0x0000000000005bed      0x291 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-__call_atexit.o)
+ .debug_line    0x0000000000005e7e       0x85 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_exit.o)
 
-.debug_frame    0x0000000000000000     0x15ac
+.debug_frame    0x0000000000000000     0x15d8
  *(.debug_frame)
  .debug_frame   0x0000000000000000       0xf4 obj/default/common.o
- .debug_frame   0x00000000000000f4      0x1c8 obj/default/main.o
- .debug_frame   0x00000000000002bc       0x50 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(_muldi3.o)
- .debug_frame   0x000000000000030c       0x20 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(_bswapsi2.o)
- .debug_frame   0x000000000000032c       0x20 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(lib2-mul.o)
- .debug_frame   0x000000000000034c       0x20 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-memset.o)
- .debug_frame   0x000000000000036c       0x48 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-printf.o)
- .debug_frame   0x00000000000003b4       0x30 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-putchar.o)
- .debug_frame   0x00000000000003e4       0x48 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-puts.o)
- .debug_frame   0x000000000000042c       0x20 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-strlen.o)
- .debug_frame   0x000000000000044c       0x90 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-vfprintf.o)
- .debug_frame   0x00000000000004dc       0x3c d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-fvwrite_small_dev.o)
- .debug_frame   0x0000000000000518       0x50 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-putc.o)
- .debug_frame   0x0000000000000568       0x30 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-writer.o)
- .debug_frame   0x0000000000000598       0x50 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(lib2-divmod.o)
- .debug_frame   0x00000000000005e8       0x34 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dcache_flush_all.o)
- .debug_frame   0x000000000000061c       0x5c c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_load.o)
- .debug_frame   0x0000000000000678       0x2c c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_main.o)
- .debug_frame   0x00000000000006a4       0x5c c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_tick.o)
- .debug_frame   0x0000000000000700       0x60 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_write.o)
- .debug_frame   0x0000000000000760       0x88 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_sys_init.o)
- .debug_frame   0x00000000000007e8       0x60 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_fd.o)
- .debug_frame   0x0000000000000848       0x34 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_read.o)
- .debug_frame   0x000000000000087c       0x34 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_write.o)
- .debug_frame   0x00000000000008b0       0x60 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_timer_sc.o)
- .debug_frame   0x0000000000000910      0x598 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_msgdma.o)
- .debug_frame   0x0000000000000ea8       0x38 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_busy_sleep.o)
- .debug_frame   0x0000000000000ee0       0x60 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_close.o)
- .debug_frame   0x0000000000000f40       0x34 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dcache_flush.o)
- .debug_frame   0x0000000000000f74       0x34 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dev.o)
- .debug_frame   0x0000000000000fa8       0x60 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dev_llist_insert.o)
- .debug_frame   0x0000000000001008       0x38 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_do_ctors.o)
- .debug_frame   0x0000000000001040       0x38 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_do_dtors.o)
- .debug_frame   0x0000000000001078       0x38 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_find_dev.o)
- .debug_frame   0x00000000000010b0       0x34 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_icache_flush_all.o)
- .debug_frame   0x00000000000010e4       0xa4 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_iic.o)
- .debug_frame   0x0000000000001188       0x38 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_iic_isr_register.o)
- .debug_frame   0x00000000000011c0       0x60 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_io_redirect.o)
- .debug_frame   0x0000000000001220       0x38 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_handler.o)
- .debug_frame   0x0000000000001258       0x84 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_open.o)
- .debug_frame   0x00000000000012dc       0x38 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_printf.o)
- .debug_frame   0x0000000000001314       0x38 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_putchar.o)
- .debug_frame   0x000000000000134c       0x34 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_release_fd.o)
- .debug_frame   0x0000000000001380       0x34 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_nios2_gen2_irq.o)
- .debug_frame   0x00000000000013b4       0x38 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_find_file.o)
- .debug_frame   0x00000000000013ec       0x34 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_get_fd.o)
- .debug_frame   0x0000000000001420       0x5c c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_instruction_exception_entry.o)
- .debug_frame   0x000000000000147c       0x20 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-atexit.o)
- .debug_frame   0x000000000000149c       0x28 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-exit.o)
- .debug_frame   0x00000000000014c4       0x20 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-memcmp.o)
- .debug_frame   0x00000000000014e4       0x48 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-__atexit.o)
- .debug_frame   0x000000000000152c       0x54 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-__call_atexit.o)
- .debug_frame   0x0000000000001580       0x2c c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_exit.o)
+ .debug_frame   0x00000000000000f4      0x1f4 obj/default/main.o
+ .debug_frame   0x00000000000002e8       0x50 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(_muldi3.o)
+ .debug_frame   0x0000000000000338       0x20 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(_bswapsi2.o)
+ .debug_frame   0x0000000000000358       0x20 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(lib2-mul.o)
+ .debug_frame   0x0000000000000378       0x20 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-memset.o)
+ .debug_frame   0x0000000000000398       0x48 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-printf.o)
+ .debug_frame   0x00000000000003e0       0x30 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-putchar.o)
+ .debug_frame   0x0000000000000410       0x48 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-puts.o)
+ .debug_frame   0x0000000000000458       0x20 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-strlen.o)
+ .debug_frame   0x0000000000000478       0x90 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-vfprintf.o)
+ .debug_frame   0x0000000000000508       0x3c d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-fvwrite_small_dev.o)
+ .debug_frame   0x0000000000000544       0x50 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-putc.o)
+ .debug_frame   0x0000000000000594       0x30 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-writer.o)
+ .debug_frame   0x00000000000005c4       0x50 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(lib2-divmod.o)
+ .debug_frame   0x0000000000000614       0x34 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dcache_flush_all.o)
+ .debug_frame   0x0000000000000648       0x5c c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_load.o)
+ .debug_frame   0x00000000000006a4       0x2c c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_main.o)
+ .debug_frame   0x00000000000006d0       0x5c c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_tick.o)
+ .debug_frame   0x000000000000072c       0x60 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_write.o)
+ .debug_frame   0x000000000000078c       0x88 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_sys_init.o)
+ .debug_frame   0x0000000000000814       0x60 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_fd.o)
+ .debug_frame   0x0000000000000874       0x34 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_read.o)
+ .debug_frame   0x00000000000008a8       0x34 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_write.o)
+ .debug_frame   0x00000000000008dc       0x60 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_timer_sc.o)
+ .debug_frame   0x000000000000093c      0x598 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_msgdma.o)
+ .debug_frame   0x0000000000000ed4       0x38 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_busy_sleep.o)
+ .debug_frame   0x0000000000000f0c       0x60 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_close.o)
+ .debug_frame   0x0000000000000f6c       0x34 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dcache_flush.o)
+ .debug_frame   0x0000000000000fa0       0x34 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dev.o)
+ .debug_frame   0x0000000000000fd4       0x60 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dev_llist_insert.o)
+ .debug_frame   0x0000000000001034       0x38 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_do_ctors.o)
+ .debug_frame   0x000000000000106c       0x38 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_do_dtors.o)
+ .debug_frame   0x00000000000010a4       0x38 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_find_dev.o)
+ .debug_frame   0x00000000000010dc       0x34 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_icache_flush_all.o)
+ .debug_frame   0x0000000000001110       0xa4 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_iic.o)
+ .debug_frame   0x00000000000011b4       0x38 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_iic_isr_register.o)
+ .debug_frame   0x00000000000011ec       0x60 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_io_redirect.o)
+ .debug_frame   0x000000000000124c       0x38 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_handler.o)
+ .debug_frame   0x0000000000001284       0x84 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_open.o)
+ .debug_frame   0x0000000000001308       0x38 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_printf.o)
+ .debug_frame   0x0000000000001340       0x38 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_putchar.o)
+ .debug_frame   0x0000000000001378       0x34 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_release_fd.o)
+ .debug_frame   0x00000000000013ac       0x34 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_nios2_gen2_irq.o)
+ .debug_frame   0x00000000000013e0       0x38 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_find_file.o)
+ .debug_frame   0x0000000000001418       0x34 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_get_fd.o)
+ .debug_frame   0x000000000000144c       0x5c c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_instruction_exception_entry.o)
+ .debug_frame   0x00000000000014a8       0x20 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-atexit.o)
+ .debug_frame   0x00000000000014c8       0x28 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-exit.o)
+ .debug_frame   0x00000000000014f0       0x20 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-memcmp.o)
+ .debug_frame   0x0000000000001510       0x48 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-__atexit.o)
+ .debug_frame   0x0000000000001558       0x54 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-__call_atexit.o)
+ .debug_frame   0x00000000000015ac       0x2c c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_exit.o)
 
-.debug_str      0x0000000000000000     0x2e8b
+.debug_str      0x0000000000000000     0x2ef3
  *(.debug_str)
  .debug_str     0x0000000000000000       0x48 c:/Workspace/quartus/npu/software/npu_bsp//obj/HAL/src/crt0.o
  .debug_str     0x0000000000000048      0x181 obj/default/common.o
                                         0x1f2 (size before relaxing)
- .debug_str     0x00000000000001c9      0x208 obj/default/main.o
-                                        0x36a (size before relaxing)
- .debug_str     0x00000000000003d1      0x1ae d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(_muldi3.o)
+ .debug_str     0x00000000000001c9      0x270 obj/default/main.o
+                                        0x3db (size before relaxing)
+ .debug_str     0x0000000000000439      0x1ae d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(_muldi3.o)
                                         0x241 (size before relaxing)
- .debug_str     0x000000000000057f        0xb d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(_bswapsi2.o)
+ .debug_str     0x00000000000005e7        0xb d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(_bswapsi2.o)
                                         0x1ed (size before relaxing)
- .debug_str     0x000000000000058a       0x3a d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(lib2-mul.o)
+ .debug_str     0x00000000000005f2       0x3a d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(lib2-mul.o)
                                         0x1a1 (size before relaxing)
- .debug_str     0x00000000000005c4      0x13a d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-memset.o)
+ .debug_str     0x000000000000062c      0x13a d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-memset.o)
                                         0x1d6 (size before relaxing)
- .debug_str     0x00000000000006fe      0x3bb d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-printf.o)
+ .debug_str     0x0000000000000766      0x3bb d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-printf.o)
                                         0x50e (size before relaxing)
- .debug_str     0x0000000000000ab9       0x52 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-putchar.o)
+ .debug_str     0x0000000000000b21       0x52 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-putchar.o)
                                         0x4cb (size before relaxing)
- .debug_str     0x0000000000000b0b       0x60 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-puts.o)
+ .debug_str     0x0000000000000b73       0x60 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-puts.o)
                                         0x4d7 (size before relaxing)
- .debug_str     0x0000000000000b6b       0x3f d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-strlen.o)
+ .debug_str     0x0000000000000bd3       0x3f d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-strlen.o)
                                         0x1dc (size before relaxing)
- .debug_str     0x0000000000000baa      0x2d2 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-vfprintf.o)
+ .debug_str     0x0000000000000c12      0x2d2 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-vfprintf.o)
                                         0x871 (size before relaxing)
- .debug_str     0x0000000000000e7c       0x65 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-fvwrite_small_dev.o)
+ .debug_str     0x0000000000000ee4       0x65 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-fvwrite_small_dev.o)
                                         0x4de (size before relaxing)
- .debug_str     0x0000000000000ee1       0xf2 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-impure.o)
+ .debug_str     0x0000000000000f49       0xf2 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-impure.o)
                                         0x4c8 (size before relaxing)
- .debug_str     0x0000000000000fd3       0x48 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-putc.o)
+ .debug_str     0x000000000000103b       0x48 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-putc.o)
                                         0x4d5 (size before relaxing)
- .debug_str     0x000000000000101b       0x47 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-writer.o)
+ .debug_str     0x0000000000001083       0x47 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-writer.o)
                                         0x4c2 (size before relaxing)
- .debug_str     0x0000000000001062       0x41 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-int_errno.o)
+ .debug_str     0x00000000000010ca       0x41 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-int_errno.o)
                                         0x1cf (size before relaxing)
- .debug_str     0x00000000000010a3       0x78 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(lib2-divmod.o)
+ .debug_str     0x000000000000110b       0x78 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/mno-hw-mul\libgcc.a(lib2-divmod.o)
                                         0x1e0 (size before relaxing)
- .debug_str     0x000000000000111b       0x34 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dcache_flush_all.o)
+ .debug_str     0x0000000000001183       0x34 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dcache_flush_all.o)
                                         0x146 (size before relaxing)
- .debug_str     0x000000000000114f       0xe9 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_load.o)
+ .debug_str     0x00000000000011b7       0xe9 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_load.o)
                                         0x203 (size before relaxing)
- .debug_str     0x0000000000001238       0x44 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_main.o)
+ .debug_str     0x00000000000012a0       0x44 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_main.o)
                                         0x15d (size before relaxing)
- .debug_str     0x000000000000127c       0xe2 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_tick.o)
+ .debug_str     0x00000000000012e4       0xe2 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_tick.o)
                                         0x243 (size before relaxing)
- .debug_str     0x000000000000135e      0x18a c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_write.o)
+ .debug_str     0x00000000000013c6      0x18a c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_write.o)
                                         0x33b (size before relaxing)
- .debug_str     0x00000000000014e8      0x264 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_sys_init.o)
+ .debug_str     0x0000000000001550      0x264 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_sys_init.o)
                                         0x453 (size before relaxing)
- .debug_str     0x000000000000174c       0x71 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_fd.o)
+ .debug_str     0x00000000000017b4       0x71 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_fd.o)
                                         0x29f (size before relaxing)
- .debug_str     0x00000000000017bd       0x48 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_read.o)
+ .debug_str     0x0000000000001825       0x48 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_read.o)
                                         0x1bc (size before relaxing)
- .debug_str     0x0000000000001805       0x4a c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_write.o)
+ .debug_str     0x000000000000186d       0x4a c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_jtag_uart_write.o)
                                         0x1b2 (size before relaxing)
- .debug_str     0x000000000000184f       0x84 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_timer_sc.o)
+ .debug_str     0x00000000000018b7       0x84 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_avalon_timer_sc.o)
                                         0x1ff (size before relaxing)
- .debug_str     0x00000000000018d3      0x965 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_msgdma.o)
+ .debug_str     0x000000000000193b      0x965 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_msgdma.o)
                                         0xd0d (size before relaxing)
- .debug_str     0x0000000000002238       0x42 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_busy_sleep.o)
+ .debug_str     0x00000000000022a0       0x42 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_busy_sleep.o)
                                         0x15c (size before relaxing)
- .debug_str     0x000000000000227a       0x1b c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_close.o)
+ .debug_str     0x00000000000022e2       0x1b c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_close.o)
                                         0x1ef (size before relaxing)
- .debug_str     0x0000000000002295       0x2c c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dcache_flush.o)
+ .debug_str     0x00000000000022fd       0x2c c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dcache_flush.o)
                                         0x14c (size before relaxing)
- .debug_str     0x00000000000022c1       0x49 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dev.o)
+ .debug_str     0x0000000000002329       0x49 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dev.o)
                                         0x355 (size before relaxing)
- .debug_str     0x000000000000230a       0x45 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dev_llist_insert.o)
+ .debug_str     0x0000000000002372       0x45 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_dev_llist_insert.o)
                                         0x1bd (size before relaxing)
- .debug_str     0x000000000000234f       0x48 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_do_ctors.o)
+ .debug_str     0x00000000000023b7       0x48 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_do_ctors.o)
                                          0xca (size before relaxing)
- .debug_str     0x0000000000002397       0x4c c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_do_dtors.o)
+ .debug_str     0x00000000000023ff       0x4c c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_do_dtors.o)
                                          0xc9 (size before relaxing)
- .debug_str     0x00000000000023e3       0x14 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_errno.o)
+ .debug_str     0x000000000000244b       0x14 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_errno.o)
                                         0x130 (size before relaxing)
- .debug_str     0x00000000000023f7       0x24 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_find_dev.o)
+ .debug_str     0x000000000000245f       0x24 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_find_dev.o)
                                         0x1d0 (size before relaxing)
- .debug_str     0x000000000000241b       0x34 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_icache_flush_all.o)
+ .debug_str     0x0000000000002483       0x34 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_icache_flush_all.o)
                                         0x146 (size before relaxing)
- .debug_str     0x000000000000244f       0xa5 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_iic.o)
+ .debug_str     0x00000000000024b7       0xa5 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_iic.o)
                                         0x21d (size before relaxing)
- .debug_str     0x00000000000024f4       0x4c c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_iic_isr_register.o)
+ .debug_str     0x000000000000255c       0x4c c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_iic_isr_register.o)
                                         0x1d9 (size before relaxing)
- .debug_str     0x0000000000002540       0x56 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_io_redirect.o)
+ .debug_str     0x00000000000025a8       0x56 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_io_redirect.o)
                                         0x359 (size before relaxing)
- .debug_str     0x0000000000002596       0x18 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_entry.o)
+ .debug_str     0x00000000000025fe       0x18 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_entry.o)
                                          0x51 (size before relaxing)
- .debug_str     0x00000000000025ae       0x3a c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_handler.o)
+ .debug_str     0x0000000000002616       0x3a c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_handler.o)
                                         0x188 (size before relaxing)
- .debug_str     0x00000000000025e8       0x29 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_vars.o)
+ .debug_str     0x0000000000002650       0x29 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_irq_vars.o)
                                         0x134 (size before relaxing)
- .debug_str     0x0000000000002611       0x2f c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_open.o)
+ .debug_str     0x0000000000002679       0x2f c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_open.o)
                                         0x23c (size before relaxing)
- .debug_str     0x0000000000002640       0x2c c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_printf.o)
+ .debug_str     0x00000000000026a8       0x2c c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_printf.o)
                                          0xf4 (size before relaxing)
- .debug_str     0x000000000000266c       0x22 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_putchar.o)
+ .debug_str     0x00000000000026d4       0x22 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_putchar.o)
                                         0x134 (size before relaxing)
- .debug_str     0x000000000000268e       0x28 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_release_fd.o)
+ .debug_str     0x00000000000026f6       0x28 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_release_fd.o)
                                         0x1c0 (size before relaxing)
- .debug_str     0x00000000000026b6       0x3b c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_nios2_gen2_irq.o)
+ .debug_str     0x000000000000271e       0x3b c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(altera_nios2_gen2_irq.o)
                                         0x14d (size before relaxing)
- .debug_str     0x00000000000026f1       0x1e c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_exception_entry.o)
+ .debug_str     0x0000000000002759       0x1e c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_exception_entry.o)
                                          0x57 (size before relaxing)
- .debug_str     0x000000000000270f       0x26 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_find_file.o)
+ .debug_str     0x0000000000002777       0x26 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_find_file.o)
                                         0x1de (size before relaxing)
- .debug_str     0x0000000000002735       0x30 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_get_fd.o)
+ .debug_str     0x000000000000279d       0x30 c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_get_fd.o)
                                         0x200 (size before relaxing)
- .debug_str     0x0000000000002765      0x48b c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_instruction_exception_entry.o)
+ .debug_str     0x00000000000027cd      0x48b c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_instruction_exception_entry.o)
                                         0x59a (size before relaxing)
- .debug_str     0x0000000000002bf0      0x119 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-atexit.o)
+ .debug_str     0x0000000000002c58      0x119 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-atexit.o)
                                         0x213 (size before relaxing)
- .debug_str     0x0000000000002d09       0x4e d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-exit.o)
+ .debug_str     0x0000000000002d71       0x4e d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-exit.o)
                                         0x1e7 (size before relaxing)
- .debug_str     0x0000000000002d57       0x46 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-memcmp.o)
+ .debug_str     0x0000000000002dbf       0x46 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-memcmp.o)
                                         0x1d6 (size before relaxing)
- .debug_str     0x0000000000002d9d       0x57 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-__atexit.o)
+ .debug_str     0x0000000000002e05       0x57 d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-__atexit.o)
                                         0x518 (size before relaxing)
- .debug_str     0x0000000000002df4       0x6d d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-__call_atexit.o)
+ .debug_str     0x0000000000002e5c       0x6d d:/intelfpga_lite/20.1/nios2eds/bin/gnu/h-x86_64-mingw32/bin/../lib/gcc/nios2-elf/10.1.1/../../../../../H-x86_64-mingw32/nios2-elf/lib/mno-hw-mul\libsmallc.a(lib_a-__call_atexit.o)
                                         0x4fb (size before relaxing)
- .debug_str     0x0000000000002e61       0x2a c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_exit.o)
+ .debug_str     0x0000000000002ec9       0x2a c:/Workspace/quartus/npu/software/npu_bsp/\libhal_bsp.a(alt_exit.o)
                                         0x142 (size before relaxing)
 
 .debug_loc      0x0000000000000000     0x1dcc

@@ -28,6 +28,34 @@ wire [255:0] biased_accum = {sum_7, sum_6, sum_5, sum_4, sum_3, sum_2, sum_1, su
 ```
 3. Remove the software `npu_extract_32bit_ocm` fallback in the Python Compiler and reactivate the fully offloaded MSGDMA `npu_drain_to_ddr` which uses hardware ReLU natively.
 
-## 2. Dynamic Hardware Post-Processor ReLU and Shift
-*   Once the bias issue is fixed, dynamically pipe `shift_val` from the AVS Memory Mapped CSR space into the Post-Processor instead of relying on the hardcoded `>>> 8` arithmetic shift.
+## 2. True Post-Training Quantization (PTQ) via CSR Registers
+**Issue:**  
+Currently, the Python SDK compiler forces a static `>> 8` division on all layers, which survives primarily due to Batch Normalization. True PTQ requires an exact decimal scale multiplier and dynamic shifting per layer to prevent accuracy drops on non-linear data distributions.
 
+**Planned Fix:**  
+1. **Verilog Updates (`npu_ctrl.v` & `npu_post_processor.v`):** 
+   Replace the hardcoded `>>> SHIFT_VAL` with two new Memory-Mapped Control Registers: `REG_QUANT_MUL` and `REG_QUANT_SHIFT`.
+   ```verilog
+   wire signed [31:0] scaled_sum = stg3_sum * reg_quant_mul;
+   wire signed [31:0] final_out_8bit = (scaled_sum >>> reg_quant_shift) + reg_quant_zero_point;
+   ```
+2. **Compiler SDK Updates (`cyclone_npu_sdk.py`):**
+   - Inject **Calibration Forward Hooks** during `export_to_fpga()` to run ~500 images through the PyTorch model and record the true empirical `Min/Max` of every activation tensor.
+   - Calculate output precision constants: $M = \frac{Scale_{in} \times Scale_{weight}}{Scale_{out}}$
+   - Decompose $M$ mathematically into an Integer Multiplier ($M_0$) and bit-shift ($n$) utilizing `math.log2()` approximations: $M \approx M_0 \times 2^{-n}$
+   - Emit standard C code to dynamically `IOWR` these 2 values into the NPU `npu_ctrl` before every channel/layer execution.
+
+## 3. Resurrecting 100% Hardware Pipeline (Fixing MSGDMA Deadlock)
+**Issue:**  
+Currently, CNN processing relies on a Software CPU Fallback (`npu_extract_32bit_ocm`) because routing `npu_post_processor.v` to the `MSGDMA Stream-to-Memory TX` module caused a System Deadlock (`out_ready` permanently tied low). This limits CNN execution time to ~65ms due to the CPU extracting and calculating 169 matrix patches sequentially.
+
+**Planned Fix:**  
+1. **Verilog MSGDMA Alignment (`npu_stream_ctrl.v`):**
+   - Ensure the Avalon-ST `Packer` module exactly matches the Byte Length and `SOP/EOP` boundaries expected by the MSGDMA C-descriptors.
+   - If `seq_total_rows` (Hardware) and the Descriptor length (Software) disagree by even 1 byte, MSGDMA will hang waiting for `EOP`, blocking the `out_ready` bus permanently.
+2. **Re-activate Hardware Bias API (`npu_api.c`):**
+   - Remove the `IOWR(NPU_CTRL_BASE, 0x200 + f, 0); // Disable HW Bias permanently` hack.
+   - Restore the explicit memory-mapped Write of the native 32-bit Bias arrays into the NPU `0x200` CSR space.
+3. **Compiler Code-Gen Update (`cyclone_npu_sdk.py`):**
+   - Delete the Software Extraction C-loops generated during `emit_c_code()`.
+   - Replace them exclusively with the `npu_drain_to_ddr(output_address)` MSGDMA instruction, returning the CNN pipeline to an undisputed Zero-Software-Overhead state. (Expected CNN performance jump: 65ms -> ~3ms).

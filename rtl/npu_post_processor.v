@@ -1,10 +1,9 @@
 `timescale 1ns / 1ps
 
-module npu_post_processor #(
-    parameter SHIFT_VAL = 8
-)(
+module npu_post_processor (
     input  wire        clk,
     input  wire        rst_n,
+    input  wire [4:0]  shift_val,
 
     // Interface from OCM Accumulator (Drain Mode)
     input  wire [31:0] in_data,
@@ -87,9 +86,9 @@ module npu_post_processor #(
         end
     end
 
-    // --- Stage 4: Quantization (Shift) and ReLU ---
+    // --- Stage 4: Shift and ReLU ---
     // Shift arithmetic right
-    wire signed [31:0] shifted_sum = stg3_sum >>> SHIFT_VAL;
+    wire signed [31:0] shifted_sum = stg3_sum >>> shift_val;
     
     wire [7:0] relu_out;
     assign relu_out = (shifted_sum < 0) ? 8'd0 : 

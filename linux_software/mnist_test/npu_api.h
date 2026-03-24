@@ -18,6 +18,7 @@ int npu_load_binary_file(const char *filename, void *dest, size_t max_size);
 
 // 3. Execution Intrinsics (These are exactly the loops emitted by the Compiler!)
 void npu_set_seq_rows(int rows);
+void npu_set_shift(int shift_val);
 void npu_clear_ocm();
 
 void npu_load_weights(uint32_t w_ddr_offset);

@@ -78,3 +78,12 @@ sim/results.xml
 *.fst
 *.wlf
 transcript
+
+# ============================================================
+# Software Build (Nios2 App)
+# ============================================================
+software/**/*.o
+software/**/*.elf
+software/**/*.map
+software/**/*.objdump
+software/*/.cache

@@ -486,6 +486,129 @@ void verify_mac_pe() {
 }
 
 // ==========================================
+// Post-Processor Diagnostics (Step-by-Step)
+// ==========================================
+void verify_post_processor_pipeline() {
+  printf("\n=== Post Processor Step-by-Step Diagnostics ===\n");
+  
+  uint32_t dma_ocm_base = 0x40000;
+  volatile uint8_t* ocm_base = lw_bridge_map + dma_ocm_base;
+  
+  // 1. Bias RAM Save/Load Test
+  printf("\n[Step 1] Testing Bias RAM Save/Load...\n");
+  int bias_errors = 0;
+  int32_t test_biases[8] = {1000, -500, 255, -128, 0, 9999, -9999, 12};
+  for (int i = 0; i < 8; i++) {
+    IOWR(NPU_CTRL_BASE, 0x200 + i, test_biases[i]);
+  }
+  for (int i = 0; i < 8; i++) {
+    int32_t read_back = (int32_t)IORD(NPU_CTRL_BASE, 0x200 + i);
+    if (read_back != test_biases[i]) {
+      printf("  ERROR at Bias[%d]! Wrote %d, Read %d\n", i, test_biases[i], read_back);
+      bias_errors++;
+    } else {
+      printf("  Bias[%d] OK: %d\n", i, read_back);
+    }
+  }
+  if (bias_errors == 0) printf("[Step 1] PASS: Bias RAM Read/Write works perfectly.\n");
+  else printf("[Step 1] FAIL: Bias RAM is corrupted.\n");
+
+  // 2. Setup OCM Data for DRAIN Test
+  printf("\n[Step 2] Formatting OCM for DRAIN Test (Int8 & ReLU)...\n");
+  // We simulate 1 batch (8 rows * 8 channels = 64 words).
+  // The Post-processor reads from OCM and pushes out 8-bit values per channel.
+  for (int r = 0; r < 8; r++) {
+    for (int c = 0; c < 8; c++) {
+      // Create interesting OCM data
+      int32_t z_val = 0;
+      if (c == 0) z_val = 1000;  // Will test positive shift
+      if (c == 1) z_val = -500;  // Will test negative shift + ReLU
+      if (c == 2) z_val = 30000; // Will test positive overflow clipping
+      if (c == 3) z_val = -30000;// Will test negative underflow clipping
+      if (c >= 4) z_val = 50 * (c + 1); // Normal values
+
+      // Since the hardware reads from OCM natively during Drain, we write it natively
+      // OCM expects [r * 8 + c] natively.
+      // OCM Base is 0x40000 (dma_ocm_base) + 0x2000 buffer we use.
+      IOWR_32DIRECT(ocm_base + 0x2000, (r * 8 + c) * 4, (uint32_t)z_val);
+      
+      if (r == 0) {
+        printf("  OCM[0, %d] initialized to %d\n", c, z_val);
+      }
+    }
+  }
+
+  // 3. Set Shift Value (Int8 Scale Test)
+  printf("\n[Step 3] Configuring Shift Register = 4\n");
+  IOWR(NPU_CTRL_BASE, 2, 4); // shift_val = 4 (Divide by 16)
+  uint32_t shift_readback = IORD(NPU_CTRL_BASE, 2);
+  printf("  Shift Register Readback: %d\n", shift_readback);
+
+  // 4. Execute Hardware DRAIN Mode
+  printf("\n[Step 4] Executing Hardware DRAIN (OCM -> PP -> MSGDMA DDR)\n");
+  msgdma_init(DDR_WRITE_ST_CSR_BASE);
+  uint32_t physical_base = 0x20000000; 
+  uint32_t output_ddr_offset = 0x200000;
+  volatile uint8_t* outputs_addr = DDR3_WINDOW_BASE + output_ddr_offset;
+  
+  // Clear DDR Output
+  for(int i=0; i<16; i++) IOWR_32DIRECT(outputs_addr, i*4, 0);
+
+  // Configure DRAIN Mode
+  IOWR(NPU_CTRL_BASE, REG_CTRL, 4); // seq_mode=2 (DRAIN)
+  IOWR(NPU_CTRL_BASE, 0x23, dma_ocm_base + 0x2000); 
+  IOWR(NPU_CTRL_BASE, 0x25, 64); // 64 words
+  IOWR(NPU_CTRL_BASE, 0x20, 1);  // accum_start = 1
+  
+  msgdma_write_stream_push(DDR_WRITE_ST_DESCRIPTOR_SLAVE_BASE, physical_base + output_ddr_offset, 64);
+  
+  printf("  Waiting for DRAIN sequence to complete...\n");
+  while ((IORD_32DIRECT(DDR_WRITE_ST_CSR_BASE, 0) & 0x01) != 0) {}
+  while ((IORD(NPU_CTRL_BASE, 0x21) & 1) == 0) {}
+
+  // 5. Verify Results
+  printf("\n[Step 5] Parsing Output & Mathematical Verification\n");
+  uint32_t hw_matrix[8][8];
+  npu_parse_output(outputs_addr, hw_matrix);
+
+  int logic_errors = 0;
+  printf("  Verification of Row 0 (Shift=4, Div=16):\n");
+  for (int c = 0; c < 8; c++) {
+    int32_t z_val = 0;
+    if (c == 0) z_val = 1000;
+    if (c == 1) z_val = -500;
+    if (c == 2) z_val = 30000;
+    if (c == 3) z_val = -30000;
+    if (c >= 4) z_val = 50 * (c + 1);
+    
+    int32_t b_val = test_biases[c];
+    int32_t sum = z_val + b_val;
+    int32_t shifted = sum >> 4; // Shift=4
+    
+    // ReLU & Clip
+    if (shifted < 0) shifted = 0;
+    if (shifted > 127) shifted = 127;
+    
+    uint32_t hw_val = hw_matrix[0][c];
+    printf("    Ch %d | OCM: %6d + Bias: %5d = Sum: %6d | >> 4 = %4d | ReLU = %3d | HW = %3d ", 
+           c, z_val, b_val, sum, (sum>>4), shifted, hw_val);
+           
+    if (hw_val == (uint32_t)shifted) {
+        printf("[OK]\n");
+    } else {
+        printf("[FAIL]\n");
+        logic_errors++;
+    }
+  }
+
+  if (logic_errors == 0) {
+    printf("\n=== Post Processor Test: SUCCESS! ===\n");
+  } else {
+    printf("\n=== Post Processor Test: FAILED (%d errors) ===\n", logic_errors);
+  }
+}
+
+// ==========================================
 // Performance Comparison (CPU vs NPU)
 // ==========================================
 
@@ -690,6 +813,7 @@ int main() {
     printf("2. Verify Full System Data path\n");
     printf("3. Verify Streaming Pipeline (N Batches)\n");
     printf("4. CPU vs NPU Performance Comparison\n");
+    printf("5. Verify Post Processor (Bias/OCM/Shift/ReLU)\n");
     printf("q. Quit\n");
     printf("Choose: ");
 
@@ -713,6 +837,8 @@ int main() {
         while (getchar() != '\n')
           ;
       }
+    } else if (c == '5') {
+      verify_post_processor_pipeline();
     } else if (c == 'q') {
       printf("Exiting...\n");
       break;
