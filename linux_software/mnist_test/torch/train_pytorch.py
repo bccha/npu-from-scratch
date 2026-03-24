@@ -49,7 +49,7 @@ def train():
     optimizer = optim.Adam(model.parameters(), lr=0.001)
     
     print("Training Genuine PyTorch MNIST MLP Native Model...")
-    for epoch in range(3):
+    for epoch in range(5):
         model.train()
         for i, (inputs, labels) in enumerate(trainloader):
             inputs, labels = inputs.to(device), labels.to(device)

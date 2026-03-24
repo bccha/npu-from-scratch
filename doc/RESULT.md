@@ -340,3 +340,40 @@ After applying dynamic `shift_val` control and fixing the `7 - c` Systolic Array
 * **Effective Throughput**: `~15 FPS`
 
 The Hardware Post-Processor successfully eliminates cross-channel bias overflow and performs zero-cost DRAIN-Time (`seq_mode=2`) Bias addition, right-shift quantization, and ReLU activation clipping entirely inside the FPGA fabric across both Dense and Convolutional spatial map layouts.
+
+---
+
+## 15. Resolving the 92% Accuracy Bottleneck (Ultimate Hardware Parity)
+
+Through systematic debugging, we identified and resolved the core pipeline bugs that had artificially suppressed the physical NPU accuracy to ~92% (and temporarily plunged it to 73% during intermediate rollbacks).
+
+### Bug 1: PTQ Saturation Throttling (`cyclone_npu_sdk.py`)
+The Python FX Compiler contained legacy clamp limits (`max_allowed_w_scale`) designed to aggressively cap weights so that internal intermediate scaling never exceeded a flat threshold of `64.0`, historically used to prevent fear of 127 SAT limit in hardware. 
+By removing this artificial cap, we unlocked the full maximum mathematical precision of INT8 bounds.
+
+### Bug 2: C-Compiler Bias Memory Truncation (`npu_compiler.py`)
+When unthrottled, hardware execution mysteriously dropped to 73%. Code analysis revealed a massive silent C-Emitter truncation bug:
+- Layer 1 (`Conv2d`) requires 64 biases (256 bytes).
+- Layer 2 (`FC1`) requires 128 biases (**512 bytes**).
+- The automatic fetch API previously hardcoded: `npu_load_binary_file("bias_lX.bin", ..., 256)`.
+- Consequently, exactly **half of the hidden Dense neurons received `0` (null) biases**, permanently fracturing the classifier.
+- We updated fetch capacity securely up to `4096 bytes`.
+
+### Final Post-Fix Validation Benchmark (5 Epochs Training)
+Retraining both `train_pytorch.py` (MLP) and `train_cnn.py` (CNN) on 5 Epochs, exporting, and running natively against 1,000 standard benchmark verification images on the physical DE10-Nano:
+
+**[MLP] `mnist_auto 1000`**
+```text
+    EmitC Accuracy : 96.60%
+    EmitC Time     : 1862.82 ms (1.863 ms/img)
+```
+> **Log Note:** The MLP console sequence logs jump from `0` to `100` and immediately exit. This is because the Systolic Array intrinsically processes `8` input images fully in parallel within a single MSGDMA hardware batch. Therefore, 1,000 images are completely executed in merely 125 sequence loops!
+
+**[CNN] `cnn_auto 1000`**
+```text
+    EmitC Accuracy : 98.20%
+    EmitC Time     : 64474.28 ms (64.474 ms/img)
+```
+*(CNNs are formatted linearly and step exactly 1:1, hence hitting `900` on sequence logs).*
+
+The FPGA logic finally mirrors pure PyFloat parameters securely within scaled 8-Bit arithmetic constraints with highly precise identicality.

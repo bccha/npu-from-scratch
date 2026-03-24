@@ -31,8 +31,7 @@ void npu_auto_inference(int num_batches, double *time_ms, double *accuracy) {
                 npu_load_inputs(curr_x_off);
                 npu_wait_accum();
             }
-            npu_set_scale(256);
-            npu_set_shift(16);
+            npu_set_shift(8);
             npu_load_bias(&bias_l1[j * 8]);
             npu_drain_to_ddr(0x910000);
             for(int r=0; r<8; r++) { for(int c_i=0; c_i<8; c_i++) {
@@ -89,10 +88,10 @@ int main(int argc, char **argv) {
     if (npu_init() < 0) return -1;
     printf("\nLoading Binaries...\n");
     npu_load_binary_file("inputs.bin", virt_ddr_base + 0x000000, 8000000);
-    npu_load_binary_file("weights_l1.bin", virt_ddr_base + 0x800000, 200000);
-    npu_load_binary_file("bias_l1.bin", bias_l1, 256);
-    npu_load_binary_file("weights_l2.bin", virt_ddr_base + 0x810000, 200000);
-    npu_load_binary_file("bias_l2.bin", bias_l2, 256);
+    npu_load_binary_file("weights_l1.bin", virt_ddr_base + 0x800000, 2000000);
+    npu_load_binary_file("bias_l1.bin", bias_l1, 4096);
+    npu_load_binary_file("weights_l2.bin", virt_ddr_base + 0x810000, 2000000);
+    npu_load_binary_file("bias_l2.bin", bias_l2, 4096);
     npu_load_binary_file("labels.bin", labels, 40000);
     double time_ms, acc;
     npu_auto_inference(num_test_batches, &time_ms, &acc);

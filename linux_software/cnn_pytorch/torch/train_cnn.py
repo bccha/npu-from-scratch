@@ -65,9 +65,9 @@ def train_and_export():
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=0.002)
     
-    # Train for just a quick 2 epochs to get reasonable weights
+    # Train for 5 epochs to get high-accuracy weights
     print("Training Genuine PyTorch MNIST CNN Model...")
-    for epoch in range(2):
+    for epoch in range(5):
         model.train()
         correct = 0
         total = 0

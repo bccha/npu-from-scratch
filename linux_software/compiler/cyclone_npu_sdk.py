@@ -96,11 +96,6 @@ def export_model_to_fpga(model, testset=None, out_dir="./", out_c_file="./npu_au
                 w_max = np.max(np.abs(W))
                 w_scale = 127.0 / w_max if w_max != 0 else 1.0
                 
-                # [SW FIX] Prevent 127 Int8 Hardware Saturation limit against the constant `256.0` RTL Divisor.
-                # Target safe scalar mapping of ~64.0 (allows native PyTorch float activations up to 2.0 without clipping!)
-                max_allowed_w_scale = 16384.0 / (127.0 if layer_idx == 1 else target_scale_h)
-                w_scale = min(w_scale, max_allowed_w_scale)
-                
                 W_q = np.clip(np.round(W * w_scale), -127, 127).astype(np.int8)
                 
                 if layer_idx == 1:
@@ -183,10 +178,6 @@ def export_model_to_fpga(model, testset=None, out_dir="./", out_c_file="./npu_au
                     
                 w_max = np.max(np.abs(W))
                 w_scale = 127.0 / w_max if w_max != 0 else 1.0
-                
-                # [SW FIX] Throttle integer mapping multiplier explicitly avoiding hardcoded divisor boundaries.
-                max_allowed_w_scale = 16384.0 / (127.0 if layer_idx == 1 else target_scale_h)
-                w_scale = min(w_scale, max_allowed_w_scale)
                 
                 W_q = np.clip(np.round(W * w_scale), -127, 127).astype(np.int8)
                 

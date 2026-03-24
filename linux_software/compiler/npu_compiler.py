@@ -236,7 +236,6 @@ class NPUCompiler:
         c.append("    int correct_predictions = 0;")
         c.append("    struct timeval tv; gettimeofday(&tv, NULL);")
         c.append("    double start_time = (double)tv.tv_sec * 1000000.0 + (double)tv.tv_usec;")
-        c.append("    int8_t *l1_drain_buf = (int8_t*)(virt_ddr_base + 0x900000); // Scratchpad Ping")
         c.append("    int8_t *H_flat = (int8_t*)(virt_ddr_base + 0x920000); // 1MB Global Flat Bridge Tensor\n")
         
         is_cnn_mode = any(l.type == 'conv2d' for l in self.layers)
@@ -284,8 +283,8 @@ class NPUCompiler:
         c.append("    npu_load_binary_file(\"inputs.bin\", virt_ddr_base + 0x000000, 8000000);")
         
         for idx, layer in enumerate(self.layers):
-            c.append(f"    npu_load_binary_file(\"weights_l{idx+1}.bin\", virt_ddr_base + 0x{layer.weight_addr:06X}, 200000);")
-            c.append(f"    npu_load_binary_file(\"bias_l{idx+1}.bin\", bias_l{idx+1}, 256);")
+            c.append(f"    npu_load_binary_file(\"weights_l{idx+1}.bin\", virt_ddr_base + 0x{layer.weight_addr:06X}, 2000000);")
+            c.append(f"    npu_load_binary_file(\"bias_l{idx+1}.bin\", bias_l{idx+1}, 4096);")
             
         c.append("    npu_load_binary_file(\"labels.bin\", labels, 40000);")
         c.append("    double time_ms, acc;")
